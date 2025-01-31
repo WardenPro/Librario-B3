@@ -1,34 +1,28 @@
-import { drizzle } from "drizzle-orm/mysql2";
-import "dotenv/config";
+import { migrate } from 'drizzle-orm/node-postgres/migrator';
+import { drizzle } from 'drizzle-orm/node-postgres';
 import { logMessage, errorMessage } from "../services/log";
 import dotenv from "dotenv";
-import fs from "fs";
+import "dotenv/config";
 
 export let db: ReturnType<typeof drizzle>;
 
 export async function startDatabase() {
     let DATABASE_URL;
+    dotenv.config();
     try {
-        if (process.env.IS_PRODUCTION === "true") {
-            console.log("babz");
-            DATABASE_URL = fs.readFileSync("/run/secrets/database_url", "utf8").trim();
-        } else {
-            dotenv.config();
-            DATABASE_URL = process.env.DATABASE_URL;
-        }
-        if (!DATABASE_URL) {
-            throw new Error("Database url manquantes dans les secrets");
-        }
+        DATABASE_URL = process.env.DATABASE_URL;
     } catch (err) {
         throw new Error("Impossible de lire le secret : " + err);
     }
 
     if (!DATABASE_URL) {
         errorMessage("DATABASE_URL is not defined in environment variables.");
-        throw new Error("DATABASE_URL is required.");
+        throw new Error("DATABASE_URL is not defined in environment variables.");
     }
 
-    db = drizzle({ connection: { uri: DATABASE_URL! } });
+    setTimeout(() => {
+        db = drizzle(DATABASE_URL);
+    }, 15000);
 
     try {
         await db.execute("select 1");
@@ -37,4 +31,6 @@ export async function startDatabase() {
         errorMessage("Error connecting to database:", error);
         throw error;
     }
+
+    await migrate(db, { migrationsFolder: "drizzle" });
 }

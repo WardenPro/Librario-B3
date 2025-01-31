@@ -10,11 +10,11 @@ import "../scheduler/pingMachines";
 import "../scheduler/clearBlacklist";
 
 export const app = express();
-export const IS_PRODUCTION = process.env.IS_PRODUCTION;
+export const NODE_ENV = process.env.NODE_ENV;
 
 const corsOptions: cors.CorsOptions = {
     origin: (origin, callback) => {
-        if (process.env.IS_PRODUCTION === "false") {
+        if (process.env.NODE_ENV === "development") {
             callback(null, true);
         } else {
             const allowedOrigins = [/^https?:\/\/(.*\.)?pfb\.ecole-89\.com$/];
@@ -25,7 +25,7 @@ const corsOptions: cors.CorsOptions = {
             ) {
                 callback(null, origin);
             } else {
-                callback(new Error("Origine non autorisée par CORS"));
+                callback(new Error("Origin not allowed by CORS"));
             }
         }
     },

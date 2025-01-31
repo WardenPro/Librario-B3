@@ -1,9 +1,9 @@
 import { SignJWT } from "jose";
-import keys from "./key";
+import key from "./key";
 
 export async function generateToken(user_id: number, role: string) {
     try {
-        const Key = Buffer.from(keys.rsa, "hex");
+        const secret_key = Buffer.from(key, "hex");
 
         const jwt = await new SignJWT({
             user_id,
@@ -11,12 +11,12 @@ export async function generateToken(user_id: number, role: string) {
         })
             .setProtectedHeader({ alg: "HS256", typ: "JWT" })
             .setIssuedAt()
-            .setExpirationTime("2h")
-            .sign(Key);
+            .setExpirationTime("7d")
+            .sign(secret_key);
 
         return jwt;
     } catch (error) {
-        console.error("Erreur lors de la génération du JWT :", error);
-        throw new Error("Impossible de générer le token.");
+        console.error("Error during JWT generation:", error);
+        throw new Error("Unable to generate the token.");
     }
 }

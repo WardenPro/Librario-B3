@@ -7,10 +7,6 @@ async function startServer() {
     try {
         await startDatabase();
         await import("./routes/users/index");
-        await import("./routes/machines_connecteurs/index");
-        await import("./routes/machines/index");
-        await import("./routes/connecteurs/index");
-        await import("./routes/metrics/index");
 
         app.listen(port, "0.0.0.0", () => {
             logMessage(`Server is running on http://localhost:${port}`);

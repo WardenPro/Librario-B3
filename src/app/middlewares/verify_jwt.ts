@@ -1,5 +1,5 @@
 import { jwtVerify, JWTPayload } from "jose";
-import keys from "./key";
+import key from "./key";
 import { blacklistJWT } from "../../db/schema/blacklistJWT";
 import { db } from "../config/database";
 import { eq } from "drizzle-orm";
@@ -74,7 +74,7 @@ export async function checkTokenMiddleware(req: any, res: any, next: any) {
             return res.status(401).json({ message: "Token JWT manquant" });
         }
 
-        const Key = Buffer.from(keys.rsa, "hex");
+        const Key = Buffer.from(key, "hex");
 
         const { payload } = await jwtVerify(token, Key);
 

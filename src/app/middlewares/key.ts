@@ -1,24 +1,19 @@
-import fs from "fs";
 import dotenv from "dotenv";
 
 function getKeys() {
-    let rsa;
+    let key;
+    dotenv.config();
 
     try {
-        if (process.env.IS_PRODUCTION === "true") {
-            rsa = fs.readFileSync("/run/secrets/rsa_secret", "utf8").trim();
-        } else {
-            dotenv.config();
-            rsa = process.env.SECRET_KEY;
-        }
-        if (!rsa) {
-            throw new Error("Clés manquantes dans dans les secrets");
-        }
-        return { rsa };
+        key = process.env.SECRET_KEY;
     } catch (err) {
-        throw new Error("Impossible de lire le secret : " + err);
+        throw new Error("Unable to read the secret:" + err);
     }
+    if (!key) {
+        throw new Error("Missing keys in secrets.");
+    }
+    return key;
 }
 
-const keys = getKeys();
-export default keys;
+const key = getKeys();
+export default key;

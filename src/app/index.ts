@@ -6,11 +6,15 @@ import helmet from "helmet";
 import cookieParser from "cookie-parser";
 import "./middlewares/key";
 import cors from "cors";
-import "../scheduler/pingMachines";
-import "../scheduler/clearBlacklist";
+import dotenv from "dotenv";
 
 export const app = express();
-export const NODE_ENV = process.env.NODE_ENV;
+dotenv.config();
+export let NODE_ENV = process.env.NODE_ENV;
+
+if (!NODE_ENV) {
+    throw new Error("NODE_ENV is not defined in environment variables.");
+}
 
 const corsOptions: cors.CorsOptions = {
     origin: (origin, callback) => {

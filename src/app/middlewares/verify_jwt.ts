@@ -11,19 +11,6 @@ export const extractBearerToken = (headerValue: string) => {
     return headerValue.trim();
 };
 
-async function isTokenBlacklisted(token: string): Promise<boolean> {
-    try {
-        const result = await db
-            .select()
-            .from(blacklistJWT)
-            .where(eq(blacklistJWT.token, token));
-
-        return result.length > 0;
-    } catch (error) {
-        throw new Error("Erreur interne lors de la vérification du token");
-    }
-}
-
 async function isTokenRevoked(payload: JWTPayload) {
     try {
         if (
@@ -31,7 +18,7 @@ async function isTokenRevoked(payload: JWTPayload) {
             typeof payload.iat !== "number" ||
             typeof payload.user_id !== "number"
         ) {
-            throw new Error("Payload invalide");
+            throw new Error("Invalid payload.");
         }
 
         const payloadId = payload.user_id;
@@ -44,7 +31,7 @@ async function isTokenRevoked(payload: JWTPayload) {
             .limit(1);
 
         if (!user || user.length === 0) {
-            throw new Error("Utilisateur non trouvé");
+            throw new Error("User not found.");
         }
 
         const userData = user[0];
@@ -59,7 +46,7 @@ async function isTokenRevoked(payload: JWTPayload) {
         return false;
     } catch (error) {
         throw new Error(
-            "Erreur lors de la vérification de la révoquation du JWT",
+            "Error during JWT revocation check.",
         );
     }
 }
@@ -73,38 +60,25 @@ export async function checkTokenMiddleware(req: any, res: any, next: any) {
             return res.status(401).json({ message: "Token JWT manquant" });
         }
 
-        const Key = Buffer.from(key, "hex");
+        const secret_key = Buffer.from(key, "hex");
 
-        const { payload } = await jwtVerify(token, Key);
-
-        let blacklisted;
-        try {
-            blacklisted = await isTokenBlacklisted(token);
-        } catch (error) {
-            return res.status(500).json({
-                message: "Erreur interne lors de la vérification du token",
-            });
-        }
-
-        if (blacklisted) {
-            return res.status(401).json({ message: "Token révoqué" });
-        }
+        const { payload } = await jwtVerify(token, secret_key);
 
         let revoked;
         try {
             revoked = await isTokenRevoked(payload);
         } catch (error) {
             return res.status(500).json({
-                message: "Erreur interne lors de la vérification du token",
+                message: "Internal error during token verification.",
             });
         }
 
         if (revoked) {
-            return res.status(401).json({ message: "Token révoqué" });
+            return res.status(401).json({ message: "Revoked token." });
         }
 
         return next();
     } catch (error) {
-        return res.status(401).json({ message: "Token invalide" });
+        return res.status(401).json({ message: "Invalid token." });
     }
 }

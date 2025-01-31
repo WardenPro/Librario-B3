@@ -16,7 +16,7 @@ export const users = pgTable("users", {
     password: text("password").notNull(),
     email: text("email").unique().notNull(),
     comment: text("comment"),
-    roles: rolesEnum.notNull(),
+    roles: rolesEnum("roles").notNull(), 
     created_at: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
     revocation_time_at: timestamp("revocation_time_at", { withTimezone: true }),
 });

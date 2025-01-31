@@ -1,0 +1,26 @@
+{
+  "name": "node",
+  "packageManager": "yarn@4.5.0",
+  "devDependencies": {
+    "@tsconfig/node20": "^20.1.4",
+    "@types/node": "^22.7.6",
+    "prettier": "3.3.3",
+    "typescript": "^5.6.3"
+  },
+  "scripts": {
+    "c": "yarn tsc",
+    "start": "node dist/",
+    "all": "yarn c && yarn start",
+    "static": "eslint .",
+    "stylecheck": "prettier --check '**/*.{js,jsx,ts,tsx,css,scss,json}'",
+    "format": "prettier --write '**/*.{js,jsx,ts,tsx,css,scss,json}'",
+    "clear": "rm -rf dist",
+    "auto": "concurrently \"yarn tsc --watch\" \"nodemon dist/index.js\"",
+    "dev": "nodemon --watch src --ext ts --exec 'yarn all'"
+  },
+  "dependencies": {
+    "drizzle-orm": "^0.35.2",
+    "drizzle-zod": "^0.5.1",
+    "zod": "^3.23.8"
+  }
+}

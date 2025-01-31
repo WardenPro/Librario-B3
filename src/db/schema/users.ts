@@ -1,22 +1,24 @@
 import {
-    mysqlTable,
-    int,
-    varchar,
+    pgTable,
+    serial,
+    text,
     timestamp,
-    mysqlEnum,
-} from "drizzle-orm/mysql-core";
+    pgEnum,
+} from "drizzle-orm/pg-core";
 import { createInsertSchema, createSelectSchema } from "drizzle-zod";
 import { z } from "zod";
 
-export const users = mysqlTable("users", {
-    id: int().autoincrement().primaryKey().notNull(),
-    name: varchar("name", { length: 255 }).notNull(),
-    password: varchar("password", { length: 255 }).notNull(),
-    email: varchar("email", { length: 255 }).unique().notNull(),
-    comment: varchar("comment", { length: 255 }),
-    roles: mysqlEnum("roles", ["user", "admin"]).notNull(),
-    created_at: timestamp("created_at").defaultNow().notNull(),
-    revocation_time_at: timestamp("revocation_time_at"),
+export const rolesEnum = pgEnum("roles", ["user", "admin"]);
+
+export const users = pgTable("users", {
+    id: serial().primaryKey().notNull(),
+    name: text("name").notNull(),
+    password: text("password").notNull(),
+    email: text("email").unique().notNull(),
+    comment: text("comment"),
+    roles: rolesEnum.notNull(),
+    created_at: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+    revocation_time_at: timestamp("revocation_time_at", { withTimezone: true }),
 });
 
 export const insertUserSchema = createInsertSchema(users, {
@@ -34,7 +36,6 @@ export const insertUserSchema = createInsertSchema(users, {
     roles: (schema) => schema.roles,
 });
 
-// Créez d'abord le schéma de sélection complet
 const fullSelectUserSchema = createSelectSchema(users, {
     id: (schema) => schema.id.positive(),
     name: (schema) => schema.name.toLowerCase(),
@@ -42,7 +43,6 @@ const fullSelectUserSchema = createSelectSchema(users, {
     roles: (schema) => schema.roles,
 });
 
-// Excluez le champ `password` du schéma de sélection
 export const selectUserSchema = fullSelectUserSchema.omit({ password: true });
 
 export const updateUserSchema = createInsertSchema(users, {

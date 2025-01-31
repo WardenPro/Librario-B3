@@ -1,0 +1,68 @@
+services:
+  migrate:
+    image: warden696/node_api_b3:latest
+    #container_name: node-migrate
+    secrets:
+      - rsa_secret
+      - database_url
+    depends_on:
+      - db
+    command: ["dist/src/app/config/migrate.js"] # crée un fichier spécifique pour exécuter le push
+    deploy:
+      restart_policy:
+        condition: on-failure # Redémarre uniquement si le service échoue
+        max_attempts: 2
+
+  app:
+    image: warden696/node_api_b3:latest
+    #container_name: node-app
+    secrets:
+      - rsa_secret
+      - database_url
+    deploy:
+      replicas: 1
+    ports:
+      - "3000:3000"
+    environment:
+      - IS_PRODUCTION=true
+      - API_URL=http://localhost:3000
+    depends_on:
+      - migrate # Dépend de la migration
+      
+
+  db:
+    image: yobasystems/alpine-mariadb
+    restart: always
+    environment:
+      MYSQL_DATABASE: db
+      MYSQL_ROOT_PASSWORD: root
+    ports:
+      - "3306:3306"
+    volumes:
+      - db-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mariadb-admin", "ping", "-h", "localhost", "-u", "root", "--password=root"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+  phpmyadmin:
+    image: phpmyadmin:apache
+
+    restart: always
+    environment:
+      PMA_HOST: db
+      MYSQL_ROOT_PASSWORD: root
+    ports:
+      - "8080:80"
+    depends_on:
+      - db
+
+volumes:
+  db-data:
+
+secrets:
+  rsa_secret:
+    external: true
+  database_url:
+    external: true

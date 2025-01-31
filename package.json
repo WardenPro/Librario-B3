@@ -1,6 +1,7 @@
 {
   "name": "node",
   "packageManager": "yarn@4.5.0",
+  "type": "commonjs",
   "devDependencies": {
     "@tsconfig/node-lts": "^22.0.1",
     "@types/connect": "^3",

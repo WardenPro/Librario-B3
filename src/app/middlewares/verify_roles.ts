@@ -1,5 +1,5 @@
 import { jwtVerify } from "jose";
-import keys from "./key";
+import key from "./key";
 import { NODE_ENV } from "..";
 
 const extractBearerToken = (headerValue: string) => {
@@ -19,8 +19,8 @@ export async function checkRoleMiddleware(req: any, res: any, next: any) {
         if (!token) {
             return res.status(401).json({ message: "Missing JWT token" });
         }
-        const Key = Buffer.from(keys.key, "hex");
-        const { payload } = await jwtVerify(token, Key);
+        const secret_key = Buffer.from(key, "hex");
+        const { payload } = await jwtVerify(token, secret_key);
 
         if (!payload || !payload.role) {
             return res.status(403).json({ message: "Missing role in token" });

@@ -1,6 +1,6 @@
 import { jwtVerify } from "jose";
 import keys from "./key";
-import { IS_PRODUCTION } from "..";
+import { NODE_ENV } from "..";
 
 const extractBearerToken = (headerValue: string) => {
     if (typeof headerValue !== "string") {
@@ -11,7 +11,7 @@ const extractBearerToken = (headerValue: string) => {
 
 export async function checkRoleMiddleware(req: any, res: any, next: any) {
     try {
-        if(!IS_PRODUCTION)
+        if(NODE_ENV === "development")
             return
         const token =
             req.headers.auth_token &&
@@ -19,7 +19,7 @@ export async function checkRoleMiddleware(req: any, res: any, next: any) {
         if (!token) {
             return res.status(401).json({ message: "Missing JWT token" });
         }
-        const Key = Buffer.from(keys.rsa, "hex");
+        const Key = Buffer.from(keys.key, "hex");
         const { payload } = await jwtVerify(token, Key);
 
         if (!payload || !payload.role) {

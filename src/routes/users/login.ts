@@ -1,9 +1,9 @@
-import { app } from "@/app/index";
-import { db } from "@/app/config/database";
-import { users } from "@/db/schema/users";
+import { app } from "../../app/index";
+import { db } from "../../app/config/database";
+import { users } from "../../db/schema/users";
 import { eq } from "drizzle-orm";
 import { argon2Verify } from "hash-wasm";
-import { generateToken } from "@/app/middlewares/jwt";
+import { generateToken } from "../../app/middlewares/jwt";
 
 app.post("/login", async (req, res) => {
     try {

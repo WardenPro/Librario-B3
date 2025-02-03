@@ -3,7 +3,6 @@ import { errorHandler } from "./middlewares/errorHandler";
 import { swaggerSpec } from "./docs/swagger";
 import swaggerUi from "swagger-ui-express";
 import helmet from "helmet";
-import cookieParser from "cookie-parser";
 import "./middlewares/key";
 import cors from "cors";
 import dotenv from "dotenv";

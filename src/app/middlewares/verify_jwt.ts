@@ -45,9 +45,7 @@ async function isTokenRevoked(payload: JWTPayload) {
 
         return false;
     } catch (error) {
-        throw new Error(
-            "Error during JWT revocation check.",
-        );
+        throw new Error("Error during JWT revocation check.");
     }
 }
 

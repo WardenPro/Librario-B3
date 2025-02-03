@@ -9,8 +9,7 @@ export const errorHandler = (
     console.error(err);
     res.status(500).json({
         success: false,
-        message:
-            "An error occurred while connecting to the database.",
+        message: "An error occurred while connecting to the database.",
         details: err.message || "Unknown error.",
     });
 };

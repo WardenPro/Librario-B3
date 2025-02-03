@@ -23,7 +23,7 @@
     },
     "scripts": {
         "c": "yarn tsc",
-        "start": "node dist/",
+        "start": "node dist/src/",
         "all": "yarn c && yarn start",
         "static": "eslint .",
         "stylecheck": "prettier --check '**/*.{js,jsx,ts,tsx,css,scss,json}'",

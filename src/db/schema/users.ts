@@ -1,12 +1,5 @@
-import {
-    pgTable,
-    serial,
-    text,
-    timestamp,
-    pgEnum,
-} from "drizzle-orm/pg-core";
+import { pgTable, serial, text, timestamp, pgEnum } from "drizzle-orm/pg-core";
 import { createInsertSchema, createSelectSchema } from "drizzle-zod";
-import { z } from "zod";
 
 export const rolesEnum = pgEnum("roles", ["user", "admin"]);
 
@@ -16,8 +9,10 @@ export const users = pgTable("users", {
     password: text("password").notNull(),
     email: text("email").unique().notNull(),
     comment: text("comment"),
-    roles: rolesEnum("roles").notNull(), 
-    created_at: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+    roles: rolesEnum("roles").notNull(),
+    created_at: timestamp("created_at", { withTimezone: true })
+        .defaultNow()
+        .notNull(),
     revocation_time_at: timestamp("revocation_time_at", { withTimezone: true }),
 });
 

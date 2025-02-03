@@ -11,8 +11,7 @@ const extractBearerToken = (headerValue: string) => {
 
 export async function checkRoleMiddleware(req: any, res: any, next: any) {
     try {
-        if(NODE_ENV === "development")
-            return
+        if (NODE_ENV === "development") return;
         const token =
             req.headers.auth_token &&
             extractBearerToken(req.headers.auth_token);

@@ -1,5 +1,5 @@
-import { migrate } from 'drizzle-orm/node-postgres/migrator';
-import { drizzle } from 'drizzle-orm/node-postgres';
+import { migrate } from "drizzle-orm/node-postgres/migrator";
+import { drizzle } from "drizzle-orm/node-postgres";
 import { logMessage, errorMessage } from "../services/log";
 import dotenv from "dotenv";
 import "dotenv/config";
@@ -17,7 +17,9 @@ export async function startDatabase() {
 
     if (!DATABASE_URL) {
         errorMessage("DATABASE_URL is not defined in environment variables.");
-        throw new Error("DATABASE_URL is not defined in environment variables.");
+        throw new Error(
+            "DATABASE_URL is not defined in environment variables.",
+        );
     }
 
     setTimeout(() => {

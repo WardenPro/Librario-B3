@@ -45,6 +45,5 @@ app.use(helmet());
 app.use(cors(corsOptions));
 app.options("*", cors(corsOptions));
 
-
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 app.use(errorHandler);

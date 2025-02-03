@@ -1,11 +1,10 @@
-import { app } from "../../app/index";
-import { db } from "../../app/config/database";
-import { users } from "../../db/schema/users";
-import { blacklistJWT } from "../../db/schema/blacklistJWT";
-import { extractBearerToken } from "../../app/middlewares/verify_jwt";
+import { app } from "@/app/index";
+import { db } from "@/app/config/database";
+import { users } from "@/db/schema/users";
+import { extractBearerToken } from "@/app/middlewares/verify_jwt";
 import { eq } from "drizzle-orm";
 import { jwtVerify } from "jose";
-import keys from "../../app/middlewares/key";
+import keys from "@/app/middlewares/key";
 
 app.post("/logout", async (req: any, res: any) => {
     try {
@@ -16,7 +15,7 @@ app.post("/logout", async (req: any, res: any) => {
             return res.status(401).json({ message: "Missing JWT token" });
         }
 
-        const Key = Buffer.from(keys.rsa, "hex");
+        const Key = Buffer.from(keys, "hex");
         const { payload } = await jwtVerify(token, Key);
 
         if (!payload || !payload.user_id) {
@@ -27,12 +26,6 @@ app.post("/logout", async (req: any, res: any) => {
 
         console.log("User_id :", payload.user_id);
         req.user_id = payload.user_id;
-
-        await db.insert(blacklistJWT).values({
-            token: token,
-            users_id: req.user_id,
-            created_at: new Date(),
-        });
 
         return res.status(200).json({ message: "Logout successful" });
     } catch (error) {
@@ -52,7 +45,7 @@ app.post("/logout/:id", async (req: any, res: any) => {
             return res.status(401).json({ message: "Missing JWT token" });
         }
 
-        const Key = Buffer.from(keys.rsa, "hex");
+        const Key = Buffer.from(keys, "hex");
         const { payload } = await jwtVerify(token, Key);
 
         if (!payload || !payload.role) {

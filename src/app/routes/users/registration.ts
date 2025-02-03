@@ -1,15 +1,13 @@
-import { app } from "../../app/index";
-import { csrfProtection } from "../../app/middlewares/csrf";
-import { db } from "../../app/config/database";
+import { app } from "@/app/index";
+import { db } from "@/app/config/database";
 import xss from "xss";
-import { users, insertUserSchema } from "../../db/schema/users";
-import { generateToken } from "../../app/middlewares/jwt";
+import { users, insertUserSchema } from "@/db/schema/users";
+import { generateToken } from "@/app/middlewares/jwt";
 import { argon2id } from "hash-wasm";
-import { checkRoleMiddleware } from "../../app/middlewares/verify_role";
+import { checkRoleMiddleware } from "@/app/middlewares/verify_roles";
 
 app.post(
     "/registration",
-    csrfProtection,
     /*checkRoleMiddleware,*/
     async (req, res) => {
         try {

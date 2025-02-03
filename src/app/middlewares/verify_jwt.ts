@@ -2,7 +2,7 @@ import { jwtVerify, JWTPayload } from "jose";
 import key from "./key";
 import { db } from "../config/database";
 import { eq } from "drizzle-orm";
-import { users } from "../../db/schema/users";
+import { users } from "@/db/schema/users";
 
 export const extractBearerToken = (headerValue: string) => {
     if (typeof headerValue !== "string") {

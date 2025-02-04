@@ -1,4 +1,11 @@
-import { pgTable, serial, text, timestamp, integer } from "drizzle-orm/pg-core";
+import {
+    pgTable,
+    serial,
+    text,
+    timestamp,
+    integer,
+    boolean,
+} from "drizzle-orm/pg-core";
 import { createInsertSchema, createSelectSchema } from "drizzle-zod";
 
 export const books = pgTable("books", {
@@ -12,6 +19,7 @@ export const books = pgTable("books", {
     quantity: integer("quantity").notNull(),
     publish_date: timestamp("publish_date", { withTimezone: true }).notNull(),
     image_link: text("image_link"),
+    is_removed: boolean("is_removed").notNull().default(false),
 });
 
 export const insertBookSchema = createInsertSchema(books, {
@@ -39,13 +47,6 @@ export const SelectBookSchema = createSelectSchema(books, {
 });
 
 export const updateBookSchema = createInsertSchema(books, {
-    name: (schema) => schema.name.optional(),
-    description: (schema) => schema.description.optional(),
-    type: (schema) => schema.type.optional(),
-    category: (schema) => schema.category.optional(),
-    publisher: (schema) => schema.publisher.optional(),
-    author: (schema) => schema.author.optional(),
-    quantity: (schema) => schema.quantity.optional(),
-    publish_date: (schema) => schema.publish_date.optional(),
-    image_link: (schema) => schema.image_link.optional(),
+    quantity: (schema) =>
+        schema.quantity.min(0, "Quantity must be a positive number"),
 });

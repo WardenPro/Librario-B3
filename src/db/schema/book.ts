@@ -10,13 +10,14 @@ import { createInsertSchema, createSelectSchema } from "drizzle-zod";
 
 export const books = pgTable("books", {
     id: serial().primaryKey().notNull(),
+    isbn: integer("isbn").notNull(),
     name: text("name").notNull(),
     description: text("description").notNull(),
     type: text("type").notNull(),
     category: text("category").notNull(),
     publisher: text("publisher").notNull(),
     author: text("author").notNull(),
-    quantity: integer("quantity").notNull(),
+    quantity: integer("quantity").notNull().default(1),
     publish_date: timestamp("publish_date").defaultNow().notNull(),
     image_link: text("image_link"),
     is_removed: boolean("is_removed").notNull().default(false),

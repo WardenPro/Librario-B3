@@ -6,11 +6,15 @@ import { books } from "./book";
 export const historical = pgTable("historical", {
     id: serial().primaryKey().notNull(),
     date_read: timestamp("date_read", { withTimezone: true })
-    .defaultNow()
-    .notNull(),
-    books_id: integer("books_id").notNull().references(() => books.id),
-    users_id: integer("user_id").notNull().references(() => users.id),
-})
+        .defaultNow()
+        .notNull(),
+    books_id: integer("books_id")
+        .notNull()
+        .references(() => books.id),
+    users_id: integer("user_id")
+        .notNull()
+        .references(() => users.id),
+});
 
 export const insertHistoricalSchema = createInsertSchema(historical, {
     date_read: (schema) => schema.date_read,

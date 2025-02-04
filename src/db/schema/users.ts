@@ -5,10 +5,10 @@ export const rolesEnum = pgEnum("roles", ["user", "admin"]);
 
 export const users = pgTable("users", {
     id: serial().primaryKey().notNull(),
-    name: text("name").notNull(),
+    last_name: text("last_name").notNull(),
+    first_name: text("first_name").notNull(),
     password: text("password").notNull(),
     email: text("email").unique().notNull(),
-    comment: text("comment"),
     roles: rolesEnum("roles").notNull(),
     created_at: timestamp("created_at", { withTimezone: true })
         .defaultNow()
@@ -17,11 +17,16 @@ export const users = pgTable("users", {
 });
 
 export const insertUserSchema = createInsertSchema(users, {
-    name: (schema) =>
-        schema.name
+    last_name: (schema) =>
+        schema.last_name
             .min(2, { message: "Must be 2 or more characters." })
             .max(50, { message: "Must be 50 maximum." })
             .regex(/^[a-zA-Z ]+$/, { message: "Must be only letters." }),
+    first_name: (schema) =>
+        schema.first_name
+             .min(2, { message: "Must be 2 or more characters." })
+             .max(50, { message: "Must be 50 maximum." })
+             .regex(/^[a-zA-Z ]+$/, { message: "Must be only letters." }),
     email: (schema) => schema.email.email(),
     password: (schema) =>
         schema.password
@@ -33,7 +38,8 @@ export const insertUserSchema = createInsertSchema(users, {
 
 const fullSelectUserSchema = createSelectSchema(users, {
     id: (schema) => schema.id.positive(),
-    name: (schema) => schema.name.toLowerCase(),
+    last_name: (schema) => schema.last_name.toLowerCase(),
+    first_name: (schema) => schema.first_name.toLowerCase(),
     email: (schema) => schema.email.email(),
     roles: (schema) => schema.roles,
 });
@@ -41,12 +47,16 @@ const fullSelectUserSchema = createSelectSchema(users, {
 export const selectUserSchema = fullSelectUserSchema.omit({ password: true });
 
 export const updateUserSchema = createInsertSchema(users, {
-    name: (schema) =>
-        schema.name
+    last_name: (schema) =>
+        schema.last_name
             .min(2, { message: "Must be 2 or more characters." })
             .max(50, { message: "Must be 50 maximum." })
-            .regex(/^[a-zA-Z ]+$/, { message: "Must be only letters." })
-            .optional(),
+            .regex(/^[a-zA-Z ]+$/, { message: "Must be only letters." }),
+    first_name: (schema) =>
+        schema.first_name
+             .min(2, { message: "Must be 2 or more characters." })
+             .max(50, { message: "Must be 50 maximum." })
+             .regex(/^[a-zA-Z ]+$/, { message: "Must be only letters." }),
     email: (schema) => schema.email.email().optional(),
     password: (schema) =>
         schema.password
@@ -54,6 +64,5 @@ export const updateUserSchema = createInsertSchema(users, {
             .max(255)
             .regex(/^[a-zA-Z0-9]+$/)
             .optional(),
-    comment: (schema) => schema.comment.max(255).optional(),
     roles: (schema) => schema.roles.optional(),
 });

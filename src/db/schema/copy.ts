@@ -7,8 +7,10 @@ export const copy = pgTable("copy", {
     state: text("state").notNull(),
     is_reserved: boolean("is_reserved").notNull(),
     copy_number: integer("copy_number").notNull(),
-    book_id: integer("book_id").notNull().references(() => books.id),
-})
+    book_id: integer("book_id")
+        .notNull()
+        .references(() => books.id),
+});
 
 export const insertCopySchema = createInsertSchema(copy, {
     state: (schema) =>
@@ -35,4 +37,4 @@ export const updateCopySchema = createInsertSchema(copy, {
     is_reserved: (schema) => schema.is_reserved.optional(),
     copy_number: (schema) => schema.copy_number.optional(),
     book_id: (schema) => schema.book_id.optional(),
-})
+});

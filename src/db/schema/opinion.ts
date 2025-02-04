@@ -7,9 +7,13 @@ export const review = pgTable("review", {
     id: serial().primaryKey().notNull(),
     description: text("description").notNull(),
     note: integer("note").notNull(),
-    books_id: integer("books_id").notNull().references(() => books.id),
-    users_id: integer("user_id").notNull().references(() => users.id),
-})
+    books_id: integer("books_id")
+        .notNull()
+        .references(() => books.id),
+    users_id: integer("user_id")
+        .notNull()
+        .references(() => users.id),
+});
 
 export const insertReviewSchema = createInsertSchema(review, {
     description: (schema) =>
@@ -34,4 +38,4 @@ export const updateReviewSchema = createInsertSchema(review, {
     note: (schema) => schema.note.optional(),
     books_id: (schema) => schema.books_id.optional(),
     users_id: (schema) => schema.users_id.optional(),
-})
+});

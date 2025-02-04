@@ -1,62 +1,13 @@
 import { app } from "../../app/index";
 import { db } from "../../app/config/database";
 import { users } from "../../db/schema/users";
-import { extractBearerToken } from "../../app/middlewares/verify_jwt";
 import { eq } from "drizzle-orm";
-import { jwtVerify } from "jose";
-import keys from "../../app/middlewares/key";
+import { checkRoleMiddleware } from "../../app/middlewares/verify_roles";
+import { checkTokenMiddleware } from "../../app/middlewares/verify_jwt";
 
-app.post("/logout", async (req: any, res: any) => {
-    try {
-        const token =
-            req.headers.auth_token &&
-            extractBearerToken(req.headers.auth_token);
-        if (!token) {
-            return res.status(401).json({ message: "Missing JWT token" });
-        }
-
-        const Key = Buffer.from(keys, "hex");
-        const { payload } = await jwtVerify(token, Key);
-
-        if (!payload || !payload.user_id) {
-            return res
-                .status(403)
-                .json({ message: "Missing user_id in token" });
-        }
-
-        console.log("User_id :", payload.user_id);
-        req.user_id = payload.user_id;
-
-        return res.status(200).json({ message: "Logout successful" });
-    } catch (error) {
-        console.error("Erreur lors de la déconnexion:", error);
-        return res
-            .status(500)
-            .json({ message: "Erreur interne lors de la déconnexion" });
-    }
-});
-app.post("/logout/:id", async (req: any, res: any) => {
+app.post("/logout/:id", checkTokenMiddleware, checkRoleMiddleware, async (req: any, res: any) => {
     try {
         const userId = parseInt(req.params.id, 10);
-        const token =
-            req.headers.auth_token &&
-            extractBearerToken(req.headers.auth_token);
-        if (!token) {
-            return res.status(401).json({ message: "Missing JWT token" });
-        }
-
-        const Key = Buffer.from(keys, "hex");
-        const { payload } = await jwtVerify(token, Key);
-
-        if (!payload || !payload.role) {
-            return res.status(403).json({ message: "Missing role in token" });
-        }
-
-        if (payload.role !== "admin") {
-            return res
-                .status(403)
-                .json({ message: "Access denied: Admin role required" });
-        }
 
         if (isNaN(userId)) {
             return res.status(400).json({ message: "Invalid user ID" });
@@ -81,10 +32,10 @@ app.post("/logout/:id", async (req: any, res: any) => {
 
         return res.status(200).json({ message: "User forcibly logged out" });
     } catch (error) {
-        console.error("Erreur lors du logout administrateur:", error);
+        console.error("Error during administrator logout:", error);
         return res
             .status(500)
-            .json({ message: "Erreur interne lors du logout administrateur" });
+            .json({ message: "Internal error during administrator logout" });
     }
 });
 

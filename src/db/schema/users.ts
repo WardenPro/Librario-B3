@@ -24,9 +24,9 @@ export const insertUserSchema = createInsertSchema(users, {
             .regex(/^[a-zA-Z ]+$/, { message: "Must be only letters." }),
     first_name: (schema) =>
         schema.first_name
-             .min(2, { message: "Must be 2 or more characters." })
-             .max(50, { message: "Must be 50 maximum." })
-             .regex(/^[a-zA-Z ]+$/, { message: "Must be only letters." }),
+            .min(2, { message: "Must be 2 or more characters." })
+            .max(50, { message: "Must be 50 maximum." })
+            .regex(/^[a-zA-Z ]+$/, { message: "Must be only letters." }),
     email: (schema) => schema.email.email(),
     password: (schema) =>
         schema.password
@@ -54,9 +54,9 @@ export const updateUserSchema = createInsertSchema(users, {
             .regex(/^[a-zA-Z ]+$/, { message: "Must be only letters." }),
     first_name: (schema) =>
         schema.first_name
-             .min(2, { message: "Must be 2 or more characters." })
-             .max(50, { message: "Must be 50 maximum." })
-             .regex(/^[a-zA-Z ]+$/, { message: "Must be only letters." }),
+            .min(2, { message: "Must be 2 or more characters." })
+            .max(50, { message: "Must be 50 maximum." })
+            .regex(/^[a-zA-Z ]+$/, { message: "Must be only letters." }),
     email: (schema) => schema.email.email().optional(),
     password: (schema) =>
         schema.password

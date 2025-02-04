@@ -7,19 +7,29 @@ export const copy = pgTable("copy", {
     state: text("state").notNull(),
     is_reserved: boolean("is_reserved").notNull(),
     copy_number: integer("copy_number").notNull(),
+<<<<<<< HEAD
     book_id: integer("book_id").notNull().references(() => books.id),
 })
+=======
+    book_id: integer("book_id")
+        .notNull()
+        .references(() => books.id),
+    book_name: integer("book_name")
+        .notNull()
+        .references(() => books.name),
+});
+>>>>>>> 5a16024dbc319e3e120c8d0c92da3b9c93d2f9c5
 
 export const insertCopySchema = createInsertSchema(copy, {
-    state: (schema) => 
+    state: (schema) =>
         schema.state
             .min(2, { message: "Must be 2 or more characters." })
             .max(50, { message: "Must be 50 maximum." })
             .regex(/^[a-zA-Z ]+$/, { message: "Must be only letters." }),
 
     is_reserved: (schema) => schema.is_reserved,
-    copy_number: (schema) => schema.copy_number
-            .max(50, { message: "Must be 3 maximum." }),
+    copy_number: (schema) =>
+        schema.copy_number.max(50, { message: "Must be 3 maximum." }),
     book_id: (schema) => schema.book_id,
 });
 
@@ -35,4 +45,9 @@ export const updateCopySchema = createInsertSchema(copy, {
     is_reserved: (schema) => schema.is_reserved.optional(),
     copy_number: (schema) => schema.copy_number.optional(),
     book_id: (schema) => schema.book_id.optional(),
+<<<<<<< HEAD
 })
+=======
+    book_name: (schema) => schema.book_name.optional(),
+});
+>>>>>>> 5a16024dbc319e3e120c8d0c92da3b9c93d2f9c5

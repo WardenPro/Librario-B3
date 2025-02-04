@@ -9,11 +9,10 @@ export const books = pgTable("books", {
     category: text("category").notNull(),
     publisher: text("publisher").notNull(),
     author: text("author").notNull(),
-    quantity: integer("quantity").notNull(),    
-    publish_date: timestamp("publish_date", { withTimezone: true })
-        .notNull(),
+    quantity: integer("quantity").notNull(),
+    publish_date: timestamp("publish_date", { withTimezone: true }).notNull(),
     image_link: text("image_link"),
-})
+});
 
 export const insertBookSchema = createInsertSchema(books, {
     name: (schema) => schema.name,

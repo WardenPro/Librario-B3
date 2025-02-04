@@ -23,9 +23,9 @@ export const review = pgTable("review", {
 
 export const insertReviewSchema = createInsertSchema(review, {
     description: (schema) =>
-        schema.description.max(50, { message: "Must be 50 maximum." }),
-    note: (schema) => schema.note.min(0, { message: "Minimal note is 0" }).max(5, { message: "Maximal note is 5" }),
-    condition: (schema) => schema.condition.min(0, { message: "Minimal condition is 0" }).max(5, { message: "Maximal condition is 5" }),
+        schema.description.max(2000, { message: "The description must be 2000 maximum." }),
+    note: (schema) => schema.note.min(0, { message: "The minimum note is 0." }).max(5, { message: "The maximum note is 5." }),
+    condition: (schema) => schema.condition.min(0, { message: "The minimum note is 0." }).max(5, { message: "The maximum note is 5." }),
     book_id: (schema) => schema.book_id,
     user_id: (schema) => schema.user_id,
 });
@@ -42,10 +42,10 @@ export const selectReviewSchema = createSelectSchema(review, {
 export const updateReviewSchema = createInsertSchema(review, {
     description: (schema) =>
         schema.description
-            .max(250, { message: "Must be 250 maximum." })
+            .max(2000, { message: "The description must be 2000 maximum." })
             .optional(),
-    note: (schema) => schema.note.min(0, { message: "Minimal note is 0" }).max(5, { message: "Maximal note is 5" }),
-    condition: (schema) => schema.condition.min(0, { message: "Minimal condition is 0" }).max(5, { message: "Maximal condition is 5" }),
+    note: (schema) => schema.note.min(0, { message: "The minimum note is 0" }).max(5, { message: "The maximum note is 5" }),
+    condition: (schema) => schema.condition.min(0, { message: "The minimum note is 0." }).max(5, { message: "The maximum note is 5." }),
     book_id: (schema) => schema.book_id.optional(),
     user_id: (schema) => schema.user_id.optional(),
 });

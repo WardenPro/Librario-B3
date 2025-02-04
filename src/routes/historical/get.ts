@@ -1,7 +1,7 @@
 import { app } from "../../app/index";
 import { db } from "../../app/config/database";
 import { sql } from "drizzle-orm";
-import { historical, selectHistoricalSchema, insertHistoricalSchema, updateHistoricalSchema } from "../../db/schema/historical";
+import { historical, selectHistoricalSchema } from "../../db/schema/historical";
 import { checkTokenMiddleware } from "../../app/middlewares/verify_jwt";
 
 app.get("/historical", checkTokenMiddleware, async (req, res) => {

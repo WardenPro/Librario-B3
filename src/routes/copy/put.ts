@@ -1,7 +1,7 @@
 import { app } from "../../app/index";
 import { db } from "../../app/config/database";
 import { sql } from "drizzle-orm";
-import { copy, selectCopySchema, insertCopySchema, updateCopySchema } from "../../db/schema/copy";
+import { copy, updateCopySchema } from "../../db/schema/copy";
 import { checkTokenMiddleware } from "../../app/middlewares/verify_jwt";
 
 app.put("/copy/:id", checkTokenMiddleware, async (req, res) => {

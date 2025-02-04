@@ -1,16 +1,34 @@
-import fetch from "node-fetch";
 import { app } from "../../app/index";
 import { db } from "../../app/config/database";
 import { books } from "../../db/schema/book";
 import { eq } from "drizzle-orm";
 import { checkTokenMiddleware } from "../../app/middlewares/verify_jwt";
 import { checkRoleMiddleware } from "../../app/middlewares/verify_roles";
-
-const GOOGLE_BOOKS_API_URL = "https://www.googleapis.com/books/v1/volumes";
+import ISBN from "node-isbn";
 
 app.post("/books/import", checkTokenMiddleware, checkRoleMiddleware, async (req, res) => {
     try {
         const { isbn } = req.body;
+
+        if (!isbn) {
+            res.status(400).json({ message: "ISBN is required." });
+            return;
+        }
+        const isbnRegex = /^(?:\d{9}[xX]|\d{10}|\d{13})$/;
+        if (!isbnRegex.test(isbn)) {
+            res.status(400).json({ message: "Invalid ISBN format." });
+            return;
+        }
+        
+        //utiliser https://www.npmjs.com/package/node-isbn
+        // ISBN.provider(["google"])
+        //     .resolve(isbn)
+        //     .then(function (book) {
+        //         console.log("Book found %j", book);
+        //     })
+        //     .catch(function (err) {
+        //         console.log("Book not found", err);
+        //     });
 
         const googleResponse = await fetch(`${GOOGLE_BOOKS_API_URL}?q=isbn:${isbn}`);
         const googleData = (await googleResponse.json()) as {

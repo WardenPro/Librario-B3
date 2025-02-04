@@ -5,31 +5,31 @@ import { books } from "./book";
 
 export const historical = pgTable("historical", {
     id: serial().primaryKey().notNull(),
-    date_read: timestamp("date_read", { withTimezone: true })
+    date_read: timestamp("date_read")
         .defaultNow()
         .notNull(),
-    books_id: integer("books_id")
+    book_id: integer("book_id")
         .notNull()
-        .references(() => books.id),
-    users_id: integer("user_id")
+        .references(() => books.id, {onDelete: "cascade" }),
+    user_id: integer("user_id")
         .notNull()
-        .references(() => users.id),
+        .references(() => users.id, {onDelete: "cascade" }),
 });
 
 export const insertHistoricalSchema = createInsertSchema(historical, {
     date_read: (schema) => schema.date_read,
-    books_id: (schema) => schema.books_id,
-    users_id: (schema) => schema.users_id,
+    book_id: (schema) => schema.book_id,
+    user_id: (schema) => schema.user_id,
 });
 
 export const selectHistoricalSchema = createSelectSchema(historical, {
     date_read: (schema) => schema.date_read,
-    books_id: (schema) => schema.books_id,
-    users_id: (schema) => schema.users_id,
+    book_id: (schema) => schema.book_id,
+    user_id: (schema) => schema.user_id,
 });
 
 export const updateHistoricalSchema = createInsertSchema(historical, {
     date_read: (schema) => schema.date_read,
-    books_id: (schema) => schema.books_id.optional(),
-    users_id: (schema) => schema.users_id.optional(),
+    book_id: (schema) => schema.book_id.optional(),
+    user_id: (schema) => schema.user_id.optional(),
 });

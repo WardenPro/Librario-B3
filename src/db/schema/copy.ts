@@ -9,7 +9,7 @@ export const copy = pgTable("copy", {
     copy_number: integer("copy_number").notNull(),
     book_id: integer("book_id")
         .notNull()
-        .references(() => books.id),
+        .references(() => books.id, {onDelete: "cascade" }),
 });
 
 export const insertCopySchema = createInsertSchema(copy, {
@@ -21,7 +21,7 @@ export const insertCopySchema = createInsertSchema(copy, {
 
     is_reserved: (schema) => schema.is_reserved,
     copy_number: (schema) =>
-        schema.copy_number.max(50, { message: "Must be 3 maximum." }),
+        schema.copy_number.max(50, { message: "Must be 50 maximum." }),
     book_id: (schema) => schema.book_id,
 });
 

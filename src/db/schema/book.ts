@@ -17,7 +17,7 @@ export const books = pgTable("books", {
     publisher: text("publisher").notNull(),
     author: text("author").notNull(),
     quantity: integer("quantity").notNull(),
-    publish_date: timestamp("publish_date", { withTimezone: true }).notNull(),
+    publish_date: timestamp("publish_date").defaultNow().notNull(),
     image_link: text("image_link"),
     is_removed: boolean("is_removed").notNull().default(false),
 });

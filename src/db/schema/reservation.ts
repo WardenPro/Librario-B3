@@ -5,16 +5,16 @@ import { copy } from "./copy";
 
 export const reservation = pgTable("reservation", {
     id: serial().primaryKey().notNull(),
-    reservation_date: timestamp("reservation_date", { withTimezone: true })
+    reservation_date: timestamp("reservation_date")
         .defaultNow()
         .notNull(),
-    final_date: timestamp("final_date", { withTimezone: true }).notNull(),
+    final_date: timestamp("final_date").notNull(),
     user_id: integer("user_id")
         .notNull()
-        .references(() => users.id),
+        .references(() => users.id, {onDelete: "cascade" }),
     copy_id: integer("copy_id")
         .notNull()
-        .references(() => copy.id),
+        .references(() => copy.id, {onDelete: "cascade" }),
 });
 
 export const insertReservationSchema = createInsertSchema(reservation, {

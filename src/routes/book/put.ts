@@ -9,6 +9,7 @@ import {
     updateBookSchema,
 } from "../../db/schema/book";
 import { checkTokenMiddleware } from "../../app/middlewares/verify_jwt";
+import { checkRoleMiddleware } from "../../app/middlewares/verify_roles";
 
 export async function updateBookQuantity(
     id: number,
@@ -83,13 +84,10 @@ app.put("/books/:id", checkTokenMiddleware, async (req, res) => {
     }
 });
 
-app.put("/books/archiving/:id", checkTokenMiddleware, async (req, res) => {
+app.put("/books/archiving/:id", checkTokenMiddleware, checkRoleMiddleware, async (req, res) => {
     try {
         const bookId = parseInt(req.params.id, 10);
 
-        if (isNaN(bookId)) {
-            return res.status(400).json({ message: "Invalid book ID." });
-        }
         const Book = await db
             .select()
             .from(books)

@@ -37,17 +37,14 @@ app.post(
             const [result] = await db
                 .insert(users)
                 .values(validatedInsert)
-                .returning({id: users.id})
+                .returning({ id: users.id })
                 .execute();
 
             if (!result) {
                 throw new Error("Insertion échouée, aucun ID retourné.");
             }
 
-            const token = await generateToken(
-                result.id,
-                validatedInsert.roles,
-            );
+            const token = await generateToken(result.id, validatedInsert.roles);
 
             res.status(201).json({
                 message: "Utilisateur inséré avec succès",

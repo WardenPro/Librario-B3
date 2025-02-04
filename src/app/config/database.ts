@@ -24,10 +24,10 @@ export async function startDatabase() {
     }
 
     if (NODE_ENV === "production")
-        await new Promise(resolve => setTimeout(resolve, 15000));
-    
+        await new Promise((resolve) => setTimeout(resolve, 15000));
+
     db = drizzle(DATABASE_URL);
-    
+
     try {
         await db.execute("select 1");
         logMessage("Connected to the database.");

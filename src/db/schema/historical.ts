@@ -6,12 +6,18 @@ import { books } from "./book";
 export const historical = pgTable("historical", {
     id: serial().primaryKey().notNull(),
     date_read: timestamp("date_read", { withTimezone: true })
-    .defaultNow()
-    .notNull(),
-    books_id: integer("books_id").notNull().references(() => books.id),
-    books_name: integer("books_name").notNull().references(() => books.name),
-    users_id: integer("user_id").notNull().references(() => users.id),
-})
+        .defaultNow()
+        .notNull(),
+    books_id: integer("books_id")
+        .notNull()
+        .references(() => books.id),
+    books_name: integer("books_name")
+        .notNull()
+        .references(() => books.name),
+    users_id: integer("user_id")
+        .notNull()
+        .references(() => users.id),
+});
 
 export const insertHistoricalSchema = createInsertSchema(historical, {
     date_read: (schema) => schema.date_read,
@@ -32,4 +38,4 @@ export const updateHistoricalSchema = createInsertSchema(historical, {
     books_id: (schema) => schema.books_id.optional(),
     books_name: (schema) => schema.books_name.optional(),
     users_id: (schema) => schema.users_id.optional(),
-})
+});

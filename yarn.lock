@@ -2099,6 +2099,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"jsbarcode@npm:^3.11.6":
+  version: 3.11.6
+  resolution: "jsbarcode@npm:3.11.6"
+  checksum: 10c0/5603ddaa7f0a65b710af95e29105400d99e4c67655899399ac46965eeb7fef83a8e9378eee4eb27f778fd563917015953261c0f271592f2c705fcc2751754e4d
+  languageName: node
+  linkType: hard
+
 "json-buffer@npm:3.0.1":
   version: 3.0.1
   resolution: "json-buffer@npm:3.0.1"
@@ -2317,6 +2324,7 @@ __metadata:
     hash-wasm: "npm:^4.12.0"
     helmet: "npm:^8.0.0"
     jose: "npm:^5.9.6"
+    jsbarcode: "npm:^3.11.6"
     pg: "npm:^8.13.1"
     prettier: "npm:3.3.3"
     swagger-jsdoc: "npm:^6.2.8"

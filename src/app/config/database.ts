@@ -3,6 +3,7 @@ import { drizzle } from "drizzle-orm/node-postgres";
 import { logMessage, errorMessage } from "../services/log";
 import dotenv from "dotenv";
 import "dotenv/config";
+import { NODE_ENV } from "..";
 
 export let db: ReturnType<typeof drizzle>;
 
@@ -22,10 +23,11 @@ export async function startDatabase() {
         );
     }
 
-    setTimeout(() => {
-        db = drizzle(DATABASE_URL);
-    }, 15000);
-
+    if (NODE_ENV === "production")
+        await new Promise(resolve => setTimeout(resolve, 15000));
+    
+    db = drizzle(DATABASE_URL);
+    
     try {
         await db.execute("select 1");
         logMessage("Connected to the database.");
@@ -33,6 +35,6 @@ export async function startDatabase() {
         errorMessage("Error connecting to database:", error);
         throw error;
     }
-
-    await migrate(db, { migrationsFolder: "drizzle" });
+    if (NODE_ENV === "production")
+        await migrate(db, { migrationsFolder: "drizzle" });
 }

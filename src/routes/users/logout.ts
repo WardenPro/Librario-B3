@@ -1,10 +1,10 @@
-import { app } from "@/app/index";
-import { db } from "@/app/config/database";
-import { users } from "@/db/schema/users";
-import { extractBearerToken } from "@/app/middlewares/verify_jwt";
+import { app } from "../../app/index";
+import { db } from "../../app/config/database";
+import { users } from "../../db/schema/users";
+import { extractBearerToken } from "../../app/middlewares/verify_jwt";
 import { eq } from "drizzle-orm";
 import { jwtVerify } from "jose";
-import keys from "@/app/middlewares/key";
+import keys from "../../app/middlewares/key";
 
 app.post("/logout", async (req: any, res: any) => {
     try {

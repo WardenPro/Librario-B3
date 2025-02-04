@@ -1,9 +1,9 @@
-import { app } from "@/app/index";
-import { db } from "@/app/config/database";
-import { users, updateUserSchema } from "@/db/schema/users";
+import { app } from "../../app/index";
+import { db } from "../../app/config/database";
+import { users, updateUserSchema } from "../../db/schema/users";
 import { eq } from "drizzle-orm";
 import { ZodError } from "zod";
-import { checkTokenMiddleware } from "@/app/middlewares/verify_jwt";
+import { checkTokenMiddleware } from "../../app/middlewares/verify_jwt";
 
 export async function updateUser(id: number, data: any) {
     const validatedData = updateUserSchema.parse(data);

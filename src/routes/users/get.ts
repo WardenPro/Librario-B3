@@ -1,8 +1,8 @@
-import { app } from "@/app/index";
-import { db } from "@/app/config/database";
+import { app } from "../../app/index";
+import { db } from "../../app/config/database";
 import { sql } from "drizzle-orm";
-import { users, selectUserSchema } from "@/db/schema/users";
-import { checkTokenMiddleware } from "@/app/middlewares/verify_jwt";
+import { users, selectUserSchema } from "../../db/schema/users";
+import { checkTokenMiddleware } from "../../app/middlewares/verify_jwt";
 
 app.get("/users", checkTokenMiddleware, async (req, res) => {
     try {

@@ -1,6 +1,5 @@
 import { app } from "../../app/index";
 import { db } from "../../app/config/database";
-import { sql } from "drizzle-orm";
 import { reservation, insertReservationSchema } from "../../db/schema/reservation";
 import { checkTokenMiddleware } from "../../app/middlewares/verify_jwt";
 

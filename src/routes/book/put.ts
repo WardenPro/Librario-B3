@@ -1,11 +1,9 @@
 import { app } from "../../app/index";
 import { db } from "../../app/config/database";
 import { eq } from "drizzle-orm";
-import { sql } from "drizzle-orm";
 import { ZodError } from "zod";
 import {
     books,
-    SelectBookSchema,
     updateBookSchema,
 } from "../../db/schema/book";
 import { checkTokenMiddleware } from "../../app/middlewares/verify_jwt";

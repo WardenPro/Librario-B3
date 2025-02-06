@@ -8,11 +8,16 @@ app.put("/historical/:id", checkTokenMiddleware, async (req, res) => {
     try {
         const { id } = req.params;
         const validatedData = updateHistoricalSchema.parse(req.body);
-        const updatedHistorical = await db.update(historical).set(validatedData).where(sql`${historical.id} = ${id}`).returning();
+        const updatedHistorical = await db
+            .update(historical)
+            .set(validatedData)
+            .where(sql`${historical.id} = ${id}`)
+            .returning();
 
         if (updatedHistorical.length === 0) {
             res.status(404).json({
-                message: "Historique non trouvé ou aucune modification appliquée.",
+                message:
+                    "Historique non trouvé ou aucune modification appliquée.",
                 historical: `id: ${id}`,
             });
         } else {

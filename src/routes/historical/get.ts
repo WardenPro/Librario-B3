@@ -7,10 +7,15 @@ import { checkTokenMiddleware } from "../../app/middlewares/verify_jwt";
 app.get("/historical", checkTokenMiddleware, async (req, res) => {
     try {
         const allHistorical = await db.select().from(historical);
-        const validatedHistorical = allHistorical.map((h) => selectHistoricalSchema.parse(h));
+        const validatedHistorical = allHistorical.map((h) =>
+            selectHistoricalSchema.parse(h),
+        );
         res.status(200).json(validatedHistorical);
     } catch (error) {
-        console.error("Erreur lors de la récupération des historiques :", error);
+        console.error(
+            "Erreur lors de la récupération des historiques :",
+            error,
+        );
         res.status(500).json({
             message: "Erreur lors de la récupération des historiques.",
             error,
@@ -32,11 +37,16 @@ app.get("/historical/:id", checkTokenMiddleware, async (req, res) => {
                 historical: `id: ${id}`,
             });
         } else {
-            const validatedHistorical = foundHistorical.map((h) => selectHistoricalSchema.parse(h));
+            const validatedHistorical = foundHistorical.map((h) =>
+                selectHistoricalSchema.parse(h),
+            );
             res.status(200).json(validatedHistorical);
         }
     } catch (error) {
-        console.error("Erreur lors de la récupération de l'historique :", error);
+        console.error(
+            "Erreur lors de la récupération de l'historique :",
+            error,
+        );
         res.status(500).json({
             message: "Erreur lors de la récupération de l'historique.",
             error,

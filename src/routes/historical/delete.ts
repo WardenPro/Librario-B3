@@ -7,7 +7,10 @@ import { checkTokenMiddleware } from "../../app/middlewares/verify_jwt";
 app.delete("/historical/:id", checkTokenMiddleware, async (req, res) => {
     try {
         const { id } = req.params;
-        const deletedHistorical = await db.delete(historical).where(sql`${historical.id} = ${id}`).returning();
+        const deletedHistorical = await db
+            .delete(historical)
+            .where(sql`${historical.id} = ${id}`)
+            .returning();
 
         if (deletedHistorical.length === 0) {
             res.status(404).json({

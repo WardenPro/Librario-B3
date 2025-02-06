@@ -7,7 +7,10 @@ import { checkTokenMiddleware } from "../../app/middlewares/verify_jwt";
 app.delete("/copy/:id", checkTokenMiddleware, async (req, res) => {
     try {
         const { id } = req.params;
-        const deletedCopy = await db.delete(copy).where(sql`${copy.id} = ${id}`).returning();
+        const deletedCopy = await db
+            .delete(copy)
+            .where(sql`${copy.id} = ${id}`)
+            .returning();
 
         if (deletedCopy.length === 0) {
             res.status(404).json({

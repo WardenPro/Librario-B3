@@ -7,7 +7,10 @@ import { checkTokenMiddleware } from "../../app/middlewares/verify_jwt";
 app.post("/reviews", checkTokenMiddleware, async (req, res) => {
     try {
         const validatedData = insertReviewSchema.parse(req.body);
-        const newReview = await db.insert(review).values(validatedData).returning();
+        const newReview = await db
+            .insert(review)
+            .values(validatedData)
+            .returning();
         res.status(201).json({
             message: "Avis ajouté avec succès.",
             newReview,

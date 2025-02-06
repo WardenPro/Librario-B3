@@ -5,39 +5,48 @@ import { eq } from "drizzle-orm";
 import { checkRoleMiddleware } from "../../app/middlewares/verify_roles";
 import { checkTokenMiddleware } from "../../app/middlewares/verify_jwt";
 
-app.post("/logout/:id", checkTokenMiddleware, checkRoleMiddleware, async (req: any, res: any) => {
-    try {
-        const userId = parseInt(req.params.id, 10);
+app.post(
+    "/logout/:id",
+    checkTokenMiddleware,
+    checkRoleMiddleware,
+    async (req: any, res: any) => {
+        try {
+            const userId = parseInt(req.params.id, 10);
 
-        if (isNaN(userId)) {
-            return res.status(400).json({ message: "Invalid user ID" });
+            if (isNaN(userId)) {
+                return res.status(400).json({ message: "Invalid user ID" });
+            }
+
+            const user = await db
+                .select()
+                .from(users)
+                .where(eq(users.id, userId))
+                .limit(1);
+
+            if (!user || user.length === 0) {
+                return res.status(404).json({ message: "User not found" });
+            }
+
+            await db
+                .update(users)
+                .set({
+                    revocation_time_at: new Date(),
+                })
+                .where(eq(users.id, userId));
+
+            return res
+                .status(200)
+                .json({ message: "User forcibly logged out" });
+        } catch (error) {
+            console.error("Error during administrator logout:", error);
+            return res
+                .status(500)
+                .json({
+                    message: "Internal error during administrator logout",
+                });
         }
-
-        const user = await db
-            .select()
-            .from(users)
-            .where(eq(users.id, userId))
-            .limit(1);
-
-        if (!user || user.length === 0) {
-            return res.status(404).json({ message: "User not found" });
-        }
-
-        await db
-            .update(users)
-            .set({
-                revocation_time_at: new Date(),
-            })
-            .where(eq(users.id, userId));
-
-        return res.status(200).json({ message: "User forcibly logged out" });
-    } catch (error) {
-        console.error("Error during administrator logout:", error);
-        return res
-            .status(500)
-            .json({ message: "Internal error during administrator logout" });
-    }
-});
+    },
+);
 
 /**
  * @swagger

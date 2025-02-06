@@ -32,7 +32,9 @@ app.get("/copy/:id", checkTokenMiddleware, async (req, res) => {
                 copy: `id: ${id}`,
             });
         } else {
-            const validatedCopies = foundCopy.map((c) => selectCopySchema.parse(c));
+            const validatedCopies = foundCopy.map((c) =>
+                selectCopySchema.parse(c),
+            );
             res.status(200).json(validatedCopies);
         }
     } catch (error) {

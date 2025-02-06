@@ -7,7 +7,10 @@ import { checkTokenMiddleware } from "../../app/middlewares/verify_jwt";
 app.delete("/reviews/:id", checkTokenMiddleware, async (req, res) => {
     try {
         const { id } = req.params;
-        const deletedReview = await db.delete(review).where(sql`${review.id} = ${id}`).returning();
+        const deletedReview = await db
+            .delete(review)
+            .where(sql`${review.id} = ${id}`)
+            .returning();
 
         if (deletedReview.length === 0) {
             res.status(404).json({

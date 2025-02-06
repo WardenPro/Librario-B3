@@ -8,7 +8,11 @@ app.put("/copy/:id", checkTokenMiddleware, async (req, res) => {
     try {
         const { id } = req.params;
         const validatedData = updateCopySchema.parse(req.body);
-        const updatedCopy = await db.update(copy).set(validatedData).where(sql`${copy.id} = ${id}`).returning();
+        const updatedCopy = await db
+            .update(copy)
+            .set(validatedData)
+            .where(sql`${copy.id} = ${id}`)
+            .returning();
 
         if (updatedCopy.length === 0) {
             res.status(404).json({

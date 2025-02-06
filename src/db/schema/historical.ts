@@ -5,15 +5,13 @@ import { books } from "./book";
 
 export const historical = pgTable("historical", {
     id: serial().primaryKey().notNull(),
-    date_read: timestamp("date_read")
-        .defaultNow()
-        .notNull(),
+    date_read: timestamp("date_read").defaultNow().notNull(),
     book_id: integer("book_id")
         .notNull()
-        .references(() => books.id, {onDelete: "cascade" }),
+        .references(() => books.id, { onDelete: "cascade" }),
     user_id: integer("user_id")
         .notNull()
-        .references(() => users.id, {onDelete: "cascade" }),
+        .references(() => users.id, { onDelete: "cascade" }),
 });
 
 export const insertHistoricalSchema = createInsertSchema(historical, {

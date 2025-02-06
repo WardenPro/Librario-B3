@@ -7,7 +7,10 @@ import { checkTokenMiddleware } from "../../app/middlewares/verify_jwt";
 app.post("/historical", checkTokenMiddleware, async (req, res) => {
     try {
         const validatedData = insertHistoricalSchema.parse(req.body);
-        const newHistorical = await db.insert(historical).values(validatedData).returning();
+        const newHistorical = await db
+            .insert(historical)
+            .values(validatedData)
+            .returning();
         res.status(201).json({
             message: "Historique ajouté avec succès.",
             newHistorical,

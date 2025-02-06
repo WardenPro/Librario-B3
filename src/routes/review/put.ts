@@ -8,7 +8,11 @@ app.put("/reviews/:id", checkTokenMiddleware, async (req, res) => {
     try {
         const { id } = req.params;
         const validatedData = updateReviewSchema.parse(req.body);
-        const updatedReview = await db.update(review).set(validatedData).where(sql`${review.id} = ${id}`).returning();
+        const updatedReview = await db
+            .update(review)
+            .set(validatedData)
+            .where(sql`${review.id} = ${id}`)
+            .returning();
 
         if (updatedReview.length === 0) {
             res.status(404).json({

@@ -82,42 +82,46 @@ app.put("/books/:id", checkTokenMiddleware, async (req, res) => {
     }
 });
 
-app.put("/books/archiving/:id", checkTokenMiddleware, checkRoleMiddleware, async (req, res) => {
-    try {
-        const bookId = parseInt(req.params.id, 10);
+app.put(
+    "/books/archiving/:id",
+    checkTokenMiddleware,
+    checkRoleMiddleware,
+    async (req, res) => {
+        try {
+            const bookId = parseInt(req.params.id, 10);
 
-        const Book = await db
-            .select()
-            .from(books)
-            .where(eq(books.id, bookId))
-            .execute();
+            const Book = await db
+                .select()
+                .from(books)
+                .where(eq(books.id, bookId))
+                .execute();
 
-        if (Book.length === 0) {
-            res.status(404).json({
-                message: "Book not found.",
-                books: `id: ${bookId}`,
+            if (Book.length === 0) {
+                res.status(404).json({
+                    message: "Book not found.",
+                    books: `id: ${bookId}`,
+                });
+            }
+
+            await db
+                .update(books)
+                .set({ is_removed: true })
+                .where(eq(books.id, bookId))
+                .execute();
+
+            res.status(200).json({
+                message: "Book successfully archived.",
+                bookId: bookId,
+            });
+        } catch (error) {
+            console.error("Error while getting books :", error);
+            res.status(500).json({
+                message: "Error while getting books.",
+                error,
             });
         }
-
-        await db
-            .update(books)
-            .set({ is_removed: true })
-            .where(eq(books.id, bookId))
-            .execute();
-
-        res.status(200).json({
-            message: "Book successfully archived.",
-            bookId: bookId,
-        });
-        
-    } catch (error) {
-        console.error("Error while getting books :", error);
-        res.status(500).json({
-            message: "Error while getting books.",
-            error,
-        });
-    }
-});
+    },
+);
 
 /**
  * @swagger

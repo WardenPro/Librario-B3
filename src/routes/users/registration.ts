@@ -42,17 +42,17 @@ app.post(
                 .execute();
 
             if (!result) {
-                throw new Error("Insertion échouée, aucun ID retourné.");
+                throw new Error("Insertion failed, no ID returned.");
             }
 
             const token = await generateToken(result.id, validatedInsert.roles);
 
             res.status(201).json({
-                message: "Utilisateur inséré avec succès",
+                message: "User successfully inserted",
                 token: token,
             });
         } catch (error) {
-            console.error("Erreur lors de l'insertion de utilisateur :", error);
+            console.error("Error while inserting user:", error);
 
             if (
                 error instanceof Error &&
@@ -60,17 +60,18 @@ app.post(
                 error["code"] === "ER_DUP_ENTRY"
             ) {
                 res.status(400).json({
-                    message: "Cet email est déjà utilisé.",
+                    message: "This email is already in use.",
                 });
             } else {
                 res.status(500).json({
-                    message: "Erreur lors de l'insertion de utilisateur.",
+                    message: "Error while inserting user.",
                     error: error,
                 });
             }
         }
     },
 );
+
 
 /**
  * @swagger

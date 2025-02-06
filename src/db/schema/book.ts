@@ -49,8 +49,8 @@ export const insertBookSchema = createInsertSchema(books, {
 
 export const SelectBookSchema = createSelectSchema(books, {
     title: (schema) => schema.title,
-    ISBN_10: (schema) => schema.ISBN_10,
-    ISBN_13: (schema) => schema.ISBN_13,
+    ISBN_10: (schema) => schema.ISBN_10.nullable(),
+    ISBN_13: (schema) => schema.ISBN_13.nullable(),
     description: (schema) => schema.description,
     printType: (schema) => schema.printType,
     category: (schema) => schema.category,

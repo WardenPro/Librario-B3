@@ -12,8 +12,10 @@ const extractBearerToken = (headerValue: string) => {
 export async function checkRoleMiddleware(req: any, res: any, next: any) {
     try {
         if (NODE_ENV === "development") {
-             console.log("🚀 [INFO] Mode développement actif : Ignorer la vérification du rôle"); 
-             return next();
+            console.log(
+                "🚀 [INFO] Mode développement actif : Ignorer la vérification du rôle",
+            );
+            return next();
         }
         const token =
             req.headers.auth_token &&
@@ -37,7 +39,9 @@ export async function checkRoleMiddleware(req: any, res: any, next: any) {
 
         console.log("Rôle de l'utilisateur :", payload.role);
         req.user = payload;
-        console.log("🚀 [INFO] Mode production aczergtretbvertbeyherthtif : vérificrtation du rôle");
+        console.log(
+            "🚀 [INFO] Mode production aczergtretbvertbeyherthtif : vérificrtation du rôle",
+        );
         next();
     } catch (error) {
         console.error("Erreur lors de la vérification du JWT :", error);

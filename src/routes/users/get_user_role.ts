@@ -21,17 +21,12 @@ app.get("/roles/:id", checkTokenMiddleware, async (req, res) => {
             res.status(200).json(userRoles[0]);
         }
     } catch (error) {
-        console.error(
-            "Error while retrieving user roles:",
-            error,
-        );
+        console.error("Error while retrieving user roles:", error);
         res.status(500).json({
-            message:
-                "Error while retrieving user roles.",
+            message: "Error while retrieving user roles.",
         });
     }
 });
-
 
 /**
  * @swagger

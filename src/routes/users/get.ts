@@ -12,10 +12,7 @@ app.get("/users", checkTokenMiddleware, async (req, res) => {
         });
         res.status(200).json(validatedUsers);
     } catch (error) {
-        console.error(
-            "Error while retrieving users:",
-            error,
-        );
+        console.error("Error while retrieving users:", error);
         res.status(500).json({
             message: "Error while retrieving users.",
             error,
@@ -42,17 +39,13 @@ app.get("/users/:id", checkTokenMiddleware, async (req, res) => {
             res.status(200).json(validatedUsers);
         }
     } catch (error) {
-        console.error(
-            "Error while retrieving the user:",
-            error,
-        );
+        console.error("Error while retrieving the user:", error);
         res.status(500).json({
             message: "Error while retrieving the user.",
             error,
         });
     }
 });
-
 
 /**
  * @swagger

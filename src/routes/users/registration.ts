@@ -72,7 +72,6 @@ app.post(
     },
 );
 
-
 /**
  * @swagger
  * /registration:

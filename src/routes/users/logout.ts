@@ -39,11 +39,9 @@ app.post(
                 .json({ message: "User forcibly logged out" });
         } catch (error) {
             console.error("Error during administrator logout:", error);
-            return res
-                .status(500)
-                .json({
-                    message: "Internal error during administrator logout",
-                });
+            return res.status(500).json({
+                message: "Internal error during administrator logout",
+            });
         }
     },
 );

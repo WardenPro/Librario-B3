@@ -19,8 +19,7 @@ app.put("/reservations/:id", checkTokenMiddleware, async (req, res) => {
 
         if (updatedReservation.length === 0) {
             res.status(404).json({
-                message:
-                    "Reservation not found or no changes applied.",
+                message: "Reservation not found or no changes applied.",
                 reservation: `id: ${id}`,
             });
         } else {
@@ -30,10 +29,7 @@ app.put("/reservations/:id", checkTokenMiddleware, async (req, res) => {
             });
         }
     } catch (error) {
-        console.error(
-            "Error while updating the reservation:",
-            error,
-        );
+        console.error("Error while updating the reservation:", error);
         res.status(500).json({
             message: "Error while updating the reservation.",
             error,

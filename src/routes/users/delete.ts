@@ -21,10 +21,7 @@ app.delete("/users/:id", checkTokenMiddleware, async (req, res) => {
                 await db.delete(users).where(sql`${users.id} = ${id}`);
                 res.status(200).json("User deleted");
             } catch (error) {
-                console.error(
-                    "Error while deleting the user.",
-                    error,
-                );
+                console.error("Error while deleting the user.", error);
                 res.status(500).json({
                     message: "Error while deleting the user.",
                     error,

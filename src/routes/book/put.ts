@@ -2,10 +2,7 @@ import { app } from "../../app/index";
 import { db } from "../../app/config/database";
 import { eq } from "drizzle-orm";
 import { ZodError } from "zod";
-import {
-    books,
-    updateBookSchema,
-} from "../../db/schema/book";
+import { books, updateBookSchema } from "../../db/schema/book";
 import { checkTokenMiddleware } from "../../app/middlewares/verify_jwt";
 import { checkRoleMiddleware } from "../../app/middlewares/verify_roles";
 

@@ -34,10 +34,7 @@ app.delete(
                 }
             }
         } catch (error) {
-            console.error(
-                "Error while deleting the book.",
-                error,
-            );
+            console.error("Error while deleting the book.", error);
             res.status(500).json({
                 message: "Error while deleting the book.",
                 error,

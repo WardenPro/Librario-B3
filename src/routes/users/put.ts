@@ -60,10 +60,7 @@ app.put("/users/:id", checkTokenMiddleware, async (req, res) => {
                 })),
             });
         }
-        if (
-            error instanceof Error &&
-            error.message === "User not found"
-        ) {
+        if (error instanceof Error && error.message === "User not found") {
             res.status(404).json({ message: "User not found." });
         } else {
             console.error(error);
@@ -73,7 +70,6 @@ app.put("/users/:id", checkTokenMiddleware, async (req, res) => {
         }
     }
 });
-
 
 /**
  * @swagger

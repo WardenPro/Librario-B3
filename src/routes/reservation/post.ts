@@ -1,6 +1,9 @@
 import { app } from "../../app/index";
 import { db } from "../../app/config/database";
-import { reservation, insertReservationSchema } from "../../db/schema/reservation";
+import {
+    reservation,
+    insertReservationSchema,
+} from "../../db/schema/reservation";
 import { checkTokenMiddleware } from "../../app/middlewares/verify_jwt";
 
 app.post("/reservations", checkTokenMiddleware, async (req, res) => {

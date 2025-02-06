@@ -39,7 +39,6 @@ app.post("/login", async (req, res) => {
     }
 });
 
-
 /**
  * @swagger
  * /login:

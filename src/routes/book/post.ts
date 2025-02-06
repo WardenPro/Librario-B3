@@ -6,14 +6,7 @@ import { checkTokenMiddleware } from "../../app/middlewares/verify_jwt";
 import { checkRoleMiddleware } from "../../app/middlewares/verify_roles";
 import ISBN from "node-isbn";
 
-ISBN.provider(["google"])
-    .resolve("0735619670")
-    .then(function (book) {
-        console.log("Book found %j", book);
-    })
-    .catch(function (err) {
-        console.log("Book not found", err);
-    });
+ISBN.provider(["google"]);
 
 app.post(
     "/books/import",

@@ -2,10 +2,16 @@ import { app } from "../../app/index";
 import { db } from "../../app/config/database";
 import { books } from "../../db/schema/book";
 import { copy } from "../../db/schema/copy";
-import { and, eq } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { checkTokenMiddleware } from "../../app/middlewares/verify_jwt";
 import ISBN from "node-isbn";
 import { checkRoleMiddleware } from "../../app/middlewares/verify_roles";
+import { or } from "drizzle-orm/expressions";
+
+interface IndustryIdentifier {
+    type: string;
+    identifier: string;
+}
 
 ISBN.provider(["google"]);
 
@@ -44,26 +50,40 @@ app.post(
                 return;
             }
 
+            const industryIdentifiers = bookInfo.industryIdentifiers as unknown as IndustryIdentifier[];
+
+            console.log("📌 [INFO] Book information industryIdentifiers:", bookInfo.industryIdentifiers);
             const newBook = {
-                name: bookInfo.title || "Unknown",
+                title: bookInfo.title || "Unknown",
                 description: bookInfo.description || "No description available",
-                type: "book",
-                category: "Unknown",
+                printType: bookInfo.printType || "Unknown",
+                category: bookInfo.categories ? bookInfo.categories.join(", ") : "Unknown",
                 publisher: bookInfo.publisher || "Unknown",
                 author: bookInfo.authors ? bookInfo.authors.join(", ") : "Unknown",
                 quantity: numberOfCopies,
-                publish_date: bookInfo.publishedDate
-                    ? new Date(bookInfo.publishedDate)
-                    : new Date(),
-                isbn: parseInt(isbn, 10),
+                publish_date: bookInfo.publishedDate ? new Date(bookInfo.publishedDate) : new Date(),
+                ISBN_10: industryIdentifiers.find((i) => i.type === "ISBN_10")?.identifier || null,
+                ISBN_13: industryIdentifiers.find((i) => i.type === "ISBN_13")?.identifier || null,
                 image_link: bookInfo.imageLinks?.thumbnail || null,
                 is_removed: false,
             };
 
-            const existingIsbnBook = await db
-                .select()
-                .from(books)
-                .where(eq(books.isbn, newBook.isbn));
+            let existingIsbnBook;
+            if (newBook.ISBN_10 != null) {
+                existingIsbnBook = await db
+                    .select()
+                    .from(books)
+                    .where(eq(books.ISBN_10, newBook.ISBN_10));
+            } else if (newBook.ISBN_13 != null) {
+                existingIsbnBook = await db
+                    .select()
+                    .from(books)
+                    .where(eq(books.ISBN_13, newBook.ISBN_13));
+            } else {
+                console.log("❌ [ERROR] No ISBN found in the book information.");
+                res.status(404).json({ message: "No ISBN found in the book information." });
+                return;
+            }
 
             if (existingIsbnBook.length > 0) {
                 console.log("❌ [ERROR] A book with this ISBN already exists in the database.");
@@ -73,33 +93,24 @@ app.post(
                 return;
             }
 
-            const existingSimilarBook = await db
-                .select()
-                .from(books)
-                .where(
-                    and(
-                        eq(books.name, newBook.name),
-                        eq(books.author, newBook.author),
-                        eq(books.publisher, newBook.publisher),
-                    )
-                );
-
-            if (existingSimilarBook.length > 0) {
-                console.log("❌ [ERROR] A book with the same title, author, and publisher already exists in the database.");
-                res.status(409).json({
-                    message: "A book with the same title, author, and publisher already exists in the database.",
-                });
-                return;
-            }
-
             console.log("📝 [INFO] Adding book in database ...");
             await db.insert(books).values(newBook);
             console.log("✅ [INFO] Book added successfully.");
 
+            const conditions = [];
+
+            if (newBook.ISBN_10) {
+              conditions.push(eq(books.ISBN_10, newBook.ISBN_10));
+            }
+            
+            if (newBook.ISBN_13) {
+              conditions.push(eq(books.ISBN_13, newBook.ISBN_13));
+            }
+            
             const [inserted] = await db
-                .select()
-                .from(books)
-                .where(eq(books.isbn, newBook.isbn));
+              .select()
+              .from(books)
+              .where(or(...conditions));
 
             if (!inserted) {
                 res.status(500).json({

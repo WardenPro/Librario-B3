@@ -5,15 +5,18 @@ import {
     timestamp,
     integer,
     boolean,
+    check,
 } from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
 import { createInsertSchema, createSelectSchema } from "drizzle-zod";
 
 export const books = pgTable("books", {
     id: serial().primaryKey().notNull(),
-    isbn: integer("isbn").notNull(),
-    name: text("name").notNull(),
+    ISBN_10: integer("ISBN_10").notNull(),
+    ISBN_13: integer("ISBN_13").notNull(),
+    title: text("title").notNull(),
     description: text("description").notNull(),
-    type: text("type").notNull(),
+    printType: text("type").notNull(),
     category: text("category").notNull(),
     publisher: text("publisher").notNull(),
     author: text("author").notNull(),
@@ -21,12 +24,14 @@ export const books = pgTable("books", {
     publish_date: timestamp("publish_date").defaultNow().notNull(),
     image_link: text("image_link"),
     is_removed: boolean("is_removed").notNull().default(false),
-});
+}, (table) => ({
+    checkConstraint: check("isbn_check", sql`${table.ISBN_10} IS NOT NULL OR ${table.ISBN_13} IS NOT NULL`)
+}));
 
 export const insertBookSchema = createInsertSchema(books, {
-    name: (schema) => schema.name,
+    title: (schema) => schema.title,
     description: (schema) => schema.description,
-    type: (schema) => schema.type,
+    printType: (schema) => schema.printType,
     category: (schema) => schema.category,
     publisher: (schema) => schema.publisher,
     author: (schema) => schema.author,
@@ -36,9 +41,11 @@ export const insertBookSchema = createInsertSchema(books, {
 });
 
 export const SelectBookSchema = createSelectSchema(books, {
-    name: (schema) => schema.name,
+    title: (schema) => schema.title,
+    ISBN_10: (schema) => schema.ISBN_10,
+    ISBN_13: (schema) => schema.ISBN_13,
     description: (schema) => schema.description,
-    type: (schema) => schema.type,
+    printType: (schema) => schema.printType,
     category: (schema) => schema.category,
     publisher: (schema) => schema.publisher,
     author: (schema) => schema.author,

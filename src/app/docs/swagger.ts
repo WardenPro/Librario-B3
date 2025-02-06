@@ -25,5 +25,5 @@ export const swaggerSpec = swaggerJsdoc({
             },
         ],
     },
-    apis: ["./src/**/*.ts"],
+    apis: ["./src/routes/*.ts"],
 });

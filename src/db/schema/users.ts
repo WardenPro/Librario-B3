@@ -30,7 +30,8 @@ export const insertUserSchema = createInsertSchema(users, {
         schema.password
             .min(8)
             .max(255)
-            .regex(/^[a-zA-Z0-9]+$/),
+            .regex(/^[a-zA-Z0-9!@#$%^&*]+$/),
+            
     roles: (schema) => schema.roles,
 });
 

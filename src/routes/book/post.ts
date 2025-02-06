@@ -3,7 +3,6 @@ import { db } from "../../app/config/database";
 import { books } from "../../db/schema/book";
 import { eq } from "drizzle-orm";
 import { checkTokenMiddleware } from "../../app/middlewares/verify_jwt";
-import { checkRoleMiddleware } from "../../app/middlewares/verify_roles";
 import ISBN from "node-isbn";
 
 ISBN.provider(["google"]);
@@ -11,13 +10,12 @@ ISBN.provider(["google"]);
 app.post(
     "/books/import",
     checkTokenMiddleware,
-    
     async (req, res) => {
         try {
             console.log("📌 [INFO] Requête reçue sur /books/import");
             console.log("📌 [INFO] Corps de la requête:", req.body);
 
-            const { isbn } = req.body;
+            const { isbn, quantity } = req.body;
 
             if (!isbn) {
                 console.log("❌ [ERROR] ISBN manquant dans la requête.");
@@ -32,6 +30,12 @@ app.post(
                 console.log("❌ [ERROR] Format ISBN invalide.");
                 res.status(400).json({ message: "Invalid ISBN format." });
                 return;
+            }
+
+            // Vérification et définition d'une quantité valide
+            const parsedQuantity = parseInt(quantity, 10);
+            if (isNaN(parsedQuantity) || parsedQuantity < 1) {
+                console.log("⚠️ [WARNING] Quantité invalide, valeur par défaut 1 appliquée.");
             }
 
             try {
@@ -55,7 +59,7 @@ app.post(
                     author: bookInfo.authors
                         ? bookInfo.authors.join(", ")
                         : "Unknown",
-                    quantity: 1,
+                    quantity: parsedQuantity > 0 ? parsedQuantity : 1, // Utilisation de la quantité choisie
                     publish_date: bookInfo.publishedDate
                         ? new Date(bookInfo.publishedDate)
                         : new Date(),

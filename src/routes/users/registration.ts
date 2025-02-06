@@ -12,7 +12,8 @@ app.post(
     async (req, res) => {
         try {
             const sanitizedBody = {
-                name: req.body.name,
+                last_name: req.body.last_name,
+                first_name: req.body.first_name,
                 password: req.body.password,
                 email: req.body.email,
                 comment: xss(req.body.comment),

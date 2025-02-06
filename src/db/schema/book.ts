@@ -12,8 +12,8 @@ import { createInsertSchema, createSelectSchema } from "drizzle-zod";
 
 export const books = pgTable("books", {
     id: serial().primaryKey().notNull(),
-    ISBN_10: integer("ISBN_10").notNull(),
-    ISBN_13: integer("ISBN_13").notNull(),
+    ISBN_10: text("ISBN_10"),
+    ISBN_13: text("ISBN_13"),
     title: text("title").notNull(),
     description: text("description").notNull(),
     printType: text("type").notNull(),

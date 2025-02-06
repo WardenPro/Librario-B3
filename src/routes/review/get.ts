@@ -12,9 +12,9 @@ app.get("/reviews", checkTokenMiddleware, async (req, res) => {
         );
         res.status(200).json(validatedReviews);
     } catch (error) {
-        console.error("Erreur lors de la récupération des avis :", error);
+        console.error("Error while retrieving reviews:", error);
         res.status(500).json({
-            message: "Erreur lors de la récupération des avis.",
+            message: "Error while retrieving reviews.",
             error,
         });
     }
@@ -30,7 +30,7 @@ app.get("/reviews/:id", checkTokenMiddleware, async (req, res) => {
 
         if (foundReview.length === 0) {
             res.status(404).json({
-                message: "Avis non trouvé.",
+                message: "Review not found.",
                 review: `id: ${id}`,
             });
         } else {
@@ -40,9 +40,9 @@ app.get("/reviews/:id", checkTokenMiddleware, async (req, res) => {
             res.status(200).json(validatedReview);
         }
     } catch (error) {
-        console.error("Erreur lors de la récupération de l'avis :", error);
+        console.error("Error while retrieving the review:", error);
         res.status(500).json({
-            message: "Erreur lors de la récupération de l'avis.",
+            message: "Error while retrieving the review.",
             error,
         });
     }

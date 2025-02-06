@@ -29,7 +29,7 @@ app.get("/books/:id", checkTokenMiddleware, async (req, res) => {
             .where(sql`${books.id} = ${id}`);
         if (Book.length === 0) {
             res.status(404).json({
-                message: "Livre non trouvé.",
+                message: "Book not found.",
                 user: `id: ${id}`,
             });
         } else {
@@ -39,9 +39,9 @@ app.get("/books/:id", checkTokenMiddleware, async (req, res) => {
             res.status(200).json(validatedBooks);
         }
     } catch (error) {
-        console.error("Erreur lors de la récupération du livre :", error);
+        console.error("Error while getting book :", error);
         res.status(500).json({
-            message: "Erreur lors de la récupération du livre.",
+            message: "Error while getting book.",
             error,
         });
     }

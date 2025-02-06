@@ -16,7 +16,7 @@ app.post("/login", async (req, res) => {
             .execute();
 
         if (!user) {
-            res.status(404).json({ message: "Utilisateur introuvable" });
+            res.status(404).json({ message: "User not found" });
             return;
         }
 
@@ -26,18 +26,19 @@ app.post("/login", async (req, res) => {
         });
 
         if (!isPasswordValid) {
-            res.status(401).json({ message: "Mot de passe incorrect" });
+            res.status(401).json({ message: "Incorrect password" });
             return;
         }
 
         const token = await generateToken(user.id, user.roles);
 
-        res.status(200).json({ message: "Connexion réussie", token: token });
+        res.status(200).json({ message: "Login successful", token: token });
     } catch (error) {
-        console.error("Erreur lors de la connexion :", error);
-        res.status(500).json({ message: "Erreur serveur" });
+        console.error("Error while logging in:", error);
+        res.status(500).json({ message: "Server error" });
     }
 });
+
 
 /**
  * @swagger

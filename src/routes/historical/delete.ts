@@ -14,19 +14,19 @@ app.delete("/historical/:id", checkTokenMiddleware, async (req, res) => {
 
         if (deletedHistorical.length === 0) {
             res.status(404).json({
-                message: "Historique non trouvé.",
+                message: "History not found.",
                 historical: `id: ${id}`,
             });
         } else {
             res.status(200).json({
-                message: "Historique supprimé avec succès.",
+                message: "History successfully deleted.",
                 deletedHistorical,
             });
         }
     } catch (error) {
-        console.error("Erreur lors de la suppression de l'historique :", error);
+        console.error("Error while deleting the history:", error);
         res.status(500).json({
-            message: "Erreur lors de la suppression de l'historique.",
+            message: "Error while deleting the history.",
             error,
         });
     }

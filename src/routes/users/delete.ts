@@ -13,28 +13,28 @@ app.delete("/users/:id", checkTokenMiddleware, async (req, res) => {
             .where(sql`${users.id} = ${id}`);
         if (User.length === 0) {
             res.status(404).json({
-                message: "Utilisateur non trouvé.",
+                message: "User not found.",
                 user: `id: ${id}`,
             });
         } else {
             try {
                 await db.delete(users).where(sql`${users.id} = ${id}`);
-                res.status(200).json("User delete");
+                res.status(200).json("User deleted");
             } catch (error) {
                 console.error(
-                    "Erreur lors de la supression de l'utilisateur.",
+                    "Error while deleting the user.",
                     error,
                 );
                 res.status(500).json({
-                    message: "Erreur lors de la supression de l'utilisateur.",
+                    message: "Error while deleting the user.",
                     error,
                 });
             }
         }
     } catch (error) {
-        console.error("Erreur lors de la supression de l'utilisateur.", error);
+        console.error("Error while deleting the user.", error);
         res.status(500).json({
-            message: "Erreur lors de la supression de l'utilisateur.",
+            message: "Error while deleting the user.",
             error,
         });
     }

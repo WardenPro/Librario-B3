@@ -11,13 +11,13 @@ app.post("/reservations", checkTokenMiddleware, async (req, res) => {
             .values(validatedData)
             .returning();
         res.status(201).json({
-            message: "Réservation ajoutée avec succès.",
+            message: "Reservation successfully added.",
             newReservation,
         });
     } catch (error) {
-        console.error("Erreur lors de l'ajout de la réservation :", error);
+        console.error("Error while adding the reservation:", error);
         res.status(500).json({
-            message: "Erreur lors de l'ajout de la réservation.",
+            message: "Error while adding the reservation.",
             error,
         });
     }

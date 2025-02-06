@@ -35,11 +35,11 @@ app.delete(
             }
         } catch (error) {
             console.error(
-                "Erreur lors de la supression de l'utilisateur.",
+                "Error while deleting the book.",
                 error,
             );
             res.status(500).json({
-                message: "Erreur lors de la supression de l'utilisateur.",
+                message: "Error while deleting the book.",
                 error,
             });
         }

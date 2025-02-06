@@ -16,7 +16,7 @@ export async function updateUser(id: number, data: any) {
             .execute();
 
         if (userExists.length === 0) {
-            throw new Error("Utilisateur non trouvé");
+            throw new Error("User not found");
         }
 
         await db
@@ -62,17 +62,18 @@ app.put("/users/:id", checkTokenMiddleware, async (req, res) => {
         }
         if (
             error instanceof Error &&
-            error.message === "Utilisateur non trouvé"
+            error.message === "User not found"
         ) {
-            res.status(404).json({ message: "Utilisateur non trouvé." });
+            res.status(404).json({ message: "User not found." });
         } else {
             console.error(error);
             res.status(500).json({
-                message: "Une erreur interne est survenue.",
+                message: "An internal error occurred.",
             });
         }
     }
 });
+
 
 /**
  * @swagger

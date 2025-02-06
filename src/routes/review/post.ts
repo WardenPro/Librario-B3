@@ -12,13 +12,13 @@ app.post("/reviews", checkTokenMiddleware, async (req, res) => {
             .values(validatedData)
             .returning();
         res.status(201).json({
-            message: "Avis ajouté avec succès.",
+            message: "Review successfully added.",
             newReview,
         });
     } catch (error) {
-        console.error("Erreur lors de l'ajout de l'avis :", error);
+        console.error("Error while adding the review:", error);
         res.status(500).json({
-            message: "Erreur lors de l'ajout de l'avis.",
+            message: "Error while adding the review.",
             error,
         });
     }

@@ -16,19 +16,19 @@ app.put("/copy/:id", checkTokenMiddleware, async (req, res) => {
 
         if (updatedCopy.length === 0) {
             res.status(404).json({
-                message: "Copie non trouvée ou aucune modification appliquée.",
+                message: "Copy not found or no modifications applied.",
                 copy: `id: ${id}`,
             });
         } else {
             res.status(200).json({
-                message: "Copie mise à jour avec succès.",
+                message: "Copy successfully updated.",
                 updatedCopy,
             });
         }
     } catch (error) {
-        console.error("Erreur lors de la mise à jour de la copie :", error);
+        console.error("Error while updating the copy:", error);
         res.status(500).json({
-            message: "Erreur lors de la mise à jour de la copie.",
+            message: "Error while updating the copy.",
             error,
         });
     }

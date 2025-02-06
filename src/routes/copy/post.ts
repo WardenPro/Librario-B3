@@ -8,13 +8,13 @@ app.post("/copy", checkTokenMiddleware, async (req, res) => {
         const validatedData = insertCopySchema.parse(req.body);
         const newCopy = await db.insert(copy).values(validatedData).returning();
         res.status(201).json({
-            message: "Copie ajoutée avec succès.",
+            message: "Copy add successfully.",
             newCopy,
         });
     } catch (error) {
-        console.error("Erreur lors de l'ajout de la copie :", error);
+        console.error("Error while adding copy :", error);
         res.status(500).json({
-            message: "Erreur lors de l'ajout de la copie.",
+            message: "Error while adding copy.",
             error,
         });
     }

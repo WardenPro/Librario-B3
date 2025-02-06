@@ -16,19 +16,19 @@ app.put("/reviews/:id", checkTokenMiddleware, async (req, res) => {
 
         if (updatedReview.length === 0) {
             res.status(404).json({
-                message: "Avis non trouvé ou aucune modification appliquée.",
+                message: "Review not found or no changes applied.",
                 review: `id: ${id}`,
             });
         } else {
             res.status(200).json({
-                message: "Avis mis à jour avec succès.",
+                message: "Review successfully updated.",
                 updatedReview,
             });
         }
     } catch (error) {
-        console.error("Erreur lors de la mise à jour de l'avis :", error);
+        console.error("Error while updating the review:", error);
         res.status(500).json({
-            message: "Erreur lors de la mise à jour de l'avis.",
+            message: "Error while updating the review.",
             error,
         });
     }

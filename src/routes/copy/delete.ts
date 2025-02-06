@@ -14,19 +14,19 @@ app.delete("/copy/:id", checkTokenMiddleware, async (req, res) => {
 
         if (deletedCopy.length === 0) {
             res.status(404).json({
-                message: "Copie non trouvée.",
+                message: "Copy not found.",
                 copy: `id: ${id}`,
             });
         } else {
             res.status(200).json({
-                message: "Copie supprimée avec succès.",
+                message: "Copy successfully deleted.",
                 deletedCopy,
             });
         }
     } catch (error) {
-        console.error("Erreur lors de la suppression de la copie :", error);
+        console.error("Error while deleting the copy:", error);
         res.status(500).json({
-            message: "Erreur lors de la suppression de la copie.",
+            message: "Error while deleting the copy.",
             error,
         });
     }

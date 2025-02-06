@@ -17,19 +17,19 @@ app.put("/historical/:id", checkTokenMiddleware, async (req, res) => {
         if (updatedHistorical.length === 0) {
             res.status(404).json({
                 message:
-                    "Historique non trouvé ou aucune modification appliquée.",
+                    "Historical record not found or no modifications applied.",
                 historical: `id: ${id}`,
             });
         } else {
             res.status(200).json({
-                message: "Historique mis à jour avec succès.",
+                message: "Historical record successfully updated.",
                 updatedHistorical,
             });
         }
     } catch (error) {
-        console.error("Erreur lors de la mise à jour de l'historique :", error);
+        console.error("Error while updating the historical record:", error);
         res.status(500).json({
-            message: "Erreur lors de la mise à jour de l'historique.",
+            message: "Error while updating the historical record.",
             error,
         });
     }

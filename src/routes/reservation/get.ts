@@ -15,12 +15,9 @@ app.get("/reservations", checkTokenMiddleware, async (req, res) => {
         );
         res.status(200).json(validatedReservations);
     } catch (error) {
-        console.error(
-            "Erreur lors de la récupération des réservations :",
-            error,
-        );
+        console.error("Error while retrieving reservations:", error);
         res.status(500).json({
-            message: "Erreur lors de la récupération des réservations.",
+            message: "Error while retrieving reservations.",
             error,
         });
     }
@@ -36,7 +33,7 @@ app.get("/reservations/:id", checkTokenMiddleware, async (req, res) => {
 
         if (foundReservation.length === 0) {
             res.status(404).json({
-                message: "Réservation non trouvée.",
+                message: "Reservation not found.",
                 reservation: `id: ${id}`,
             });
         } else {
@@ -46,12 +43,9 @@ app.get("/reservations/:id", checkTokenMiddleware, async (req, res) => {
             res.status(200).json(validatedReservation);
         }
     } catch (error) {
-        console.error(
-            "Erreur lors de la récupération de la réservation :",
-            error,
-        );
+        console.error("Error while retrieving the reservation:", error);
         res.status(500).json({
-            message: "Erreur lors de la récupération de la réservation.",
+            message: "Error while retrieving the reservation.",
             error,
         });
     }

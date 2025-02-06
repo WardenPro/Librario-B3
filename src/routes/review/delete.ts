@@ -14,19 +14,19 @@ app.delete("/reviews/:id", checkTokenMiddleware, async (req, res) => {
 
         if (deletedReview.length === 0) {
             res.status(404).json({
-                message: "Avis non trouvé.",
+                message: "Review not found.",
                 review: `id: ${id}`,
             });
         } else {
             res.status(200).json({
-                message: "Avis supprimé avec succès.",
+                message: "Review successfully deleted.",
                 deletedReview,
             });
         }
     } catch (error) {
-        console.error("Erreur lors de la suppression de l'avis :", error);
+        console.error("Error while deleting the review:", error);
         res.status(500).json({
-            message: "Erreur lors de la suppression de l'avis.",
+            message: "Error while deleting the review.",
             error,
         });
     }

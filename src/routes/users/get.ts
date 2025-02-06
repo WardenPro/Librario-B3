@@ -13,11 +13,11 @@ app.get("/users", checkTokenMiddleware, async (req, res) => {
         res.status(200).json(validatedUsers);
     } catch (error) {
         console.error(
-            "Erreur lors de la récupération des utilisateurs :",
+            "Error while retrieving users:",
             error,
         );
         res.status(500).json({
-            message: "Erreur lors de la récupération des utilisateurs.",
+            message: "Error while retrieving users.",
             error,
         });
     }
@@ -32,7 +32,7 @@ app.get("/users/:id", checkTokenMiddleware, async (req, res) => {
             .where(sql`${users.id} = ${id}`);
         if (User.length === 0) {
             res.status(404).json({
-                message: "Utilisateur non trouvé.",
+                message: "User not found.",
                 user: `id: ${id}`,
             });
         } else {
@@ -43,15 +43,16 @@ app.get("/users/:id", checkTokenMiddleware, async (req, res) => {
         }
     } catch (error) {
         console.error(
-            "Erreur lors de la récupération de l'utilisateur :",
+            "Error while retrieving the user:",
             error,
         );
         res.status(500).json({
-            message: "Erreur lors de la récupération de l'utilisateur.",
+            message: "Error while retrieving the user.",
             error,
         });
     }
 });
+
 
 /**
  * @swagger

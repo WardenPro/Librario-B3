@@ -12,12 +12,9 @@ app.get("/historical", checkTokenMiddleware, async (req, res) => {
         );
         res.status(200).json(validatedHistorical);
     } catch (error) {
-        console.error(
-            "Erreur lors de la récupération des historiques :",
-            error,
-        );
+        console.error("Error while retrieving historical records:", error);
         res.status(500).json({
-            message: "Erreur lors de la récupération des historiques.",
+            message: "Error while retrieving historical records.",
             error,
         });
     }
@@ -33,7 +30,7 @@ app.get("/historical/:id", checkTokenMiddleware, async (req, res) => {
 
         if (foundHistorical.length === 0) {
             res.status(404).json({
-                message: "Historique non trouvé.",
+                message: "Historical record not found.",
                 historical: `id: ${id}`,
             });
         } else {
@@ -43,12 +40,9 @@ app.get("/historical/:id", checkTokenMiddleware, async (req, res) => {
             res.status(200).json(validatedHistorical);
         }
     } catch (error) {
-        console.error(
-            "Erreur lors de la récupération de l'historique :",
-            error,
-        );
+        console.error("Error while retrieving the historical record:", error);
         res.status(500).json({
-            message: "Erreur lors de la récupération de l'historique.",
+            message: "Error while retrieving the historical record.",
             error,
         });
     }

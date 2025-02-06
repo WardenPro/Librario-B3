@@ -10,9 +10,9 @@ app.get("/copy", checkTokenMiddleware, async (req, res) => {
         const validatedCopies = allCopies.map((c) => selectCopySchema.parse(c));
         res.status(200).json(validatedCopies);
     } catch (error) {
-        console.error("Erreur lors de la récupération des copies :", error);
+        console.error("Error while retrieving copies:", error);
         res.status(500).json({
-            message: "Erreur lors de la récupération des copies.",
+            message: "Error while retrieving copies.",
             error,
         });
     }
@@ -28,7 +28,7 @@ app.get("/copy/:id", checkTokenMiddleware, async (req, res) => {
 
         if (foundCopy.length === 0) {
             res.status(404).json({
-                message: "Copie non trouvée.",
+                message: "Copy not found.",
                 copy: `id: ${id}`,
             });
         } else {
@@ -38,9 +38,9 @@ app.get("/copy/:id", checkTokenMiddleware, async (req, res) => {
             res.status(200).json(validatedCopies);
         }
     } catch (error) {
-        console.error("Erreur lors de la récupération de la copie :", error);
+        console.error("Error while retrieving the copy:", error);
         res.status(500).json({
-            message: "Erreur lors de la récupération de la copie.",
+            message: "Error while retrieving the copy.",
             error,
         });
     }

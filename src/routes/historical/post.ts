@@ -12,13 +12,13 @@ app.post("/historical", checkTokenMiddleware, async (req, res) => {
             .values(validatedData)
             .returning();
         res.status(201).json({
-            message: "Historique ajouté avec succès.",
+            message: "Historical record successfully added.",
             newHistorical,
         });
     } catch (error) {
-        console.error("Erreur lors de l'ajout de l'historique :", error);
+        console.error("Error while adding the historical record:", error);
         res.status(500).json({
-            message: "Erreur lors de l'ajout de l'historique.",
+            message: "Error while adding the historical record.",
             error,
         });
     }

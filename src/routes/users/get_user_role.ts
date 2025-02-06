@@ -15,22 +15,23 @@ app.get("/roles/:id", checkTokenMiddleware, async (req, res) => {
 
         if (userRoles.length === 0) {
             res.status(404).json({
-                message: `Utilisateur avec l'ID ${id} non trouvé`,
+                message: `User with ID ${id} not found`,
             });
         } else {
             res.status(200).json(userRoles[0]);
         }
     } catch (error) {
         console.error(
-            "Erreur lors de la récupération des rôles de l'utilisateur :",
+            "Error while retrieving user roles:",
             error,
         );
         res.status(500).json({
             message:
-                "Erreur lors de la récupération des rôles de l'utilisateur.",
+                "Error while retrieving user roles.",
         });
     }
 });
+
 
 /**
  * @swagger

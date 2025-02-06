@@ -1,15 +1,17 @@
 import { app } from "../../app/index";
 import { db } from "../../app/config/database";
 import { books } from "../../db/schema/book";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { checkTokenMiddleware } from "../../app/middlewares/verify_jwt";
 import ISBN from "node-isbn";
+import { checkRoleMiddleware } from "../../app/middlewares/verify_roles";
 
 ISBN.provider(["google"]);
 
 app.post(
     "/books/import",
     checkTokenMiddleware,
+    checkRoleMiddleware,
     async (req, res) => {
         try {
             console.log("📌 [INFO] Requête reçue sur /books/import");
@@ -68,17 +70,42 @@ app.post(
                     is_removed: false,
                 };
 
-                console.log("📌 [INFO] Vérification si le livre existe déjà en base...");
-                const existingBook = await db
+                console.log("📌 [INFO] Vérification si l'ISBN est déjà en base...");
+
+                // Vérification 1 : L'ISBN est-il déjà présent en base ?
+                const existingIsbnBook = await db
                     .select()
                     .from(books)
-                    .where(eq(books.isbn, isbn))
+                    .where(eq(books.isbn, newBook.isbn))
                     .execute();
 
-                if (existingBook.length > 0) {
-                    console.log("⚠️ [WARNING] Livre déjà présent en base.");
+                if (existingIsbnBook.length > 0) {
+                    console.log("❌ [ERROR] Un livre avec cet ISBN existe déjà.");
                     res.status(409).json({
-                        message: "Book already exists in database.",
+                        message: "A book with this ISBN already exists in the database.",
+                    });
+                    return;
+                }
+
+                console.log("📌 [INFO] Vérification si un livre avec le même nom, auteur et éditeur existe déjà...");
+
+                // Vérification 2 : Un livre avec le même titre, auteur et éditeur existe-t-il ?
+                const existingSimilarBook = await db
+                    .select()
+                    .from(books)
+                    .where(
+                        and(
+                            eq(books.name, newBook.name),
+                            eq(books.author, newBook.author),
+                            eq(books.publisher, newBook.publisher)
+                        )
+                    )
+                    .execute();
+
+                if (existingSimilarBook.length > 0) {
+                    console.log("❌ [ERROR] Un livre avec le même nom, auteur et éditeur existe déjà.");
+                    res.status(409).json({
+                        message: "A book with the same title, author, and publisher already exists in the database.",
                     });
                     return;
                 }

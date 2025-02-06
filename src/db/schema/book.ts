@@ -10,23 +10,30 @@ import {
 import { sql } from "drizzle-orm";
 import { createInsertSchema, createSelectSchema } from "drizzle-zod";
 
-export const books = pgTable("books", {
-    id: serial().primaryKey().notNull(),
-    ISBN_10: text("ISBN_10"),
-    ISBN_13: text("ISBN_13"),
-    title: text("title").notNull(),
-    description: text("description").notNull(),
-    printType: text("type").notNull(),
-    category: text("category").notNull(),
-    publisher: text("publisher").notNull(),
-    author: text("author").notNull(),
-    quantity: integer("quantity").notNull().default(1),
-    publish_date: timestamp("publish_date").defaultNow().notNull(),
-    image_link: text("image_link"),
-    is_removed: boolean("is_removed").notNull().default(false),
-}, (table) => ({
-    checkConstraint: check("isbn_check", sql`${table.ISBN_10} IS NOT NULL OR ${table.ISBN_13} IS NOT NULL`)
-}));
+export const books = pgTable(
+    "books",
+    {
+        id: serial().primaryKey().notNull(),
+        ISBN_10: text("ISBN_10"),
+        ISBN_13: text("ISBN_13"),
+        title: text("title").notNull(),
+        description: text("description").notNull(),
+        printType: text("type").notNull(),
+        category: text("category").notNull(),
+        publisher: text("publisher").notNull(),
+        author: text("author").notNull(),
+        quantity: integer("quantity").notNull().default(1),
+        publish_date: timestamp("publish_date").defaultNow().notNull(),
+        image_link: text("image_link"),
+        is_removed: boolean("is_removed").notNull().default(false),
+    },
+    (table) => ({
+        checkConstraint: check(
+            "isbn_check",
+            sql`${table.ISBN_10} IS NOT NULL OR ${table.ISBN_13} IS NOT NULL`,
+        ),
+    }),
+);
 
 export const insertBookSchema = createInsertSchema(books, {
     title: (schema) => schema.title,

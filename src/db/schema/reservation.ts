@@ -2,6 +2,7 @@ import { pgTable, serial, timestamp, integer } from "drizzle-orm/pg-core";
 import { createInsertSchema, createSelectSchema } from "drizzle-zod";
 import { users } from "./users";
 import { copy } from "./copy";
+import z from "zod";
 
 export const reservation = pgTable("reservation", {
     id: serial().primaryKey().notNull(),
@@ -16,8 +17,8 @@ export const reservation = pgTable("reservation", {
 });
 
 export const insertReservationSchema = createInsertSchema(reservation, {
-    reservation_date: (schema) => schema.reservation_date,
-    final_date: (schema) => schema.final_date,
+    reservation_date: z.coerce.date(),
+    final_date: z.coerce.date(),
     user_id: (schema) => schema.user_id,
     copy_id: (schema) => schema.copy_id,
 });

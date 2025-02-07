@@ -50,7 +50,7 @@ app.get("/copy/:id", checkTokenMiddleware, async (req, res) => {
 app.get("/copy/book/:bookId", checkTokenMiddleware, async (req, res) => {
     try {
         const { bookId } = req.params;
-        
+
         const copies = await db
             .select({
                 copy_id: copy.id,
@@ -59,11 +59,12 @@ app.get("/copy/book/:bookId", checkTokenMiddleware, async (req, res) => {
                 is_claimed: copy.is_claimed,
                 copy_number: copy.copy_number,
                 book_id: copy.book_id,
-                review_condition: review.condition,
+                review_condition: sql`array_agg(${review.condition})`.as('review_condition')
             })
             .from(copy)
             .leftJoin(review, sql`${copy.id} = ${review.copy_id}`)
-            .where(sql`${copy.book_id} = ${bookId}`);
+            .where(sql`${copy.book_id} = ${bookId}`)
+            .groupBy(copy.id, copy.state, copy.is_reserved, copy.is_claimed, copy.copy_number, copy.book_id);
 
         if (copies.length === 0) {
             res.status(404).json({

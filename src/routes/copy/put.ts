@@ -33,3 +33,61 @@ app.put("/copy/:id", checkTokenMiddleware, async (req, res) => {
         });
     }
 });
+
+app.put("/copy/reserved/:id", checkTokenMiddleware,  async (req, res) => {
+    try {
+        const { id } = req.params;
+        const updatedCopy = await db
+            .update(copy)
+            .set({ is_reserved: true })
+            .where(sql`${copy.id} = ${id}`)
+            .returning();
+
+        if (updatedCopy.length === 0) {
+            res.status(404).json({
+                message: "Copy not found or already reserved.",
+                copy: `id: ${id}`,
+            });
+        } else {
+            res.status(200).json({
+                message: "Copy successfully reserved.",
+                updatedCopy,
+            });
+        }
+    } catch (error) {
+        console.error("Error while reserving the copy:", error);
+        res.status(500).json({
+            message: "Error while reserving the copy.",
+            error,
+        });
+    }
+});
+
+app.put("/copy/unreserved/:id", checkTokenMiddleware,  async (req, res) => {
+    try {
+        const { id } = req.params;
+        const updatedCopy = await db
+            .update(copy)
+            .set({ is_reserved: false })
+            .where(sql`${copy.id} = ${id}`)
+            .returning();
+
+        if (updatedCopy.length === 0) {
+            res.status(404).json({
+                message: "Copy not found or already reserved.",
+                copy: `id: ${id}`,
+            });
+        } else {
+            res.status(200).json({
+                message: "Copy successfully reserved.",
+                updatedCopy,
+            });
+        }
+    } catch (error) {
+        console.error("Error while reserving the copy:", error);
+        res.status(500).json({
+            message: "Error while reserving the copy.",
+            error,
+        });
+    }
+});

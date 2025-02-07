@@ -69,5 +69,5 @@ export const updateBookSchema = createInsertSchema(books, {
     publisher:  (schema) => schema.publisher.optional(),
     author:     (schema) => schema.author.optional(),
     quantity: (schema) =>
-        schema.quantity.min(0, "Quantity must be a positive number"),
+        schema.quantity.min(0, "Quantity must be a positive number").optional(),
 });

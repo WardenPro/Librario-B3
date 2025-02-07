@@ -155,6 +155,7 @@ app.post(
                 copiesToInsert.push({
                     state: copyState,
                     is_reserved: false,
+                    is_claimed: false,
                     copy_number: i,
                     book_id: bookId,
                 });

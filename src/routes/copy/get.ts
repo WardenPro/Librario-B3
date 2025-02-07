@@ -59,8 +59,6 @@ app.get("/copy/book/:bookId", checkTokenMiddleware, async (req, res) => {
                 is_claimed: copy.is_claimed,
                 copy_number: copy.copy_number,
                 book_id: copy.book_id,
-                review_description: review.description,
-                review_note: review.note,
                 review_condition: review.condition,
             })
             .from(copy)

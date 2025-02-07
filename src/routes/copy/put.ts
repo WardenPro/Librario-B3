@@ -33,3 +33,32 @@ app.put("/copy/:id", checkTokenMiddleware, async (req, res) => {
         });
     }
 });
+
+app.put("/copy/claimed/:id", checkTokenMiddleware,  async (req, res) => {
+    try {
+        const { id } = req.params;
+        const updatedCopy = await db
+            .update(copy)
+            .set({ is_claimed: true })
+            .where(sql`${copy.id} = ${id}`)
+            .returning();
+
+        if (updatedCopy.length === 0) {
+            res.status(404).json({
+                message: "Copy not found or already claimed.",
+                copy: `id: ${id}`,
+            });
+        } else {
+            res.status(200).json({
+                message: "Copy successfully claimed.",
+                updatedCopy,
+            });
+        }
+    } catch (error) {
+        console.error("Error while reserving the copy:", error);
+        res.status(500).json({
+            message: "Error while reserving the copy.",
+            error,
+        });
+    }
+});

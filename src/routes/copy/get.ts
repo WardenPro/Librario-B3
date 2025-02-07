@@ -3,6 +3,7 @@ import { db } from "../../app/config/database";
 import { sql } from "drizzle-orm";
 import { copy, selectCopySchema } from "../../db/schema/copy";
 import { checkTokenMiddleware } from "../../app/middlewares/verify_jwt";
+import { review } from "../../db/schema/review";
 
 app.get("/copy", checkTokenMiddleware, async (req, res) => {
     try {
@@ -45,3 +46,42 @@ app.get("/copy/:id", checkTokenMiddleware, async (req, res) => {
         });
     }
 });
+
+app.get("/copy/book/:bookId", checkTokenMiddleware, async (req, res) => {
+    try {
+        const { bookId } = req.params;
+        
+        const copies = await db
+            .select({
+                copy_id: copy.id,
+                state: copy.state,
+                is_reserved: copy.is_reserved,
+                is_claimed: copy.is_claimed,
+                copy_number: copy.copy_number,
+                book_id: copy.book_id,
+                review_description: review.description,
+                review_note: review.note,
+                review_condition: review.condition,
+            })
+            .from(copy)
+            .leftJoin(review, sql`${copy.id} = ${review.copy_id}`)
+            .where(sql`${copy.book_id} = ${bookId}`);
+
+        if (copies.length === 0) {
+            res.status(404).json({
+                message: "No copies found for this book.",
+                book_id: bookId,
+            });
+        }
+
+        res.status(200).json(copies);
+    } catch (error) {
+        console.error("Error while retrieving copies and reviews for book:", error);
+        res.status(500).json({
+            message: "Error while retrieving copies and reviews for book.",
+            error,
+        });
+    }
+});
+
+

@@ -31,8 +31,8 @@ export const selectReservationSchema = createSelectSchema(reservation, {
 });
 
 export const updateReservationSchema = createInsertSchema(reservation, {
-    reservation_date: (schema) => schema.reservation_date.optional(),
-    final_date: (schema) => schema.final_date.optional(),
+    reservation_date: z.coerce.date().optional(),
+    final_date: z.coerce.date().optional(),
     user_id: (schema) => schema.user_id.optional(),
     copy_id: (schema) => schema.copy_id.optional(),
 });

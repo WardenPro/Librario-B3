@@ -175,6 +175,7 @@ app.post(
                 total_copies: copiesToInsert.length,
                 copy_state: copyState,
             });
+            return;
         } catch (error) {
             console.error("❌ [ERROR] Internal server error:", error);
             res.status(500).json({ message: "Internal server error." });

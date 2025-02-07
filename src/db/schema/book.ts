@@ -62,6 +62,12 @@ export const SelectBookSchema = createSelectSchema(books, {
 });
 
 export const updateBookSchema = createInsertSchema(books, {
+    title:      (schema) => schema.title.optional(),
+    description:(schema) => schema.description.optional(),
+    printType:  (schema) => schema.printType.optional(),
+    category:   (schema) => schema.category.optional(),
+    publisher:  (schema) => schema.publisher.optional(),
+    author:     (schema) => schema.author.optional(),
     quantity: (schema) =>
         schema.quantity.min(0, "Quantity must be a positive number"),
 });

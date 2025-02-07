@@ -3,10 +3,10 @@ import { db } from "../../app/config/database";
 import { books } from "../../db/schema/book";
 import { copy } from "../../db/schema/copy";
 import { eq } from "drizzle-orm";
-import { checkTokenMiddleware } from "../../app/middlewares/verify_jwt";
-import ISBN from "node-isbn";
-import { checkRoleMiddleware } from "../../app/middlewares/verify_roles";
 import { or } from "drizzle-orm/expressions";
+import { checkTokenMiddleware } from "../../app/middlewares/verify_jwt";
+import { checkRoleMiddleware } from "../../app/middlewares/verify_roles";
+import ISBN from "node-isbn";
 
 interface IndustryIdentifier {
     type: string;

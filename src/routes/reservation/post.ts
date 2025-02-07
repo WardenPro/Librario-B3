@@ -1,9 +1,11 @@
 import { app } from "../../app/index";
 import { db } from "../../app/config/database";
+import { sql } from "drizzle-orm";
 import {
     reservation,
     insertReservationSchema,
 } from "../../db/schema/reservation";
+import { copy } from "../../db/schema/copy";
 import { checkTokenMiddleware } from "../../app/middlewares/verify_jwt";
 
 app.post("/reservations", checkTokenMiddleware, async (req, res) => {
@@ -13,8 +15,14 @@ app.post("/reservations", checkTokenMiddleware, async (req, res) => {
             .insert(reservation)
             .values(validatedData)
             .returning();
+
+        await db
+            .update(copy)
+            .set({ is_reserved: true })
+            .where(sql`${copy.id} = ${validatedData.copy_id}`);
+        
         res.status(201).json({
-            message: "Reservation successfully added.",
+            message: "Reservation successfully added and copy marked as reserved.",
             newReservation,
         });
     } catch (error) {

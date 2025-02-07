@@ -28,12 +28,12 @@ export function logMessage(message: string) {
 
 export function errorMessage(
     message: string,
-    error: unknown = new Error("Aucune erreur spécifiée"),
+    error: unknown = new Error("No error specified"),
 ) {
     let log = `${getCurrentDateTime()}: ${message}`;
     console.log(log);
     log += "\n";
-    if (error instanceof Error && error.message != "Aucune erreur spécifiée") {
+    if (error instanceof Error && error.message != "No error specified") {
         console.error(error);
         log += `${error.stack}\n`;
     }

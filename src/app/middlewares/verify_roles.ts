@@ -12,9 +12,6 @@ const extractBearerToken = (headerValue: string) => {
 export async function checkRoleMiddleware(req: any, res: any, next: any) {
     try {
         if (NODE_ENV === "development") {
-            console.log(
-                "🚀 [INFO] Mode développement actif : Ignorer la vérification du rôle",
-            );
             return next();
         }
         const token =

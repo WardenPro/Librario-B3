@@ -55,7 +55,7 @@ export async function checkTokenMiddleware(req: any, res: any, next: any) {
             req.headers.auth_token &&
             extractBearerToken(req.headers.auth_token);
         if (!token) {
-            return res.status(401).json({ message: "Token JWT manquant" });
+            return res.status(401).json({ message: "Missing JWT token" });
         }
 
         const secret_key = Buffer.from(key, "hex");

@@ -13,7 +13,7 @@ export async function startDatabase() {
     try {
         DATABASE_URL = process.env.DATABASE_URL;
     } catch (err) {
-        throw new Error("Impossible de lire le secret : " + err);
+        throw new Error("Unable to read the secret:" + err);
     }
 
     if (!DATABASE_URL) {

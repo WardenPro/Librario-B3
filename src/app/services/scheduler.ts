@@ -5,8 +5,8 @@ import { logMessage } from "./log";
 
 export function startScheduler() {
     cron.schedule("0 * * * *", async () => {
-        console.log("Exécution de la tâche 'expired_reservation' :", new Date().toISOString());
+        logMessage("Executing the 'expired_reservation' task.");
         await expired_reservation();
     });
-    logMessage("Le scheduler est démarré !");
+    logMessage("The scheduler is started!");
 }

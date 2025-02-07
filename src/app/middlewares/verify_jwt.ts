@@ -45,7 +45,7 @@ async function isTokenRevoked(payload: JWTPayload) {
 
         return false;
     } catch (error) {
-        throw new Error("Error during JWT revocation check.");
+        throw new Error("Error during JWT revocation check."+ error);
     }
 }
 
@@ -67,7 +67,7 @@ export async function checkTokenMiddleware(req: any, res: any, next: any) {
             revoked = await isTokenRevoked(payload);
         } catch (error) {
             return res.status(500).json({
-                message: "Internal error during token verification.",
+                message: "Internal error during token verification." + error,
             });
         }
 
@@ -77,6 +77,6 @@ export async function checkTokenMiddleware(req: any, res: any, next: any) {
 
         return next();
     } catch (error) {
-        return res.status(401).json({ message: "Invalid token." });
+        return res.status(401).json({ message: "Invalid token." + error});
     }
 }

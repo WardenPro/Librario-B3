@@ -6,6 +6,7 @@ export const copy = pgTable("copy", {
     id: serial().primaryKey().notNull(),
     state: text("state").notNull(),
     is_reserved: boolean("is_reserved").notNull(),
+    is_claimed: boolean("is_claimed").notNull(),
     copy_number: integer("copy_number").notNull(),
     book_id: integer("book_id")
         .notNull()
@@ -20,6 +21,7 @@ export const insertCopySchema = createInsertSchema(copy, {
             .regex(/^[a-zA-Z ]+$/, { message: "Must be only letters." }),
 
     is_reserved: (schema) => schema.is_reserved,
+    is_claimed: (schema) => schema.is_claimed,
     copy_number: (schema) =>
         schema.copy_number.max(50, { message: "Must be 50 maximum." }),
     book_id: (schema) => schema.book_id,
@@ -28,6 +30,7 @@ export const insertCopySchema = createInsertSchema(copy, {
 export const selectCopySchema = createSelectSchema(copy, {
     state: (schema) => schema.state,
     is_reserved: (schema) => schema.is_reserved,
+    is_claimed: (schema) => schema.is_claimed,
     copy_number: (schema) => schema.copy_number,
     book_id: (schema) => schema.book_id,
 });
@@ -35,6 +38,7 @@ export const selectCopySchema = createSelectSchema(copy, {
 export const updateCopySchema = createInsertSchema(copy, {
     state: (schema) => schema.state.optional(),
     is_reserved: (schema) => schema.is_reserved.optional(),
+    is_claimed: (schema) => schema.is_claimed.optional(),
     copy_number: (schema) => schema.copy_number.optional(),
     book_id: (schema) => schema.book_id.optional(),
 });

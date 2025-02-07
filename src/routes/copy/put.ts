@@ -19,6 +19,7 @@ app.put("/copy/:id", checkTokenMiddleware, async (req, res) => {
                 message: "Copy not found or no modifications applied.",
                 copy: `id: ${id}`,
             });
+            return;
         } else {
             res.status(200).json({
                 message: "Copy successfully updated.",

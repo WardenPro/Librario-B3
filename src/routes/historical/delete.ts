@@ -17,6 +17,7 @@ app.delete("/historical/:id", checkTokenMiddleware, async (req, res) => {
                 message: "History not found.",
                 historical: `id: ${id}`,
             });
+            return;
         } else {
             res.status(200).json({
                 message: "History successfully deleted.",

@@ -33,6 +33,7 @@ app.get("/historical/:id", checkTokenMiddleware, async (req, res) => {
                 message: "Historical record not found.",
                 historical: `id: ${id}`,
             });
+            return;
         } else {
             const validatedHistorical = foundHistorical.map((h) =>
                 selectHistoricalSchema.parse(h),

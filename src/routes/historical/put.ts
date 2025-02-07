@@ -20,6 +20,7 @@ app.put("/historical/:id", checkTokenMiddleware, async (req, res) => {
                     "Historical record not found or no modifications applied.",
                 historical: `id: ${id}`,
             });
+            return;
         } else {
             res.status(200).json({
                 message: "Historical record successfully updated.",

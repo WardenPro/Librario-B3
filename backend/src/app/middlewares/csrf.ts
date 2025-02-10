@@ -1,8 +1,8 @@
 import csurf from "csurf";
 import { RequestHandler } from "express";
-import { IS_PRODUCTION } from "..";
+import { NODE_ENV } from "..";
 
-const csrfProtection: RequestHandler = IS_PRODUCTION
+const csrfProtection: RequestHandler = NODE_ENV
     ? csurf({
           cookie: {
               httpOnly: true,

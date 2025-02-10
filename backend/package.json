@@ -6,7 +6,6 @@
     "@tsconfig/node-lts": "^22.0.1",
     "@types/connect": "^3",
     "@types/cors": "^2",
-    "@types/csurf": "^1",
     "@types/express": "^5.0.0",
     "@types/node": "^22.12.0",
     "@types/node-cron": "^3",

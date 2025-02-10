@@ -9,6 +9,6 @@
         "strict": true,
         "skipLibCheck": true
     },
-    "include": ["server/src/**/*", "drizzle.config.ts"],
+    "include": ["src/**/*", "drizzle.config.ts"],
     "exclude": ["**/*.test.ts"]
 }

@@ -3,12 +3,13 @@
     "private": true,
     "packageManager": "yarn@4.5.0",
     "workspaces": [
-        "frontend",
-        "backend"
+        "backend",
+        "frontend"
     ],
     "scripts": {
         "build": "cd frontend && yarn build && cd ../backend && yarn build",
-        "deploy": "yarn build && cd backend && yarn start && cd ../frontend && yarn start",
+        "start": "concurrently -n frontend,backend -c green,blue \"cd frontend && yarn start\" \"cd backend && yarn start\"",
+        "all": "concurrently -n frontend,backend -c green,blue \"cd frontend && yarn all\" \"cd backend && yarn all\"",
         "static": "eslint backend/",
         "stylecheck": "prettier --check '**/*.{js,jsx,ts,tsx,css,scss,json}'",
         "format": "prettier --write '**/*.{js,jsx,ts,tsx,css,scss,json}' '!db/**'"

@@ -7,7 +7,6 @@ import "./middlewares/key";
 import cors from "cors";
 import dotenv from "dotenv";
 import csrf from "csurf";
-import cookieParser from "cookie-parser";
 
 export const app = express();
 dotenv.config();
@@ -46,7 +45,6 @@ app.use(express.json());
 app.use(helmet());
 app.use(cors(corsOptions));
 app.options("*", cors(corsOptions));
-app.use(cookieParser());
 
 // Middleware CSRF Protection
 const csrfProtection = csrf({

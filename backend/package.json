@@ -32,6 +32,7 @@
   "dependencies": {
     "connect": "^3.7.0",
     "cors": "^2.8.5",
+    "csurf": "^1.11.0",
     "dotenv": "^16.4.7",
     "drizzle-orm": "^0.35.2",
     "drizzle-zod": "^0.5.1",

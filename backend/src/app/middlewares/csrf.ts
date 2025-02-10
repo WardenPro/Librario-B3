@@ -1,22 +1,16 @@
-import csrf from "csurf";
-import cookieParser from "cookie-parser";
-import { Request, Response, NextFunction } from "express";
+import csurf from "csurf";
+import { RequestHandler } from "express";
+import { IS_PRODUCTION } from "..";
 
-// Initialisation du middleware CSRF avec stockage du token dans un cookie sécurisé
-export const csrfProtection = csrf({
-  cookie: {
-    httpOnly: true, // Empêche l'accès au cookie côté client
-    secure: process.env.NODE_ENV === "production", // Active Secure en prod
-    sameSite: "strict", // Empêche l'envoi du cookie en cross-site
-  },
-});
+const csrfProtection: RequestHandler = IS_PRODUCTION
+    ? csurf({
+          cookie: {
+              httpOnly: true,
+              secure: false,
+              sameSite: "strict",
+              path: "/",
+          },
+      })
+    : (req, res, next) => next();
 
-// Middleware pour envoyer le token CSRF au client
-export const csrfTokenMiddleware = (req: Request, res: Response, next: NextFunction) => {
-  res.cookie("XSRF-TOKEN", req.csrfToken(), {
-    httpOnly: false, // Permet au client d'accéder au token CSRF (Next.js, React, etc.)
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "strict",
-  });
-  next();
-};
+export { csrfProtection };

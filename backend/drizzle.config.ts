@@ -2,9 +2,9 @@ import "dotenv/config";
 import { defineConfig } from "drizzle-kit";
 
 export default defineConfig({
-    out: "./drizzle",
+    out: "./backend/drizzle",
     dialect: "postgresql",
-    schema: "./src/db/schema",
+    schema: "./backend/src/db/schema",
     dbCredentials: {
         url: process.env.DATABASE_URL!,
     },

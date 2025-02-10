@@ -3,8 +3,9 @@ import { db } from "../../app/config/database";
 import { sql } from "drizzle-orm";
 import { historical, selectHistoricalSchema } from "../../db/schema/historical";
 import { checkTokenMiddleware } from "../../app/middlewares/verify_jwt";
+import { checkRoleMiddleware } from "../../app/middlewares/verify_roles";
 
-app.get("/historical", checkTokenMiddleware, async (req, res) => {
+app.get("/historical", checkTokenMiddleware, checkRoleMiddleware, async (req, res) => {
     try {
         const allHistorical = await db.select().from(historical);
         const validatedHistorical = allHistorical.map((h) =>

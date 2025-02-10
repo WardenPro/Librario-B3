@@ -4,12 +4,12 @@ import { sql } from "drizzle-orm";
 import { copy } from "../../db/schema/copy";
 import { checkTokenMiddleware } from "../../app/middlewares/verify_jwt";
 import { books } from "../../db/schema/book";
+import { checkRoleMiddleware } from "../../app/middlewares/verify_roles";
 
-app.delete("/copy/:id", checkTokenMiddleware, async (req, res) => {
+app.delete("/copy/:id", checkTokenMiddleware, checkRoleMiddleware, async (req, res) => {
     try {
         const { id } = req.params;
 
-        // Supprimer la copie
         const deletedCopy = await db
             .delete(copy)
             .where(sql`${copy.id} = ${id}`)
@@ -22,13 +22,11 @@ app.delete("/copy/:id", checkTokenMiddleware, async (req, res) => {
             });
         }
 
-        // Si la copie est supprimée, on diminue la quantité du livre associé
-        const bookId = deletedCopy[0].book_id;  // Le livre associé à cette copie
+        const bookId = deletedCopy[0].book_id;
 
-        // Mise à jour de la quantité du livre dans la table 'books'
         await db
             .update(books)
-            .set({ quantity: sql`${books.quantity} - 1` })  // Décrémenter la quantité de 1
+            .set({ quantity: sql`${books.quantity} - 1` })
             .where(sql`${books.id} = ${bookId}`);
 
         res.status(200).json({

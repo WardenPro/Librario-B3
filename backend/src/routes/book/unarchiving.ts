@@ -8,7 +8,7 @@ import { checkRoleMiddleware } from "../../app/middlewares/verify_roles";
 app.put(
     "/books/unarchiving/:id",
     checkTokenMiddleware,
-    checkRoleMiddleware,
+    checkRoleMiddleware("admin"),
     async (req, res) => {
         try {
             const { id } = req.params;

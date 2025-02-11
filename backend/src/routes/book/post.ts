@@ -18,7 +18,7 @@ ISBN.provider(["google"]);
 app.post(
     "/books/import",
     checkTokenMiddleware,
-    checkRoleMiddleware,
+    checkRoleMiddleware("admin"),
     async (req, res) => {
         try {
             console.log("📌 [INFO] Body Request :", req.body);

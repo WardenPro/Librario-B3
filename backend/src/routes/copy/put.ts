@@ -5,7 +5,7 @@ import { copy, updateCopySchema } from "../../db/schema/copy";
 import { checkTokenMiddleware } from "../../app/middlewares/verify_jwt";
 import { checkRoleMiddleware } from "../../app/middlewares/verify_roles";
 
-app.put("/copy/:id", checkTokenMiddleware, checkRoleMiddleware, async (req, res) => {
+app.put("/copy/:id", checkTokenMiddleware, checkRoleMiddleware("admin"), async (req, res) => {
     try {
         const { id } = req.params;
         const validatedData = updateCopySchema.parse(req.body);
@@ -36,7 +36,7 @@ app.put("/copy/:id", checkTokenMiddleware, checkRoleMiddleware, async (req, res)
     }
 });
 
-app.put("/copy/claimed/:id", checkTokenMiddleware, checkRoleMiddleware, async (req, res) => {
+app.put("/copy/claimed/:id", checkTokenMiddleware, checkRoleMiddleware("admin"), async (req, res) => {
     try {
         const { id } = req.params;
         const updatedCopy = await db
@@ -65,7 +65,7 @@ app.put("/copy/claimed/:id", checkTokenMiddleware, checkRoleMiddleware, async (r
     }
 });
 
-app.put("/copy/unclaimed/:id", checkTokenMiddleware, checkRoleMiddleware, async (req, res) => {
+app.put("/copy/unclaimed/:id", checkTokenMiddleware, checkRoleMiddleware("admin"), async (req, res) => {
     try {
         const { id } = req.params;
         const updatedCopy = await db

@@ -8,7 +8,7 @@ import { checkRoleMiddleware } from "../../app/middlewares/verify_roles";
 app.delete(
     "/books/:id",
     checkTokenMiddleware,
-    checkRoleMiddleware,
+    checkRoleMiddleware("admin"),
     async (req, res) => {
         try {
             const { id } = req.params;

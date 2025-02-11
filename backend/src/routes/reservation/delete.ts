@@ -4,8 +4,9 @@ import { sql } from "drizzle-orm";
 import { copy } from "../../db/schema/copy";
 import { reservation } from "../../db/schema/reservation";
 import { checkTokenMiddleware } from "../../app/middlewares/verify_jwt";
+import { checkRoleMiddleware } from "../../app/middlewares/verify_roles";
 
-app.delete("/reservations/:id", checkTokenMiddleware, async (req, res) => {
+app.delete("/reservations/:id", checkTokenMiddleware, checkRoleMiddleware(), async (req, res) => {
     try {
         const { id } = req.params;
 

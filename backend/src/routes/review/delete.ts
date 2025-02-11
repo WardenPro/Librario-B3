@@ -3,8 +3,9 @@ import { db } from "../../app/config/database";
 import { sql } from "drizzle-orm";
 import { review } from "../../db/schema/review";
 import { checkTokenMiddleware } from "../../app/middlewares/verify_jwt";
+import { checkRoleMiddleware } from "../../app/middlewares/verify_roles";
 
-app.delete("/reviews/:id", checkTokenMiddleware, async (req, res) => {
+app.delete("/reviews/:id", checkTokenMiddleware, checkRoleMiddleware(), async (req, res) => {
     try {
         const { id } = req.params;
         const deletedReview = await db

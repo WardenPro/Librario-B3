@@ -4,6 +4,7 @@ import { users, updateUserSchema } from "../../db/schema/users";
 import { eq } from "drizzle-orm";
 import { ZodError } from "zod";
 import { checkTokenMiddleware } from "../../app/middlewares/verify_jwt";
+import { checkRoleMiddleware } from "../../app/middlewares/verify_roles";
 
 export async function updateUser(id: number, data: any) {
     const validatedData = updateUserSchema.parse(data);
@@ -43,7 +44,7 @@ export async function updateUser(id: number, data: any) {
     }
 }
 
-app.put("/users/:id", checkTokenMiddleware, async (req, res) => {
+app.put("/users/:id", checkTokenMiddleware, checkRoleMiddleware(), async (req, res) => {
     try {
         const userId = parseInt(req.params.id, 10);
 

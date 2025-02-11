@@ -1,10 +1,10 @@
 import { app } from "../../app/index";
 import { db } from "../../app/config/database";
-import { sql } from "drizzle-orm";
 import { review, insertReviewSchema } from "../../db/schema/review";
 import { checkTokenMiddleware } from "../../app/middlewares/verify_jwt";
+import { checkRoleMiddleware } from "../../app/middlewares/verify_roles";
 
-app.post("/reviews", checkTokenMiddleware, async (req, res) => {
+app.post("/reviews", checkTokenMiddleware, checkRoleMiddleware(), async (req, res) => {
     try {
         const validatedData = insertReviewSchema.parse(req.body);
         const newReview = await db

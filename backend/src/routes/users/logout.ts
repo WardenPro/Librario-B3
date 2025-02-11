@@ -8,7 +8,7 @@ import { checkTokenMiddleware } from "../../app/middlewares/verify_jwt";
 app.post(
     "/logout/:id",
     checkTokenMiddleware,
-    checkRoleMiddleware,
+    checkRoleMiddleware(),
     async (req: any, res: any) => {
         try {
             const userId = parseInt(req.params.id, 10);

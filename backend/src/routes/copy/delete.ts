@@ -6,7 +6,7 @@ import { checkTokenMiddleware } from "../../app/middlewares/verify_jwt";
 import { books } from "../../db/schema/book";
 import { checkRoleMiddleware } from "../../app/middlewares/verify_roles";
 
-app.delete("/copy/:id", checkTokenMiddleware, checkRoleMiddleware, async (req, res) => {
+app.delete("/copy/:id", checkTokenMiddleware, checkRoleMiddleware("admin"), async (req, res) => {
     try {
         const { id } = req.params;
 

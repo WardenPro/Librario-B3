@@ -3,8 +3,9 @@ import { db } from "../../app/config/database";
 import { sql } from "drizzle-orm";
 import { review, updateReviewSchema } from "../../db/schema/review";
 import { checkTokenMiddleware } from "../../app/middlewares/verify_jwt";
+import { checkRoleMiddleware } from "../../app/middlewares/verify_roles";
 
-app.put("/reviews/:id", checkTokenMiddleware, async (req, res) => {
+app.put("/reviews/:id", checkTokenMiddleware, checkRoleMiddleware(), async (req, res) => {
     try {
         const { id } = req.params;
         const validatedData = updateReviewSchema.parse(req.body);

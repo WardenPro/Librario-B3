@@ -5,7 +5,7 @@ import { historical, selectHistoricalSchema } from "../../db/schema/historical";
 import { checkTokenMiddleware } from "../../app/middlewares/verify_jwt";
 import { checkRoleMiddleware } from "../../app/middlewares/verify_roles";
 
-app.get("/historical", checkTokenMiddleware, checkRoleMiddleware, async (req, res) => {
+app.get("/historical", checkTokenMiddleware, checkRoleMiddleware("admin"), async (req, res) => {
     try {
         const allHistorical = await db.select().from(historical);
         const validatedHistorical = allHistorical.map((h) =>
@@ -21,7 +21,7 @@ app.get("/historical", checkTokenMiddleware, checkRoleMiddleware, async (req, re
     }
 });
 
-app.get("/historical/:id", checkTokenMiddleware, async (req, res) => {
+app.get("/historical/:id", checkTokenMiddleware, checkRoleMiddleware(), async (req, res) => {
     try {
         const { id } = req.params;
         const foundHistorical = await db

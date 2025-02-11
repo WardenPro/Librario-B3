@@ -47,9 +47,9 @@ app.get("/copy/:id", checkTokenMiddleware, async (req, res) => {
     }
 });
 
-app.get("/copy/book/:bookId", checkTokenMiddleware, async (req, res) => {
+app.get("/copy/book/:id", checkTokenMiddleware, async (req, res) => {
     try {
-        const { bookId } = req.params;
+        const { id } = req.params;
 
         const copies = await db
             .select({
@@ -63,13 +63,13 @@ app.get("/copy/book/:bookId", checkTokenMiddleware, async (req, res) => {
             })
             .from(copy)
             .leftJoin(review, sql`${copy.id} = ${review.copy_id}`)
-            .where(sql`${copy.book_id} = ${bookId}`)
+            .where(sql`${copy.book_id} = ${id}`)
             .groupBy(copy.id, copy.state, copy.is_reserved, copy.is_claimed, copy.copy_number, copy.book_id);
 
         if (copies.length === 0) {
             res.status(404).json({
                 message: "No copies found for this book.",
-                book_id: bookId,
+                book_id: id,
             });
         }
 

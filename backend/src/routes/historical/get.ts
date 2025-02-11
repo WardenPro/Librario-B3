@@ -49,3 +49,32 @@ app.get("/historical/:id", checkTokenMiddleware, checkRoleMiddleware(), async (r
         });
     }
 });
+
+app.get("/historical/:userid", checkTokenMiddleware, checkRoleMiddleware(), async (req, res) => {
+    try {
+        const { id } = req.params;
+        const foundHistorical = await db
+            .select()
+            .from(historical)
+            .where(sql`${historical.user_id} = ${id}`);
+
+        if (foundHistorical.length === 0) {
+            res.status(404).json({
+                message: "Historical record not found.",
+                historical: `id: ${id}`,
+            });
+            return;
+        } else {
+            const validatedHistorical = foundHistorical.map((h) =>
+                selectHistoricalSchema.parse(h),
+            );
+            res.status(200).json(validatedHistorical);
+        }
+    } catch (error) {
+        console.error("Error while retrieving the historical record:", error);
+        res.status(500).json({
+            message: "Error while retrieving the historical record.",
+            error,
+        });
+    }
+});

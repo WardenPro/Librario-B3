@@ -36,6 +36,8 @@ app.put("/copy/:id", checkTokenMiddleware, checkRoleMiddleware("admin"), async (
     }
 });
 
+//change id to barcode number
+
 app.put("/copy/claimed/:id", checkTokenMiddleware, checkRoleMiddleware("admin"), async (req, res) => {
     try {
         const { id } = req.params;

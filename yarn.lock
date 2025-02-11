@@ -2494,6 +2494,7 @@ __metadata:
     "@types/pg": "npm:^8"
     "@types/swagger-jsdoc": "npm:^6"
     "@types/swagger-ui-express": "npm:^4.1.7"
+    bwip-js: "npm:^4.5.1"
     connect: "npm:^3.7.0"
     cors: "npm:^2.8.5"
     dotenv: "npm:^16.4.7"
@@ -2506,7 +2507,6 @@ __metadata:
     hash-wasm: "npm:^4.12.0"
     helmet: "npm:^8.0.0"
     jose: "npm:^5.9.6"
-    jsbarcode: "npm:^3.11.6"
     node-cron: "npm:^3.0.3"
     node-isbn: "npm:^1.6.1"
     pg: "npm:^8.13.1"
@@ -2609,6 +2609,15 @@ __metadata:
   dependencies:
     streamsearch: "npm:^1.1.0"
   checksum: 10c0/fa7e836a2b82699b6e074393428b91ae579d4f9e21f5ac468e1b459a244341d722d2d22d10920cdd849743dbece6dca11d72de939fb75a7448825cf2babfba1f
+  languageName: node
+  linkType: hard
+
+"bwip-js@npm:^4.5.1":
+  version: 4.5.1
+  resolution: "bwip-js@npm:4.5.1"
+  bin:
+    bwip-js: bin/bwip-js.js
+  checksum: 10c0/db183f517bc7e68d593a091badc4922bda2369ad6e570c595dba8052142ff87103f52810135d11eca576836b22aa5e258679f18b1b2f51dc798c43b7b153d93f
   languageName: node
   linkType: hard
 
@@ -4430,13 +4439,6 @@ __metadata:
   bin:
     js-yaml: bin/js-yaml.js
   checksum: 10c0/184a24b4eaacfce40ad9074c64fd42ac83cf74d8c8cd137718d456ced75051229e5061b8633c3366b8aada17945a7a356b337828c19da92b51ae62126575018f
-  languageName: node
-  linkType: hard
-
-"jsbarcode@npm:^3.11.6":
-  version: 3.11.6
-  resolution: "jsbarcode@npm:3.11.6"
-  checksum: 10c0/5603ddaa7f0a65b710af95e29105400d99e4c67655899399ac46965eeb7fef83a8e9378eee4eb27f778fd563917015953261c0f271592f2c705fcc2751754e4d
   languageName: node
   linkType: hard
 

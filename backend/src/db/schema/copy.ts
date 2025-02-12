@@ -7,7 +7,6 @@ export const copy = pgTable("copy", {
     state: text("state").notNull(),
     is_reserved: boolean("is_reserved").notNull(),
     is_claimed: boolean("is_claimed").notNull(),
-    barcode: text("barcode"),
     book_id: integer("book_id")
         .notNull()  
         .references(() => books.id, { onDelete: "cascade" }),
@@ -22,7 +21,6 @@ export const insertCopySchema = createInsertSchema(copy, {
 
     is_reserved: (schema) => schema.is_reserved,
     is_claimed: (schema) => schema.is_claimed,
-    barcode: (schema) => schema.barcode,
     book_id: (schema) => schema.book_id,
 });
 
@@ -30,7 +28,6 @@ export const selectCopySchema = createSelectSchema(copy, {
     state: (schema) => schema.state,
     is_reserved: (schema) => schema.is_reserved,
     is_claimed: (schema) => schema.is_claimed,
-    barcode: (schema) => schema.barcode,
     book_id: (schema) => schema.book_id,
 });
 
@@ -38,6 +35,5 @@ export const updateCopySchema = createInsertSchema(copy, {
     state: (schema) => schema.state.optional(),
     is_reserved: (schema) => schema.is_reserved.optional(),
     is_claimed: (schema) => schema.is_claimed.optional(),
-     barcode: (schema) => schema.barcode,
     book_id: (schema) => schema.book_id.optional(),
 });

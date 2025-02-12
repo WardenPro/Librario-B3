@@ -8,7 +8,7 @@ import { checkTokenMiddleware } from "../../app/middlewares/verify_jwt";
 import { grantedAccessMiddleware } from "../../app/middlewares/verify_access_right";
 import ISBN from "node-isbn";
 import { Request, Response } from "express";
-import { generateBarcode } from "../../app/services/barcode";
+import { generateBarcodeImage } from "../../app/services/barcode"; 
 
 interface IndustryIdentifier {
     type: string;
@@ -145,8 +145,6 @@ app.post(
             }
 
             const bookId = inserted.id;
-
-            // 🛠 **1️⃣ Génération des copies avec barcode temporaire ("null")**
             const copiesArray = Array.isArray(req.body.copies) ? req.body.copies : [];
 
             const copiesToInsert = [];
@@ -161,25 +159,11 @@ app.post(
             }
 
             const insertedCopies = await db.insert(copy).values(copiesToInsert).returning();
-            console.log(`✅ [INFO] Created ${copiesToInsert.length} copies with varying states.`);
 
-            // 🔄 **2️⃣ Mise à jour des copies avec leur vrai code-barres**
-            const copiesWithBarcodes = [];
             for (const copyRecord of insertedCopies) {
-                const barcodeText = await generateBarcode(copyRecord.id, newBook.ISBN_10, newBook.ISBN_13);
-
-                if (barcodeText) {
-                    await db.update(copy)
-                        .set({ barcode: barcodeText })
-                        .where(eq(copy.id, copyRecord.id))
-                        .execute();
-                }
-
-                copiesWithBarcodes.push({
-                    ...copyRecord,
-                    barcode: barcodeText,
-                });
+                generateBarcodeImage(copyRecord.id);
             }
+            console.log(`✅ [INFO] Created ${copiesToInsert.length} copies with varying states.`);
 
             res.status(201).json({
                 message: "Book added successfully.",
@@ -188,7 +172,6 @@ app.post(
                     id: bookId,
                 },
                 total_copies: copiesToInsert.length,
-                copies: copiesWithBarcodes,
             });
         } catch (error) {
             console.error("❌ [ERROR] Internal server error:", error);
@@ -232,25 +215,11 @@ app.post("/books/manual", checkTokenMiddleware, async (req, res) => {
         }
         
         const insertedCopies = await db.insert(copy).values(copiesToInsert).returning();
-        console.log(`✅ [INFO] Created ${copiesToInsert.length} copies with varying states.`);
 
-        const copiesWithBarcodes = [];
         for (const copyRecord of insertedCopies) {
-            const barcodeText = await generateBarcode(copyRecord.id, newBook.ISBN_10, newBook.ISBN_13);
-
-            if (barcodeText) {
-
-                await db.update(copy)
-                    .set({ barcode: barcodeText })
-                    .where(eq(copy.id, copyRecord.id))
-                    .execute();
-            }
-
-            copiesWithBarcodes.push({
-                ...copyRecord,
-                barcode: barcodeText,
-            });
+            generateBarcodeImage(copyRecord.id);
         }
+        console.log(`✅ [INFO] Created ${copiesToInsert.length} copies with varying states.`);
 
         res.status(201).json({
             message: "Book successfully added with copies.",
@@ -258,7 +227,6 @@ app.post("/books/manual", checkTokenMiddleware, async (req, res) => {
                 ...newBook,
             },
             total_copies: copiesToInsert.length,
-            copies: copiesWithBarcodes,
         });
 
     } catch (error) {

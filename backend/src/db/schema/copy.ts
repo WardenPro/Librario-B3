@@ -3,7 +3,7 @@ import { createInsertSchema, createSelectSchema } from "drizzle-zod";
 import { books } from "./book";
 
 export const copy = pgTable("copy", {
-    id: integer("id").primaryKey().notNull(),
+    id: serial().primaryKey().notNull(),
     state: text("state").notNull(),
     is_reserved: boolean("is_reserved").notNull(),
     is_claimed: boolean("is_claimed").notNull(),

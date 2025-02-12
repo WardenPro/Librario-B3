@@ -1,6 +1,6 @@
 import { app } from "../../app/index";
 import { db } from "../../app/config/database";
-import { books } from "../../db/schema/book";
+import { books, insertBookSchema } from "../../db/schema/book";
 import { copy } from "../../db/schema/copy";
 import { eq } from "drizzle-orm";
 import { or } from "drizzle-orm/expressions";
@@ -48,7 +48,7 @@ app.post(
 
             const bookInfo = await ISBN.resolve(isbn);
             if (!bookInfo) {
-                console.log("❌ [ERROR] Book not found with Google Books.");
+                console.log("Book not found with Google Books.");
                 res.status(404).json({ message: "Book not found." });
                 return;
             }
@@ -145,27 +145,25 @@ app.post(
 
             const bookId = inserted.id;
 
-            const copyState =
-                state && typeof state === "string" && state.trim() !== ""
-                    ? state
-                    : "new";
+             // ✅ Vérifier si `copies` est bien un tableau
+             const copiesArray = Array.isArray(req.body.copies) ? req.body.copies : [];
 
-            const copiesToInsert = [];
-            for (let i = 1; i <= numberOfCopies; i++) {
-                copiesToInsert.push({
-                    state: copyState,
-                    is_reserved: false,
-                    is_claimed: false,
-                    copy_number: i,
-                    book_id: bookId,
-                });
-            }
-
-            await db.insert(copy).values(copiesToInsert);
-
-            console.log(
-                `✅ [INFO] Created ${copiesToInsert.length} copies with state '${copyState}'.`,
-            );
+             // ✅ Générer les copies avec des états différents
+             const copiesToInsert = [];
+             for (let i = 0; i < numberOfCopies; i++) {
+                 copiesToInsert.push({
+                     state: copiesArray[i]?.state || "new", // Si `state` n'est pas défini, on met "new"
+                     is_reserved: false,
+                     is_claimed: false,
+                     copy_number: i + 1,
+                     book_id: bookId,
+                 });
+             }
+ 
+             // ✅ Insertion des copies
+             await db.insert(copy).values(copiesToInsert);
+             console.log(`✅ [INFO] Created ${copiesToInsert.length} copies with varying states.`);
+ 
 
             res.status(201).json({
                 message: "Book added successfully.",
@@ -174,7 +172,7 @@ app.post(
                     id: bookId,
                 },
                 total_copies: copiesToInsert.length,
-                copy_state: copyState,
+                copy_state: state,
             });
             return;
         } catch (error) {
@@ -183,3 +181,57 @@ app.post(
         }
     },
 );
+
+app.post("/books/manual", checkTokenMiddleware, async (req, res) => {
+    try {
+        console.log("📌 [INFO] Body Request :", req.body);
+
+        const validatedData = insertBookSchema.parse(req.body);
+        console.log("✅ [INFO] Data validated successfully.");
+
+        console.log("📝 [INFO] Adding book in database ...");
+        const [newBook] = await db.insert(books).values(validatedData).returning();
+
+        if (!newBook) {
+            console.error("❌ [ERROR] Failed to insert book.");
+            res.status(500).json({ message: "Failed to insert book." });
+        }
+
+        console.log("✅ [INFO] Book added successfully:", newBook);
+
+        const bookId = newBook.id;
+        const numberOfCopies = validatedData.quantity || 1;
+
+        const copiesArray = Array.isArray(req.body.copies) ? req.body.copies : [];
+
+        const copiesToInsert = [];
+        for (let i = 0; i < numberOfCopies; i++) {
+            copiesToInsert.push({
+                state: copiesArray[i]?.state || "new",
+                is_reserved: false,
+                is_claimed: false,
+                copy_number: i + 1,
+                book_id: bookId,
+            });
+        }
+
+        await db.insert(copy).values(copiesToInsert);
+        console.log(`✅ [INFO] Created ${copiesToInsert.length} copies with varying states.`);
+
+        res.status(201).json({
+            message: "Book successfully added with copies.",
+            book: {
+                ...newBook,
+            },
+            total_copies: copiesToInsert.length,
+            copies: copiesToInsert,
+        });
+
+    } catch (error) {
+        console.error("❌ [ERROR] Error while adding the book:", error);
+        res.status(500).json({
+            message: "Error while adding the book.",
+            error,
+        });
+    }
+});

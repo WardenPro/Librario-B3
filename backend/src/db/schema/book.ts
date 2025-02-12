@@ -7,6 +7,7 @@ import {
     boolean,
     check,
 } from "drizzle-orm/pg-core";
+import z from "zod";
 import { sql } from "drizzle-orm";
 import { createInsertSchema, createSelectSchema } from "drizzle-zod";
 
@@ -43,7 +44,7 @@ export const insertBookSchema = createInsertSchema(books, {
     publisher: (schema) => schema.publisher,
     author: (schema) => schema.author,
     quantity: (schema) => schema.quantity,
-    publish_date: (schema) => schema.publish_date,
+    publish_date: z.coerce.date(),
     image_link: (schema) => schema.image_link,
 });
 

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Edit, Trash2, Plus } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
@@ -18,51 +18,62 @@ type Book = {
   imageUrl: string
 }
 
-// Données factices pour les livres
-const booksData: Book[] = [
-  {
-    id: 1,
-    title: "Le Petit Prince",
-    author: "Antoine de Saint-Exupéry",
-    isbn: "9780156012195",
-    copies: 5,
-    imageUrl: "/placeholder.svg?height=150&width=100",
-  },
-  {
-    id: 2,
-    title: "1984",
-    author: "George Orwell",
-    isbn: "9780451524935",
-    copies: 3,
-    imageUrl: "/placeholder.svg?height=150&width=100",
-  },
-  {
-    id: 3,
-    title: "Dune",
-    author: "Frank Herbert",
-    isbn: "9780441172719",
-    copies: 2,
-    imageUrl: "/placeholder.svg?height=150&width=100",
-  },
-]
+// Fonction pour récupérer les livres depuis l'API
+const fetchBooks = async () => {
+  try {
+    const response = await fetch("http://localhost:4000/api/books", {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("token")}`, // Ajoute le token JWT si nécessaire
+      },
+    })
+    if (!response.ok) throw new Error("Erreur lors de la récupération des livres")
+    return await response.json()
+  } catch (error) {
+    console.error("Erreur lors du fetch des livres :", error)
+    return []
+  }
+}
 
 export default function BooksClient() {
-  const [books, setBooks] = useState<Book[]>(booksData)
+  const [books, setBooks] = useState<Book[]>([])
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [currentBook, setCurrentBook] = useState<Book | null>(null)
 
-  const handleAddBook = (newBook: Omit<Book, "id">) => {
-    setBooks([...books, { ...newBook, id: books.length + 1 }])
-    setIsDialogOpen(false)
+  useEffect(() => {
+    fetchBooks().then(setBooks)
+  }, [])
+
+  const handleAddBook = async (newBook: Omit<Book, "id">) => {
+    try {
+      const response = await fetch("api/books", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          auth_token: `${localStorage.getItem("token")}`,
+        },
+        body: JSON.stringify(newBook),
+      })
+      if (!response.ok) throw new Error("Erreur lors de l'ajout du livre")
+      const addedBook = await response.json()
+      setBooks([...books, addedBook])
+      setIsDialogOpen(false)
+    } catch (error) {
+      console.error("Erreur lors de l'ajout du livre :", error)
+    }
   }
 
-  const handleEditBook = (updatedBook: Book) => {
-    setBooks(books.map((book) => (book.id === updatedBook.id ? updatedBook : book)))
-    setIsDialogOpen(false)
-  }
-
-  const handleDeleteBook = (id: number) => {
-    setBooks(books.filter((book) => book.id !== id))
+  const handleDeleteBook = async (id: number) => {
+    try {
+      await fetch(`/api/books/${id}`, {
+        method: "DELETE",
+        headers: {
+          auth_token: `${localStorage.getItem("token")}`,
+        },
+      })
+      setBooks(books.filter((book) => book.id !== id))
+    } catch (error) {
+      console.error("Erreur lors de la suppression du livre :", error)
+    }
   }
 
   return (
@@ -113,78 +124,6 @@ export default function BooksClient() {
           </div>
         ))}
       </div>
-
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>{currentBook ? "Modifier le livre" : "Ajouter un livre"}</DialogTitle>
-            <DialogDescription>
-              {currentBook ? "Modifiez les détails du livre ici." : "Entrez les détails du nouveau livre ici."}
-            </DialogDescription>
-          </DialogHeader>
-          <form
-            onSubmit={(e) => {
-              e.preventDefault()
-              const formData = new FormData(e.currentTarget)
-              const bookData = {
-                title: formData.get("title") as string,
-                author: formData.get("author") as string,
-                isbn: formData.get("isbn") as string,
-                copies: Number.parseInt(formData.get("copies") as string, 10),
-                imageUrl: formData.get("imageUrl") as string,
-              }
-              if (currentBook) {
-                handleEditBook({ ...bookData, id: currentBook.id })
-              } else {
-                handleAddBook(bookData)
-              }
-            }}
-          >
-            <div className="grid gap-4 py-4">
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="title" className="text-right">
-                  Titre
-                </Label>
-                <Input id="title" name="title" defaultValue={currentBook?.title} className="col-span-3" />
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="author" className="text-right">
-                  Auteur
-                </Label>
-                <Input id="author" name="author" defaultValue={currentBook?.author} className="col-span-3" />
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="isbn" className="text-right">
-                  ISBN
-                </Label>
-                <Input id="isbn" name="isbn" defaultValue={currentBook?.isbn} className="col-span-3" />
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="copies" className="text-right">
-                  Exemplaires
-                </Label>
-                <Input
-                  id="copies"
-                  name="copies"
-                  type="number"
-                  defaultValue={currentBook?.copies}
-                  className="col-span-3"
-                />
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="imageUrl" className="text-right">
-                  URL de l'image
-                </Label>
-                <Input id="imageUrl" name="imageUrl" defaultValue={currentBook?.imageUrl} className="col-span-3" />
-              </div>
-            </div>
-            <div className="flex justify-end">
-              <Button type="submit">{currentBook ? "Modifier" : "Ajouter"}</Button>
-            </div>
-          </form>
-        </DialogContent>
-      </Dialog>
     </>
   )
 }
-

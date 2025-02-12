@@ -8,6 +8,7 @@ import { checkTokenMiddleware } from "../../app/middlewares/verify_jwt";
 import { grantedAccessMiddleware } from "../../app/middlewares/verify_access_right";
 import ISBN from "node-isbn";
 import { Request, Response } from "express";
+import { generateBarcode } from "../../app/services/barcode";
 
 interface IndustryIdentifier {
     type: string;
@@ -34,8 +35,8 @@ app.post(
 
             console.log(`📌 [INFO] ISBN get: ${isbn}`);
 
-            const isbnRegex = /^(?:\\d{9}[xX]|\\d{10}|\\d{13})$/;
-            if (isbnRegex.test(isbn)) {
+            const isbnRegex = /^(?:\d{9}[xX]|\d{10}|\d{13})$/;
+            if (!isbnRegex.test(isbn)) {
                 console.log("❌ [ERROR] Invalid ISBN format.");
                 res.status(400).json({ message: "Invalid ISBN format." });
                 return;
@@ -61,6 +62,7 @@ app.post(
                 "📌 [INFO] Book information industryIdentifiers:",
                 bookInfo.industryIdentifiers,
             );
+
             const newBook = {
                 title: bookInfo.title || "Unknown",
                 description: bookInfo.description || "No description available",
@@ -87,20 +89,18 @@ app.post(
             };
 
             let existingIsbnBook;
-            if (newBook.ISBN_10 != null) {
+            if (newBook.ISBN_10) {
                 existingIsbnBook = await db
                     .select()
                     .from(books)
                     .where(eq(books.ISBN_10, newBook.ISBN_10));
-            } else if (newBook.ISBN_13 != null) {
+            } else if (newBook.ISBN_13) {
                 existingIsbnBook = await db
                     .select()
                     .from(books)
                     .where(eq(books.ISBN_13, newBook.ISBN_13));
             } else {
-                console.log(
-                    "❌ [ERROR] No ISBN found in the book information.",
-                );
+                console.log("❌ [ERROR] No ISBN found in the book information.");
                 res.status(404).json({
                     message: "No ISBN found in the book information.",
                 });
@@ -146,25 +146,40 @@ app.post(
 
             const bookId = inserted.id;
 
-             // ✅ Vérifier si `copies` est bien un tableau
-             const copiesArray = Array.isArray(req.body.copies) ? req.body.copies : [];
+            // 🛠 **1️⃣ Génération des copies avec barcode temporaire ("null")**
+            const copiesArray = Array.isArray(req.body.copies) ? req.body.copies : [];
 
-             // ✅ Générer les copies avec des états différents
-             const copiesToInsert = [];
-             for (let i = 0; i < numberOfCopies; i++) {
-                 copiesToInsert.push({
-                     state: copiesArray[i]?.state || "new", // Si `state` n'est pas défini, on met "new"
-                     is_reserved: false,
-                     is_claimed: false,
-                     copy_number: i + 1,
-                     book_id: bookId,
-                 });
-             }
- 
-             // ✅ Insertion des copies
-             await db.insert(copy).values(copiesToInsert);
-             console.log(`✅ [INFO] Created ${copiesToInsert.length} copies with varying states.`);
- 
+            const copiesToInsert = [];
+            for (let i = 0; i < numberOfCopies; i++) {
+                copiesToInsert.push({
+                    state: copiesArray[i]?.state || "new",
+                    is_reserved: false,
+                    is_claimed: false,
+                    barcode: "null",
+                    book_id: bookId,
+                });
+            }
+
+            const insertedCopies = await db.insert(copy).values(copiesToInsert).returning();
+            console.log(`✅ [INFO] Created ${copiesToInsert.length} copies with varying states.`);
+
+            // 🔄 **2️⃣ Mise à jour des copies avec leur vrai code-barres**
+            const copiesWithBarcodes = [];
+            for (const copyRecord of insertedCopies) {
+                const barcodeText = await generateBarcode(copyRecord.id, newBook.ISBN_10, newBook.ISBN_13);
+
+                if (barcodeText) {
+                    await db.update(copy)
+                        .set({ barcode: barcodeText })
+                        .where(eq(copy.id, copyRecord.id))
+                        .execute();
+                }
+
+                copiesWithBarcodes.push({
+                    ...copyRecord,
+                    barcode: barcodeText,
+                });
+            }
 
             res.status(201).json({
                 message: "Book added successfully.",
@@ -173,15 +188,15 @@ app.post(
                     id: bookId,
                 },
                 total_copies: copiesToInsert.length,
-                copy_state: state,
+                copies: copiesWithBarcodes,
             });
-            return;
         } catch (error) {
             console.error("❌ [ERROR] Internal server error:", error);
             res.status(500).json({ message: "Internal server error." });
         }
     },
 );
+
 
 app.post("/books/manual", checkTokenMiddleware, async (req, res) => {
     try {
@@ -211,13 +226,31 @@ app.post("/books/manual", checkTokenMiddleware, async (req, res) => {
                 state: copiesArray[i]?.state || "new",
                 is_reserved: false,
                 is_claimed: false,
-                copy_number: i + 1,
+                barcode: "null",
                 book_id: bookId,
             });
         }
-
-        await db.insert(copy).values(copiesToInsert);
+        
+        const insertedCopies = await db.insert(copy).values(copiesToInsert).returning();
         console.log(`✅ [INFO] Created ${copiesToInsert.length} copies with varying states.`);
+
+        const copiesWithBarcodes = [];
+        for (const copyRecord of insertedCopies) {
+            const barcodeText = await generateBarcode(copyRecord.id, newBook.ISBN_10, newBook.ISBN_13);
+
+            if (barcodeText) {
+
+                await db.update(copy)
+                    .set({ barcode: barcodeText })
+                    .where(eq(copy.id, copyRecord.id))
+                    .execute();
+            }
+
+            copiesWithBarcodes.push({
+                ...copyRecord,
+                barcode: barcodeText,
+            });
+        }
 
         res.status(201).json({
             message: "Book successfully added with copies.",
@@ -225,7 +258,7 @@ app.post("/books/manual", checkTokenMiddleware, async (req, res) => {
                 ...newBook,
             },
             total_copies: copiesToInsert.length,
-            copies: copiesToInsert,
+            copies: copiesWithBarcodes,
         });
 
     } catch (error) {

@@ -19,7 +19,7 @@ export const books = pgTable(
         ISBN_13: text("ISBN_13"),
         title: text("title").notNull(),
         description: text("description").notNull(),
-        printType: text("type").notNull(),
+        printType: text("printType").notNull(),
         category: text("category").notNull(),
         publisher: text("publisher").notNull(),
         author: text("author").notNull(),

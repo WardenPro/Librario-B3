@@ -65,7 +65,7 @@ app.get(
                     state: copy.state,
                     is_reserved: copy.is_reserved,
                     is_claimed: copy.is_claimed,
-                    copy_number: copy.copy_number,
+                    barcode: copy.barcode,
                     book_id: copy.book_id,
                     review_condition: sql`array_agg(${review.condition})`.as(
                         "review_condition",
@@ -79,7 +79,7 @@ app.get(
                     copy.state,
                     copy.is_reserved,
                     copy.is_claimed,
-                    copy.copy_number,
+                    copy.barcode,
                     copy.book_id,
                 );
 

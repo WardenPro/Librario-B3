@@ -5,8 +5,9 @@ import { copy } from "../../db/schema/copy";
 import { eq } from "drizzle-orm";
 import { or } from "drizzle-orm/expressions";
 import { checkTokenMiddleware } from "../../app/middlewares/verify_jwt";
-import { checkRoleMiddleware } from "../../app/middlewares/verify_roles";
+import { grantedAccessMiddleware } from "../../app/middlewares/verify_access_right";
 import ISBN from "node-isbn";
+import { Request, Response } from "express";
 
 interface IndustryIdentifier {
     type: string;
@@ -18,8 +19,8 @@ ISBN.provider(["google"]);
 app.post(
     "/books/import",
     checkTokenMiddleware,
-    checkRoleMiddleware("admin"),
-    async (req, res) => {
+    grantedAccessMiddleware("admin"),
+    async (req: Request, res: Response) => {
         try {
             console.log("📌 [INFO] Body Request :", req.body);
 

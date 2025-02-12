@@ -24,7 +24,9 @@ export async function expired_reservation() {
             );
 
         if (expiredReservations.length > 0) {
-            logMessage("Found expired reservations. Removing them from the database ...");
+            logMessage(
+                "Found expired reservations. Removing them from the database ...",
+            );
 
             const copyIds = expiredReservations.map((r) => r.copyId);
             await db
@@ -40,7 +42,6 @@ export async function expired_reservation() {
                 .where(inArray(reservation.id, reservationIds));
 
             logMessage("Expired reservations removed successfully.");
-            
         } else {
             logMessage("No expired reservations found.");
         }

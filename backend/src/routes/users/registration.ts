@@ -4,70 +4,69 @@ import xss from "xss";
 import { users, insertUserSchema } from "../../db/schema/users";
 import { generateToken } from "../../app/middlewares/jwt";
 import { argon2id } from "hash-wasm";
+import { Request, Response } from "express";
 
-app.post(
-    "/registration", async (req, res) => {
-        try {
-            const sanitizedBody = {
-                last_name: req.body.last_name,
-                first_name: req.body.first_name,
-                password: req.body.password,
-                email: req.body.email,
-                comment: xss(req.body.comment),
-                roles: req.body.roles,
-            };
+app.post("/registration", async (req: Request, res: Response) => {
+    try {
+        const sanitizedBody = {
+            last_name: req.body.last_name,
+            first_name: req.body.first_name,
+            password: req.body.password,
+            email: req.body.email,
+            comment: xss(req.body.comment),
+            roles: req.body.roles,
+        };
 
-            const salt = new Uint8Array(16);
-            crypto.getRandomValues(salt);
-            const hashedPassword = await argon2id({
-                password: sanitizedBody.password,
-                salt,
-                parallelism: 1,
-                iterations: 2,
-                memorySize: 19456,
-                hashLength: 32,
-                outputType: "encoded",
-            });
+        const salt = new Uint8Array(16);
+        crypto.getRandomValues(salt);
+        const hashedPassword = await argon2id({
+            password: sanitizedBody.password,
+            salt,
+            parallelism: 1,
+            iterations: 2,
+            memorySize: 19456,
+            hashLength: 32,
+            outputType: "encoded",
+        });
 
-            const validatedInsert = insertUserSchema.parse(sanitizedBody);
-            validatedInsert.password = hashedPassword;
+        const validatedInsert = insertUserSchema.parse(sanitizedBody);
+        validatedInsert.password = hashedPassword;
 
-            const [result] = await db
-                .insert(users)
-                .values(validatedInsert)
-                .returning({ id: users.id })
-                .execute();
+        const [result] = await db
+            .insert(users)
+            .values(validatedInsert)
+            .returning({ id: users.id })
+            .execute();
 
-            if (!result) {
-                throw new Error("Insertion failed, no ID returned.");
-            }
-
-            const token = await generateToken(result.id, validatedInsert.roles);
-
-            res.status(201).json({
-                message: "User successfully inserted",
-                token: token,
-            });
-        } catch (error) {
-            console.error("Error while inserting user:", error);
-
-            if (
-                error instanceof Error &&
-                "code" in error &&
-                error["code"] === "ER_DUP_ENTRY"
-            ) {
-                res.status(400).json({
-                    message: "This email is already in use.",
-                });
-            } else {
-                res.status(500).json({
-                    message: "Error while inserting user.",
-                    error: error,
-                });
-            }
+        if (!result) {
+            throw new Error("Insertion failed, no ID returned.");
         }
-    },
-);
+
+        const token = await generateToken(result.id, validatedInsert.roles);
+
+        res.status(201).json({
+            message: "User successfully inserted",
+            token: token,
+        });
+    } catch (error) {
+        console.error("Error while inserting user:", error);
+
+        if (
+            error instanceof Error &&
+            "code" in error &&
+            error["code"] === "ER_DUP_ENTRY"
+        ) {
+            res.status(400).json({
+                message: "This email is already in use.",
+            });
+        } else {
+            res.status(500).json({
+                message: "Error while inserting user.",
+                error: error,
+            });
+        }
+    }
+});
 
 /**
  * @swagger

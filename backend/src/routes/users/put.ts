@@ -4,9 +4,10 @@ import { users, updateUserSchema } from "../../db/schema/users";
 import { eq } from "drizzle-orm";
 import { ZodError } from "zod";
 import { checkTokenMiddleware } from "../../app/middlewares/verify_jwt";
-import { checkRoleMiddleware } from "../../app/middlewares/verify_roles";
+import { grantedAccessMiddleware } from "../../app/middlewares/verify_access_right";
+import { Request, Response } from "express";
 
-export async function updateUser(id: number, data: any) {
+export async function updateUser(id: number, data: Request) {
     const validatedData = updateUserSchema.parse(data);
 
     try {
@@ -44,33 +45,38 @@ export async function updateUser(id: number, data: any) {
     }
 }
 
-app.put("/users/:id", checkTokenMiddleware, checkRoleMiddleware(), async (req, res) => {
-    try {
-        const userId = parseInt(req.params.id, 10);
+app.put(
+    "/users/:id",
+    checkTokenMiddleware,
+    grantedAccessMiddleware(),
+    async (req: Request, res: Response) => {
+        try {
+            const userId = parseInt(req.params.id, 10);
 
-        const updatedUser = await updateUser(userId, req.body);
+            const updatedUser = await updateUser(userId, req.body);
 
-        res.status(200).json(updatedUser);
-    } catch (error) {
-        if (error instanceof ZodError) {
-            res.status(400).json({
-                message: "Validation error",
-                errors: error.errors.map((issue) => ({
-                    path: issue.path,
-                    message: issue.message,
-                })),
-            });
+            res.status(200).json(updatedUser);
+        } catch (error) {
+            if (error instanceof ZodError) {
+                res.status(400).json({
+                    message: "Validation error",
+                    errors: error.errors.map((issue) => ({
+                        path: issue.path,
+                        message: issue.message,
+                    })),
+                });
+            }
+            if (error instanceof Error && error.message === "User not found") {
+                res.status(404).json({ message: "User not found." });
+            } else {
+                console.error(error);
+                res.status(500).json({
+                    message: "An internal error occurred.",
+                });
+            }
         }
-        if (error instanceof Error && error.message === "User not found") {
-            res.status(404).json({ message: "User not found." });
-        } else {
-            console.error(error);
-            res.status(500).json({
-                message: "An internal error occurred.",
-            });
-        }
-    }
-});
+    },
+);
 
 /**
  * @swagger

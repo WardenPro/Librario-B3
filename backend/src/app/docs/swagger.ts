@@ -9,9 +9,7 @@ export const swaggerSpec = swaggerJsdoc({
             description: "API Documentation with Swagger",
         },
         servers: [{ url: "http://localhost:3000" }],
-        tags: [
-            
-        ],
+        tags: [],
     },
     apis: ["./src/routes/*.ts"],
 });

@@ -2,19 +2,21 @@ import { app } from "../../app/index";
 import { db } from "../../app/config/database";
 import { users } from "../../db/schema/users";
 import { eq } from "drizzle-orm";
-import { checkRoleMiddleware } from "../../app/middlewares/verify_roles";
+import { grantedAccessMiddleware } from "../../app/middlewares/verify_access_right";
 import { checkTokenMiddleware } from "../../app/middlewares/verify_jwt";
+import { Request, Response } from "express";
 
 app.post(
     "/logout/:id",
     checkTokenMiddleware,
-    checkRoleMiddleware(),
-    async (req: any, res: any) => {
+    grantedAccessMiddleware(),
+    async (req: Request, res: Response) => {
         try {
             const userId = parseInt(req.params.id, 10);
 
             if (isNaN(userId)) {
-                return res.status(400).json({ message: "Invalid user ID" });
+                res.status(400).json({ message: "Invalid user ID" });
+                return;
             }
 
             const user = await db
@@ -24,7 +26,8 @@ app.post(
                 .limit(1);
 
             if (!user || user.length === 0) {
-                return res.status(404).json({ message: "User not found" });
+                res.status(404).json({ message: "User not found" });
+                return;
             }
 
             await db
@@ -34,14 +37,14 @@ app.post(
                 })
                 .where(eq(users.id, userId));
 
-            return res
-                .status(200)
-                .json({ message: "User forcibly logged out" });
+            res.status(200).json({ message: "User forcibly logged out" });
+            return;
         } catch (error) {
             console.error("Error during administrator logout:", error);
-            return res.status(500).json({
+            res.status(500).json({
                 message: "Internal error during administrator logout",
             });
+            return;
         }
     },
 );

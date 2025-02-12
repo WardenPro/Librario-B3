@@ -3,8 +3,9 @@ import { db } from "../../app/config/database";
 import { sql } from "drizzle-orm";
 import { books, SelectBookSchema } from "../../db/schema/book";
 import { checkTokenMiddleware } from "../../app/middlewares/verify_jwt";
+import { Request, Response } from "express";
 
-app.get("/books", checkTokenMiddleware, async (req, res) => {
+app.get("/books", checkTokenMiddleware, async (req: Request, res: Response) => {
     try {
         const allBooks = await db.select().from(books);
         const validatedBooks = allBooks.map((books) => {
@@ -20,32 +21,36 @@ app.get("/books", checkTokenMiddleware, async (req, res) => {
     }
 });
 
-app.get("/books/:id", checkTokenMiddleware, async (req, res) => {
-    try {
-        const { id } = req.params;
-        const Book = await db
-            .select()
-            .from(books)
-            .where(sql`${books.id} = ${id}`);
-        if (Book.length === 0) {
-            res.status(404).json({
-                message: "Book not found.",
-                user: `id: ${id}`,
+app.get(
+    "/books/:id",
+    checkTokenMiddleware,
+    async (req: Request, res: Response) => {
+        try {
+            const { id } = req.params;
+            const Book = await db
+                .select()
+                .from(books)
+                .where(sql`${books.id} = ${id}`);
+            if (Book.length === 0) {
+                res.status(404).json({
+                    message: "Book not found.",
+                    user: `id: ${id}`,
+                });
+            } else {
+                const validatedBooks = Book.map((books) => {
+                    return SelectBookSchema.parse(books);
+                });
+                res.status(200).json(validatedBooks);
+            }
+        } catch (error) {
+            console.error("Error while getting book :", error);
+            res.status(500).json({
+                message: "Error while getting book.",
+                error,
             });
-        } else {
-            const validatedBooks = Book.map((books) => {
-                return SelectBookSchema.parse(books);
-            });
-            res.status(200).json(validatedBooks);
         }
-    } catch (error) {
-        console.error("Error while getting book :", error);
-        res.status(500).json({
-            message: "Error while getting book.",
-            error,
-        });
-    }
-});
+    },
+);
 
 /**
  * @swagger

@@ -60,11 +60,13 @@ export const updateReviewSchema = createInsertSchema(review, {
     note: (schema) =>
         schema.note
             .min(0, { message: "The minimum note is 0" })
-            .max(5, { message: "The maximum note is 5" }).optional(),
+            .max(5, { message: "The maximum note is 5" })
+            .optional(),
     condition: (schema) =>
         schema.condition
             .min(0, { message: "The minimum note is 0." })
-            .max(5, { message: "The maximum note is 5." }).optional(),
+            .max(5, { message: "The maximum note is 5." })
+            .optional(),
     book_id: (schema) => schema.book_id.optional(),
     user_id: (schema) => schema.user_id.optional(),
 });

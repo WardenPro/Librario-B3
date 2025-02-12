@@ -4,8 +4,9 @@ import { users } from "../../db/schema/users";
 import { eq } from "drizzle-orm";
 import { argon2Verify } from "hash-wasm";
 import { generateToken } from "../../app/middlewares/jwt";
+import { Request, Response } from "express";
 
-app.post("/login", async (req, res) => {
+app.post("/login", async (req: Request, res: Response) => {
     try {
         const { email, password } = req.body;
 

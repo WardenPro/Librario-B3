@@ -3,13 +3,14 @@ import { db } from "../../app/config/database";
 import { sql } from "drizzle-orm";
 import { books } from "../../db/schema/book";
 import { checkTokenMiddleware } from "../../app/middlewares/verify_jwt";
-import { checkRoleMiddleware } from "../../app/middlewares/verify_roles";
+import { grantedAccessMiddleware } from "../../app/middlewares/verify_access_right";
+import { Request, Response } from "express";
 
 app.put(
     "/books/archiving/:id",
     checkTokenMiddleware,
-    checkRoleMiddleware("admin"),
-    async (req, res) => {
+    grantedAccessMiddleware("admin"),
+    async (req: Request, res: Response) => {
         try {
             const { id } = req.params;
             const Book = await db

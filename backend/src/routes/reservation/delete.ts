@@ -4,40 +4,49 @@ import { sql } from "drizzle-orm";
 import { copy } from "../../db/schema/copy";
 import { reservation } from "../../db/schema/reservation";
 import { checkTokenMiddleware } from "../../app/middlewares/verify_jwt";
-import { checkRoleMiddleware } from "../../app/middlewares/verify_roles";
+import { grantedAccessMiddleware } from "../../app/middlewares/verify_access_right";
+import { Request, Response } from "express";
 
-app.delete("/reservations/:id", checkTokenMiddleware, checkRoleMiddleware(), async (req, res) => {
-    try {
-        const { id } = req.params;
+app.delete(
+    "/reservations/:id",
+    checkTokenMiddleware,
+    grantedAccessMiddleware(),
+    async (req: Request, res: Response) => {
+        try {
+            const { id } = req.params;
 
-        const reservedCopy = await db.select({ copy_id: copy.id}).from(copy).where(sql`${copy.id} = ${id}`)
+            const reservedCopy = await db
+                .select({ copy_id: copy.id })
+                .from(copy)
+                .where(sql`${copy.id} = ${id}`);
 
-        if (reservedCopy.length === 0) {
-            res.status(404).json({
-                message: "Reservation not found.",
-                reservation: `id: ${id}`,
+            if (reservedCopy.length === 0) {
+                res.status(404).json({
+                    message: "Reservation not found.",
+                    reservation: `id: ${id}`,
+                });
+            }
+
+            const deletedReservation = await db
+                .delete(reservation)
+                .where(sql`${reservation.id} = ${id}`)
+                .returning();
+
+            await db
+                .update(copy)
+                .set({ is_reserved: false })
+                .where(sql`${copy.id} = ${reservedCopy}`);
+
+            res.status(200).json({
+                message: "Reservation successfully deleted.",
+                deletedReservation,
             });
-        } 
-
-        const deletedReservation = await db
-            .delete(reservation)
-            .where(sql`${reservation.id} = ${id}`)
-            .returning();
-
-        await db
-        .update(copy)
-        .set({ is_reserved: false })
-        .where(sql`${copy.id} = ${reservedCopy}`);
-
-        res.status(200).json({
-            message: "Reservation successfully deleted.",
-            deletedReservation,
-        });
-    } catch (error) {
-        console.error("Error while deleting the reservation:", error);
-        res.status(500).json({
-            message: "Error while deleting the reservation.",
-            error,
-        });
-    }
-});
+        } catch (error) {
+            console.error("Error while deleting the reservation:", error);
+            res.status(500).json({
+                message: "Error while deleting the reservation.",
+                error,
+            });
+        }
+    },
+);

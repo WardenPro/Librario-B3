@@ -19,10 +19,7 @@ async function startServer() {
         });
         startScheduler();
     } catch (error) {
-        errorMessage(
-            "Error connecting to the database:",
-            error,
-        );
+        errorMessage("Error connecting to the database:", error);
     }
 }
 

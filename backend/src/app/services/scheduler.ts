@@ -1,7 +1,7 @@
 import cron from "node-cron";
 import "./expired_reservation";
 import { expired_reservation } from "./expired_reservation";
-import { logMessage } from "./log";
+import { logMessage } from "../utils/logger";
 
 export function startScheduler() {
     cron.schedule("0 * * * *", async () => {

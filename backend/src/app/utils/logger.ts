@@ -26,16 +26,13 @@ export function logMessage(message: string) {
     fs.appendFileSync(path.join(logDir, "server.log"), log);
 }
 
-export function errorMessage(
-    message: string,
-    error: unknown = new Error("No error specified"),
-) {
+export function errorMessage(message: string, error?: unknown) {
     let log = `${getCurrentDateTime()}: ${message}`;
-    console.log(log);
+    console.error(log);
     log += "\n";
-    if (error instanceof Error && error.message != "No error specified") {
+    if (error) {
         console.error(error);
-        log += `${error.stack}\n`;
+        log += "\n";
     }
     fs.appendFileSync(path.join(logDir, "error.log"), log);
 }

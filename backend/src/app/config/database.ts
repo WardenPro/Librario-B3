@@ -1,6 +1,6 @@
 import { migrate } from "drizzle-orm/node-postgres/migrator";
 import { drizzle } from "drizzle-orm/node-postgres";
-import { logMessage, errorMessage } from "../services/log";
+import { logMessage, errorMessage } from "../utils/logger";
 import dotenv from "dotenv";
 import "dotenv/config";
 import { NODE_ENV } from "..";

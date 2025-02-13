@@ -5,9 +5,11 @@ const tsPlugin = require("@typescript-eslint/eslint-plugin");
 const tsParser = require("@typescript-eslint/parser");
 
 module.exports = [
+    {
+        ignores: ["dist/", "conf/", "coverage/", "eslint.config.js"],
+    },
     configs.recommended,
     {
-        ignores: ["dist/", "conf/", "coverage/"],
         files: ["src/**/*.ts"],
         languageOptions: {
             ecmaVersion: 2020,

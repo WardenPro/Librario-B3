@@ -1,5 +1,6 @@
 import { SignJWT } from "jose";
 import key from "./key";
+import { AppError } from "../utils/AppError";
 
 export async function generateToken(user_id: number, role: string) {
     try {
@@ -16,7 +17,6 @@ export async function generateToken(user_id: number, role: string) {
 
         return jwt;
     } catch (error) {
-        console.error("Error during JWT generation:", error);
-        throw new Error("Unable to generate the token.");
+        throw new AppError("Unable to generate the token.", 500, error);
     }
 }

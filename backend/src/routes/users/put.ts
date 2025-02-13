@@ -2,10 +2,10 @@ import { app } from "../../app/index";
 import { db } from "../../app/config/database";
 import { users, newUpdateUserSchema } from "../../db/schema/users";
 import { eq } from "drizzle-orm";
-import { ZodError } from "zod";
 import { checkTokenMiddleware } from "../../app/middlewares/verify_jwt";
 import { grantedAccessMiddleware } from "../../app/middlewares/verify_access_right";
-import { Request, Response } from "express";
+import { NextFunction, Request, Response } from "express";
+import { AppError } from "../../app/utils/AppError";
 
 export async function updateUser(id: number, data: Request) {
     const validatedData = newUpdateUserSchema.parse(data);
@@ -17,31 +17,29 @@ export async function updateUser(id: number, data: Request) {
             .where(eq(users.id, id))
             .execute();
 
-        if (userExists.length === 0) {
-            throw new Error("User not found");
-        }
+        if (userExists.length === 0)
+            throw new AppError("User not found", 404, { id: `${id}` });
 
-        await db
+        const [updatedUser] = await db
             .update(users)
             .set(validatedData)
             .where(eq(users.id, id))
+            .returning()
             .execute();
 
-        const updatedUser = await db
-            .select()
-            .from(users)
-            .where(eq(users.id, id))
-            .execute();
+        if (!updatedUser)
+            throw new AppError("No changes were made to the user data.", 400);
 
-        return updatedUser[0];
+        return updatedUser;
     } catch (error) {
-        if (error instanceof Error) {
-            throw new Error("Error updating user: " + error.message);
-        } else {
-            throw new Error(
-                "An unknown error occurred while updating the user.",
-            );
+        if (error instanceof AppError) {
+            throw error;
         }
+        throw new AppError(
+            "An unknown error occurred while updating the user.",
+            500,
+            error,
+        );
     }
 }
 
@@ -49,31 +47,35 @@ app.put(
     "/users/:id",
     checkTokenMiddleware,
     grantedAccessMiddleware(),
-    async (req: Request, res: Response) => {
+    async (req: Request, res: Response, next: NextFunction) => {
         try {
             const userId = parseInt(req.params.id, 10);
+            if (isNaN(userId) || userId <= 0)
+                throw new AppError("Invalid user ID provided.", 400);
+            if (Object.keys(req.body).length === 0)
+                throw new AppError("No data provided for update.", 400);
 
             const updatedUser = await updateUser(userId, req.body);
+            if (!updatedUser)
+                throw new AppError(
+                    "An error occurred while updating the user.",
+                    500,
+                );
 
-            res.status(200).json(updatedUser);
+            res.status(200).json({
+                email: updatedUser.email,
+                last_name: updatedUser.last_name,
+                first_name: updatedUser.first_name,
+            });
         } catch (error) {
-            if (error instanceof ZodError) {
-                res.status(400).json({
-                    message: "Validation error",
-                    errors: error.errors.map((issue) => ({
-                        path: issue.path,
-                        message: issue.message,
-                    })),
-                });
-            }
-            if (error instanceof Error && error.message === "User not found") {
-                res.status(404).json({ message: "User not found." });
-            } else {
-                console.error(error);
-                res.status(500).json({
-                    message: "An internal error occurred.",
-                });
-            }
+            if (error instanceof AppError) return next(error);
+            next(
+                new AppError(
+                    "Internal error while updating the user",
+                    500,
+                    error,
+                ),
+            );
         }
     },
 );

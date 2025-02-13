@@ -1,5 +1,6 @@
 import { NODE_ENV } from "..";
 import { Request, Response, NextFunction } from "express";
+import { AppError } from "../utils/AppError";
 
 export function grantedAccessMiddleware(requiredRole?: "admin" | "id") {
     return (req: Request, res: Response, next: NextFunction) => {
@@ -7,17 +8,15 @@ export function grantedAccessMiddleware(requiredRole?: "admin" | "id") {
             try {
                 //inversed the condition to test it
                 if (NODE_ENV !== "development") {
-                    next();
-                    return;
+                    return next();
                 }
 
                 const payload = req.payload;
 
                 if (!payload || !payload.role || !payload.user_id) {
-                    res.status(403).json({
-                        message: "Missing role or ID in token",
-                    });
-                    return;
+                    return next(
+                        new AppError("Missing role or ID in token", 403),
+                    );
                 }
 
                 const userRole: string = payload.role as string;
@@ -25,28 +24,19 @@ export function grantedAccessMiddleware(requiredRole?: "admin" | "id") {
 
                 const requestedId = parseInt(req.params.id, 10);
 
-                if (requiredRole === "id" && requestedId !== userId) {
-                    res.status(403).json({
-                        message: "Access denied: not your account",
-                    });
-                    return;
-                }
+                if (requiredRole === "id" && requestedId !== userId)
+                    return next(
+                        new AppError("Access denied: not your account", 403),
+                    );
 
-                if (requiredRole === "admin" && userRole !== "admin") {
-                    res.status(403).json({
-                        message: "Access denied: admin only",
-                    });
-                    return;
-                }
+                if (requiredRole === "admin" && userRole !== "admin")
+                    return next(new AppError("Access denied: admin only", 403));
 
-                if (requestedId !== userId && userRole !== "admin") {
-                    res.status(403).json({ message: "Access denied" });
-                    return;
-                }
+                if (requestedId !== userId && userRole !== "admin")
+                    return next(new AppError("Access denied", 403));
 
                 next();
             } catch (error) {
-                console.error("Error during access verification:", error);
                 next(error);
             }
         })();

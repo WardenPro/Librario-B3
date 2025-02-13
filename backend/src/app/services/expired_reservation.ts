@@ -2,7 +2,7 @@ import { lt, eq, and, inArray } from "drizzle-orm";
 import { reservation } from "../../db/schema/reservation";
 import { copy } from "../../db/schema/copy";
 import { db } from "../config/database";
-import { logMessage } from "./log";
+import { logMessage } from "../utils/logger";
 
 export async function expired_reservation() {
     try {

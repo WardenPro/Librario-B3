@@ -4,13 +4,14 @@ import { sql } from "drizzle-orm";
 import { books } from "../../db/schema/book";
 import { checkTokenMiddleware } from "../../app/middlewares/verify_jwt";
 import { grantedAccessMiddleware } from "../../app/middlewares/verify_access_right";
-import { Request, Response } from "express";
+import { NextFunction, Request, Response } from "express";
+import { AppError } from "../../app/utils/AppError";
 
 app.put(
     "/books/archiving/:id",
     checkTokenMiddleware,
     grantedAccessMiddleware("admin"),
-    async (req: Request, res: Response) => {
+    async (req: Request, res: Response, next: NextFunction) => {
         try {
             const { id } = req.params;
             const Book = await db
@@ -18,31 +19,23 @@ app.put(
                 .from(books)
                 .where(sql`${books.id} = ${id}`);
             if (Book.length === 0) {
-                res.status(404).json({
-                    message: "Book not found.",
-                    books: `id: ${id}`,
-                });
-            } else {
-                try {
-                    await db
-                        .update(books)
-                        .set({ is_removed: true })
-                        .where(sql`${books.id} = ${id}`);
-                    res.status(200).json("Book deleted successfully.");
-                } catch (error) {
-                    console.error("Error while deleting the book.", error);
-                    res.status(500).json({
-                        message: "Error while deleting the book.",
-                        error,
-                    });
-                }
+                throw new AppError(`Book not found. ID: ${id}`, 404);
+            }
+            try {
+                await db
+                    .update(books)
+                    .set({ is_removed: true })
+                    .where(sql`${books.id} = ${id}`);
+                res.status(200).json("Book deleted successfully.");
+            } catch (error) {
+                throw new AppError(
+                    "Error while deleting the book.",
+                    500,
+                    error,
+                );
             }
         } catch (error) {
-            console.error("Error while deleting the book.", error);
-            res.status(500).json({
-                message: "Error while deleting the book.",
-                error,
-            });
+            next(error);
         }
     },
 );

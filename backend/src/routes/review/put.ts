@@ -1,29 +1,44 @@
 import { app } from "../../app/index";
 import { db } from "../../app/config/database";
-import { sql } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { review, updateReviewSchema } from "../../db/schema/review";
 import { checkTokenMiddleware } from "../../app/middlewares/verify_jwt";
 import { grantedAccessMiddleware } from "../../app/middlewares/verify_access_right";
-import { Request, Response } from "express";
+import { NextFunction, Request, Response } from "express";
+import { AppError } from "../../app/utils/AppError";
 
 app.put(
     "/reviews/:id",
     checkTokenMiddleware,
     grantedAccessMiddleware(),
-    async (req: Request, res: Response) => {
+    async (req: Request, res: Response, next: NextFunction) => {
         try {
-            const { id } = req.params;
+            if (Object.keys(req.body).length === 0)
+                throw new AppError("No data provided for update.", 400);
+            const reviewId = parseInt(req.params.id, 10);
+            if (isNaN(reviewId) || reviewId <= 0)
+                throw new AppError("Invalid review ID provided.", 400);
+
+            const existingReview = await db
+                .select()
+                .from(review)
+                .where(eq(review.id, reviewId))
+                .execute();
+
+            if (existingReview.length === 0)
+                throw new AppError("Review not found.", 404, { id: reviewId });
+
             const validatedData = updateReviewSchema.parse(req.body);
             const updatedReview = await db
                 .update(review)
                 .set(validatedData)
-                .where(sql`${review.id} = ${id}`)
-                .returning();
+                .where(eq(review.id, reviewId))
+                .returning()
+                .execute();
 
             if (updatedReview.length === 0) {
-                res.status(404).json({
-                    message: "Review not found or no changes applied.",
-                    review: `id: ${id}`,
+                throw new AppError("No changes applied.", 404, {
+                    id: reviewId,
                 });
             } else {
                 res.status(200).json({
@@ -32,11 +47,16 @@ app.put(
                 });
             }
         } catch (error) {
-            console.error("Error while updating the review:", error);
-            res.status(500).json({
-                message: "Error while updating the review.",
-                error,
-            });
+            if (error instanceof AppError) {
+                return next(error);
+            }
+            next(
+                new AppError(
+                    "Internal error while updating the review.",
+                    500,
+                    error,
+                ),
+            );
         }
     },
 );

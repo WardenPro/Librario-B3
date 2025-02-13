@@ -1,29 +1,32 @@
 import { app } from "../../app/index";
 import { db } from "../../app/config/database";
-import { sql } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import {
     reservation,
     insertReservationSchema,
 } from "../../db/schema/reservation";
 import { copy } from "../../db/schema/copy";
 import { checkTokenMiddleware } from "../../app/middlewares/verify_jwt";
-import { Request, Response } from "express";
+import { Request, Response, NextFunction } from "express";
+import { AppError } from "../../app/utils/AppError";
 
 app.post(
     "/reservations",
     checkTokenMiddleware,
-    async (req: Request, res: Response) => {
+    async (req: Request, res: Response, next: NextFunction) => {
         try {
             const validatedData = insertReservationSchema.parse(req.body);
             const newReservation = await db
                 .insert(reservation)
                 .values(validatedData)
-                .returning();
+                .returning()
+                .execute();
 
             await db
                 .update(copy)
                 .set({ is_reserved: true })
-                .where(sql`${copy.id} = ${validatedData.copy_id}`);
+                .where(eq(copy.id, validatedData.copy_id))
+                .execute();
 
             res.status(201).json({
                 message:
@@ -31,11 +34,8 @@ app.post(
                 newReservation,
             });
         } catch (error) {
-            console.error("Error while adding the reservation:", error);
-            res.status(500).json({
-                message: "Error while adding the reservation.",
-                error,
-            });
+            if (error instanceof AppError) return next(error);
+            next(new AppError("Error while adding the reservation.", 500));
         }
     },
 );

@@ -18,7 +18,8 @@ app.put(
                 .update(copy)
                 .set(validatedData)
                 .where(sql`${copy.id} = ${id}`)
-                .returning();
+                .returning()
+                .execute();
 
             if (updatedCopy.length === 0) {
                 res.status(404).json({

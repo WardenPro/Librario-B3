@@ -7,7 +7,8 @@ import { or } from "drizzle-orm/expressions";
 import { checkTokenMiddleware } from "../../app/middlewares/verify_jwt";
 import { grantedAccessMiddleware } from "../../app/middlewares/verify_access_right";
 import ISBN from "node-isbn";
-import { Request, Response } from "express";
+import { Request, Response, NextFunction } from "express";
+import { AppError } from "../../app/utils/AppError";
 import { generateBarcodeImage } from "../../app/services/barcode"; 
 
 interface IndustryIdentifier {
@@ -21,26 +22,15 @@ app.post(
     "/books/import",
     checkTokenMiddleware,
     grantedAccessMiddleware("admin"),
-    async (req: Request, res: Response) => {
+    async (req: Request, res: Response, next: NextFunction) => {
         try {
-            console.log("📌 [INFO] Body Request :", req.body);
-
             const { isbn, quantity, state } = req.body;
 
-            if (!isbn) {
-                console.log("❌ [ERROR] ISBN missing in the request.");
-                res.status(400).json({ message: "ISBN is required." });
-                return;
-            }
+            if (!isbn) throw new AppError("ISBN is required.", 400);
 
-            console.log(`📌 [INFO] ISBN get: ${isbn}`);
-
-            const isbnRegex = /^(?:\d{9}[xX]|\d{10}|\d{13})$/;
-            if (!isbnRegex.test(isbn)) {
-                console.log("❌ [ERROR] Invalid ISBN format.");
-                res.status(400).json({ message: "Invalid ISBN format." });
-                return;
-            }
+            const isbnRegex = /^(?:\d{9}[xX]|\\d{10}|\\d{13})$/;
+            if (!isbnRegex.test(isbn))
+                throw new AppError("Invalid ISBN format.", 400);
 
             const parsedQuantity = parseInt(quantity, 10);
             const numberOfCopies =
@@ -49,19 +39,11 @@ app.post(
                     : 1;
 
             const bookInfo = await ISBN.resolve(isbn);
-            if (!bookInfo) {
-                console.log("Book not found with Google Books.");
-                res.status(404).json({ message: "Book not found." });
-                return;
-            }
+            if (!bookInfo)
+                throw new AppError("Book not found with Google Books.", 404);
 
             const industryIdentifiers =
                 bookInfo.industryIdentifiers as unknown as IndustryIdentifier[];
-
-            console.log(
-                "📌 [INFO] Book information industryIdentifiers:",
-                bookInfo.industryIdentifiers,
-            );
 
             const newBook = {
                 title: bookInfo.title || "Unknown",
@@ -88,64 +70,46 @@ app.post(
                 is_removed: false,
             };
 
-            let existingIsbnBook;
-            if (newBook.ISBN_10) {
-                existingIsbnBook = await db
-                    .select()
-                    .from(books)
-                    .where(eq(books.ISBN_10, newBook.ISBN_10));
-            } else if (newBook.ISBN_13) {
-                existingIsbnBook = await db
-                    .select()
-                    .from(books)
-                    .where(eq(books.ISBN_13, newBook.ISBN_13));
-            } else {
-                console.log("❌ [ERROR] No ISBN found in the book information.");
-                res.status(404).json({
-                    message: "No ISBN found in the book information.",
-                });
-                return;
-            }
-
-            if (existingIsbnBook.length > 0) {
-                console.log(
-                    "❌ [ERROR] A book with this ISBN already exists in the database.",
-                );
-                res.status(409).json({
-                    message:
-                        "A book with this ISBN already exists in the database.",
-                });
-                return;
-            }
-
-            console.log("📝 [INFO] Adding book in database ...");
-            await db.insert(books).values(newBook);
-            console.log("✅ [INFO] Book added successfully.");
-
             const conditions = [];
-
-            if (newBook.ISBN_10) {
+            if (newBook.ISBN_10)
                 conditions.push(eq(books.ISBN_10, newBook.ISBN_10));
-            }
-
-            if (newBook.ISBN_13) {
+            if (newBook.ISBN_13)
                 conditions.push(eq(books.ISBN_13, newBook.ISBN_13));
+
+            let existingIsbnBook;
+            if (conditions.length > 0) {
+                existingIsbnBook = await db
+                    .select()
+                    .from(books)
+                    .where(or(...conditions));
+            } else {
+                throw new AppError(
+                    "No ISBN found in the book information.",
+                    404,
+                );
             }
 
-            const [inserted] = await db
-                .select()
-                .from(books)
-                .where(or(...conditions));
+            if (existingIsbnBook.length > 0)
+                throw new AppError(
+                    "A book with this ISBN already exists in the database.",
+                    409,
+                );
 
-            if (!inserted) {
-                res.status(500).json({
-                    message: "Error retrieving inserted book from database.",
-                });
-                return;
-            }
+            const [insertedBook] = await db
+                .insert(books)
+                .values(newBook)
+                .returning();
 
-            const bookId = inserted.id;
-            const copiesArray = Array.isArray(req.body.copies) ? req.body.copies : [];
+            if (!insertedBook)
+                throw new AppError(
+                    "Error retrieving inserted book from database.",
+                    500,
+                );
+
+            const copyState =
+                state && typeof state === "string" && state.trim() !== ""
+                    ? state
+                    : "new";
 
             const copiesToInsert = [];
             for (let i = 0; i < numberOfCopies; i++) {
@@ -154,7 +118,7 @@ app.post(
                     is_reserved: false,
                     is_claimed: false,
                     barcode: "null",
-                    book_id: bookId,
+                    book_id: insertedBook.id,
                 });
             }
 
@@ -169,13 +133,12 @@ app.post(
                 message: "Book added successfully.",
                 book: {
                     ...newBook,
-                    id: bookId,
+                    id: insertedBook.id,
                 },
                 total_copies: copiesToInsert.length,
             });
         } catch (error) {
-            console.error("❌ [ERROR] Internal server error:", error);
-            res.status(500).json({ message: "Internal server error." });
+            next(error);
         }
     },
 );
@@ -215,6 +178,8 @@ app.post("/books/manual", checkTokenMiddleware, async (req, res) => {
         }
         
         const insertedCopies = await db.insert(copy).values(copiesToInsert).returning();
+        if (!insertedCopies)
+            throw new AppError("Error inserting copies into the database.", 500);
 
         for (const copyRecord of insertedCopies) {
             generateBarcodeImage(copyRecord.id);

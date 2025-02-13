@@ -4,6 +4,7 @@ import { db } from "../config/database";
 import { eq } from "drizzle-orm";
 import { users } from "../../db/schema/users";
 import { Request, Response, NextFunction } from "express";
+import { AppError } from "../../app/utils/AppError";
 
 export const extractBearerToken = (headerValue: string) => {
     if (typeof headerValue !== "string") {
@@ -32,7 +33,7 @@ async function isTokenRevoked(payload: JWTPayload) {
             .limit(1);
 
         if (!user || user.length === 0) {
-            throw new Error("User not found.");
+            throw new AppError("User not found, id:" + payloadId, 404);
         }
 
         const userData = user[0];
@@ -56,43 +57,40 @@ export async function checkTokenMiddleware(
     next: NextFunction,
 ) {
     try {
-        const authHeader = req.headers["auth_token"];
-        const authToken =
-            typeof authHeader === "string" ? authHeader : authHeader?.[0];
+        const authToken = req.headers["auth_token"];
+        if (
+            !authToken ||
+            typeof authToken !== "string" ||
+            authToken.length === 0
+        )
+            throw new AppError("Missing JWT token", 401);
 
-        if (!authToken) {
-            res.status(401).json({ message: "Missing JWT token" });
-            return;
-        }
+        const token = extractBearerToken(authToken);
+        if (!token) throw new AppError("Invalid token", 500);
 
-        const token = extractBearerToken(authToken) as string;
         const secret_key = Buffer.from(key, "hex");
 
         const { payload } = await jwtVerify(token, secret_key);
-        if (!payload || Object.keys(payload).length === 0) {
-            res.status(401).json({ message: "Invalid token payload." });
-            return;
-        }
+        if (!payload || Object.keys(payload).length === 0)
+            throw new AppError("Invalid token payload", 401);
+
         req.payload = payload;
 
         let revoked;
         try {
             revoked = await isTokenRevoked(payload);
         } catch (error) {
-            res.status(500).json({
-                message: "Internal error during token verification." + error,
-            });
-            return;
+            throw new AppError(
+                "Error during JWT revocation check.",
+                500,
+                error,
+            );
         }
 
-        if (revoked) {
-            res.status(401).json({ message: "Revoked token." });
-            return;
-        }
+        if (revoked) throw new AppError("Relogin is required.", 401);
 
-        return next();
+        next();
     } catch (error) {
-        res.status(401).json({ message: "Invalid token." + error });
-        return;
+        next(error);
     }
 }

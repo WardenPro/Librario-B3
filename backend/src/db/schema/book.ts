@@ -28,12 +28,12 @@ export const books = pgTable(
         image_link: text("image_link"),
         is_removed: boolean("is_removed").notNull().default(false),
     },
-    (table) => ({
-        checkConstraint: check(
+    (table) => [
+        check(
             "isbn_check",
             sql`${table.ISBN_10} IS NOT NULL OR ${table.ISBN_13} IS NOT NULL`,
         ),
-    }),
+    ],
 );
 
 export const insertBookSchema = createInsertSchema(books, {

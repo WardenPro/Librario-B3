@@ -21,9 +21,7 @@ export const review = pgTable(
             .notNull()
             .references(() => users.id, { onDelete: "cascade" }),
     },
-    (table) => ({
-        uniqueUserBook: unique().on(table.user_id, table.book_id),
-    }),
+    (table) => [unique().on(table.user_id, table.book_id)],
 );
 
 export const insertReviewSchema = createInsertSchema(review, {

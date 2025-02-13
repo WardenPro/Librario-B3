@@ -4,69 +4,85 @@ import xss from "xss";
 import { users, insertUserSchema } from "../../db/schema/users";
 import { generateToken } from "../../app/middlewares/jwt";
 import { argon2id } from "hash-wasm";
-import { Request, Response } from "express";
+import { NextFunction, Request, Response } from "express";
+import { AppError } from "../../app/utils/AppError";
 
-app.post("/registration", async (req: Request, res: Response) => {
-    try {
-        const sanitizedBody = {
-            last_name: req.body.last_name,
-            first_name: req.body.first_name,
-            password: req.body.password,
-            email: req.body.email,
-            comment: xss(req.body.comment),
-            roles: "user",
-        };
+app.post(
+    "/registration",
+    async (req: Request, res: Response, next: NextFunction) => {
+        try {
+            if (Object.keys(req.body).length === 0)
+                throw new AppError("No data provided for registration.", 400);
+            const { first_name, last_name, email, bio, password } = req.body;
+            if (!first_name || !last_name || !email || !password)
+                throw new AppError(
+                    "Missing required fields: first_name, last_name, email, password.",
+                    400,
+                );
 
-        const salt = new Uint8Array(16);
-        crypto.getRandomValues(salt);
-        const hashedPassword = await argon2id({
-            password: sanitizedBody.password,
-            salt,
-            parallelism: 1,
-            iterations: 2,
-            memorySize: 19456,
-            hashLength: 32,
-            outputType: "encoded",
-        });
+            const sanitizedBody = {
+                first_name: xss(first_name),
+                last_name: xss(last_name),
+                password: password,
+                email: email,
+                bio: xss(bio),
+                roles: "user",
+            };
 
-        const validatedInsert = insertUserSchema.parse(sanitizedBody);
-        validatedInsert.password = hashedPassword;
-
-        const [result] = await db
-            .insert(users)
-            .values(validatedInsert)
-            .returning({ id: users.id })
-            .execute();
-
-        if (!result) {
-            throw new Error("Insertion failed, no ID returned.");
-        }
-
-        const token = await generateToken(result.id, validatedInsert.roles);
-
-        res.status(201).json({
-            message: "User successfully inserted",
-            token: token,
-        });
-    } catch (error) {
-        console.error("Error while inserting user:", error);
-
-        if (
-            error instanceof Error &&
-            "code" in error &&
-            error["code"] === "ER_DUP_ENTRY"
-        ) {
-            res.status(400).json({
-                message: "This email is already in use.",
+            const salt = new Uint8Array(16);
+            crypto.getRandomValues(salt);
+            const hashedPassword = await argon2id({
+                password: sanitizedBody.password,
+                salt,
+                parallelism: 1,
+                iterations: 2,
+                memorySize: 19456,
+                hashLength: 32,
+                outputType: "encoded",
             });
-        } else {
-            res.status(500).json({
-                message: "Error while inserting user.",
-                error: error,
-            });
+
+            const validatedInsert = insertUserSchema.parse(sanitizedBody);
+            validatedInsert.password = hashedPassword;
+
+            const [result] = await db
+                .insert(users)
+                .values(validatedInsert)
+                .returning({ id: users.id })
+                .execute();
+
+            if (!result) {
+                throw new AppError("Error during registarion.", 500);
+            }
+
+            try {
+                const token = await generateToken(
+                    result.id,
+                    validatedInsert.roles,
+                );
+                res.status(201).json({
+                    message: "User successfully registered",
+                    token: token,
+                });
+            } catch {
+                res.status(201).json({
+                    message: "User successfully registered",
+                });
+            }
+        } catch (error) {
+            if (
+                error instanceof Error &&
+                "constraint" in error &&
+                error["constraint"] === "users_email_unique"
+            ) {
+                next(new AppError("This email is already in use.", 400));
+            } else if (error instanceof AppError) {
+                next(error);
+            } else {
+                next(new AppError("Error during registarion.", 500, error));
+            }
         }
-    }
-});
+    },
+);
 
 /**
  * @swagger

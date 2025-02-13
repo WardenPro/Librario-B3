@@ -4,11 +4,15 @@ import { users } from "../../db/schema/users";
 import { eq } from "drizzle-orm";
 import { argon2Verify } from "hash-wasm";
 import { generateToken } from "../../app/middlewares/jwt";
-import { Request, Response } from "express";
+import { NextFunction, Request, Response } from "express";
+import { AppError } from "../../app/utils/AppError";
 
-app.post("/login", async (req: Request, res: Response) => {
+app.post("/login", async (req: Request, res: Response, next: NextFunction) => {
     try {
         const { email, password } = req.body;
+        if (!email || !password) {
+            throw new AppError("Email and password are required.", 400);
+        }
 
         const [user] = await db
             .select()
@@ -16,27 +20,23 @@ app.post("/login", async (req: Request, res: Response) => {
             .where(eq(users.email, email))
             .execute();
 
-        if (!user) {
-            res.status(404).json({ message: "User not found" });
-            return;
-        }
+        const isValid = user
+            ? await argon2Verify({
+                password: password,
+                hash: user.password,
+            })
+            : false;
 
-        const isPasswordValid = await argon2Verify({
-            password: password,
-            hash: user.password,
-        });
-
-        if (!isPasswordValid) {
-            res.status(401).json({ message: "Incorrect password" });
-            return;
+        if (!isValid) {
+            throw new AppError("Invalid credentials.", 401);
         }
 
         const token = await generateToken(user.id, user.roles);
 
-        res.status(200).json({ message: "Login successful", token: token });
+        res.status(200).json({ message: "Login successful.", token: token });
     } catch (error) {
-        console.error("Error while logging in:", error);
-        res.status(500).json({ message: "Server error" });
+        if (error instanceof AppError) return next(error);
+        next(new AppError("Internal error during user login", 500, error));
     }
 });
 

@@ -4,47 +4,41 @@ import { users } from "../../db/schema/users";
 import { eq } from "drizzle-orm";
 import { grantedAccessMiddleware } from "../../app/middlewares/verify_access_right";
 import { checkTokenMiddleware } from "../../app/middlewares/verify_jwt";
-import { Request, Response } from "express";
+import { Request, Response, NextFunction } from "express";
+import { AppError } from "../../app/utils/AppError";
 
 app.post(
     "/logout/:id",
     checkTokenMiddleware,
     grantedAccessMiddleware(),
-    async (req: Request, res: Response) => {
+    async (req: Request, res: Response, next: NextFunction) => {
         try {
             const userId = parseInt(req.params.id, 10);
-
-            if (isNaN(userId)) {
-                res.status(400).json({ message: "Invalid user ID" });
-                return;
-            }
+            if (isNaN(userId) || userId <= 0)
+                throw new AppError("Invalid user ID provided.", 400);
 
             const user = await db
                 .select()
                 .from(users)
                 .where(eq(users.id, userId))
-                .limit(1);
+                .limit(1)
+                .execute();
 
-            if (!user || user.length === 0) {
-                res.status(404).json({ message: "User not found" });
-                return;
-            }
+            if (!user || user.length === 0)
+                throw new AppError(`User with ID ${userId} not found`, 404);
 
             await db
                 .update(users)
                 .set({
                     revocation_time_at: new Date(),
                 })
-                .where(eq(users.id, userId));
+                .where(eq(users.id, userId))
+                .execute();
 
             res.status(200).json({ message: "User forcibly logged out" });
-            return;
         } catch (error) {
-            console.error("Error during administrator logout:", error);
-            res.status(500).json({
-                message: "Internal error during administrator logout",
-            });
-            return;
+            if (error instanceof AppError) return next(error);
+            next(new AppError("Internal error during user logout", 500, error));
         }
     },
 );

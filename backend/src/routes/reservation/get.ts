@@ -6,25 +6,33 @@ import {
 } from "../../db/schema/reservation";
 import { checkTokenMiddleware } from "../../app/middlewares/verify_jwt";
 import { grantedAccessMiddleware } from "../../app/middlewares/verify_access_right";
-import { Response } from "express";
+import { Request, Response, NextFunction } from "express";
+import { AppError } from "../../app/utils/AppError";
 
 app.get(
     "/reservations",
     checkTokenMiddleware,
     grantedAccessMiddleware("admin"),
-    async (res: Response) => {
+    async (req: Request, res: Response, next: NextFunction) => {
         try {
-            const allReservations = await db.select().from(reservation);
+            const allReservations = await db
+                .select()
+                .from(reservation)
+                .execute();
             const validatedReservations = allReservations.map((r) =>
                 selectReservationSchema.parse(r),
             );
+
             res.status(200).json(validatedReservations);
         } catch (error) {
-            console.error("Error while retrieving reservations:", error);
-            res.status(500).json({
-                message: "Error while retrieving reservations.",
-                error,
-            });
+            if (error instanceof AppError) return next(error);
+            next(
+                new AppError(
+                    "Error while retrieving reservations.",
+                    500,
+                    error,
+                ),
+            );
         }
     },
 );

@@ -2,8 +2,7 @@ import { app } from "../../app/index";
 import { db } from "../../app/config/database";
 import { books, insertBookSchema } from "../../db/schema/book";
 import { copy } from "../../db/schema/copy";
-import { eq } from "drizzle-orm";
-import { or } from "drizzle-orm/expressions";
+import { eq, or } from "drizzle-orm";
 import { checkTokenMiddleware } from "../../app/middlewares/verify_jwt";
 import { grantedAccessMiddleware } from "../../app/middlewares/verify_access_right";
 import ISBN from "node-isbn";
@@ -25,10 +24,9 @@ app.post(
     async (req: Request, res: Response, next: NextFunction) => {
         try {
             const { isbn, quantity, state } = req.body;
-
             if (!isbn) throw new AppError("ISBN is required.", 400);
 
-            const isbnRegex = /^(?:\d{9}[xX]|\\d{10}|\\d{13})$/;
+            const isbnRegex = /^(?:\d{9}[xX]|\d{10}|\d{13})$/;
             if (!isbnRegex.test(isbn))
                 throw new AppError("Invalid ISBN format.", 400);
 
@@ -44,7 +42,6 @@ app.post(
 
             const industryIdentifiers =
                 bookInfo.industryIdentifiers as unknown as IndustryIdentifier[];
-
             const newBook = {
                 title: bookInfo.title || "Unknown",
                 description: bookInfo.description || "No description available",
@@ -76,145 +73,121 @@ app.post(
             if (newBook.ISBN_13)
                 conditions.push(eq(books.ISBN_13, newBook.ISBN_13));
 
-            let existingIsbnBook;
             if (conditions.length > 0) {
-                existingIsbnBook = await db
+                const existingIsbnBook = await db
                     .select()
                     .from(books)
                     .where(or(...conditions));
-            } else {
-                throw new AppError(
-                    "No ISBN found in the book information.",
-                    404,
-                );
+                if (existingIsbnBook.length > 0)
+                    throw new AppError(
+                        "A book with this ISBN already exists in the database.",
+                        409,
+                    );
             }
 
-            if (existingIsbnBook.length > 0)
-                throw new AppError(
-                    "A book with this ISBN already exists in the database.",
-                    409,
-                );
+            const insertedBook = await db.transaction(async (trx) => {
+                const [newInsertedBook] = await trx
+                    .insert(books)
+                    .values(newBook)
+                    .returning();
+                if (!newInsertedBook)
+                    throw new AppError(
+                        "Error inserting book into the database.",
+                        500,
+                    );
 
-            const [insertedBook] = await db
-                .insert(books)
-                .values(newBook)
-                .returning();
-
-            if (!insertedBook)
-                throw new AppError(
-                    "Error retrieving inserted book from database.",
-                    500,
-                );
-
-            const copyState =
-                state && typeof state === "string" && state.trim() !== ""
-                    ? state
-                    : "new";
-
-            const copiesToInsert = [];
-            for (let i = 0; i < numberOfCopies; i++) {
-                copiesToInsert.push({
-                    state: copyState || "new",
+                const copiesToInsert = Array.from({
+                    length: numberOfCopies,
+                }).map(() => ({
+                    state: state || "new",
                     is_reserved: false,
                     is_claimed: false,
                     barcode: "null",
                     book_id: insertedBook.id,
-                });
-            }
+                }));
 
-            const insertedCopies = await db
-                .insert(copy)
-                .values(copiesToInsert)
-                .returning();
+                const insertedCopies = await trx
+                    .insert(copy)
+                    .values(copiesToInsert)
+                    .returning();
+                if (insertedCopies.length === 0)
+                    throw new AppError("Error inserting copies.", 500);
 
-            for (const copyRecord of insertedCopies) {
-                generateBarcodeImage(copyRecord.id);
-            }
-            console.log(
-                `✅ [INFO] Created ${copiesToInsert.length} copies with varying states.`,
-            );
+                for (const copyRecord of insertedCopies) {
+                    await generateBarcodeImage(copyRecord.id);
+                }
+
+                return newInsertedBook;
+            });
 
             res.status(201).json({
                 message: "Book added successfully.",
-                book: {
-                    ...newBook,
-                    id: insertedBook.id,
-                },
-                total_copies: copiesToInsert.length,
+                book: insertedBook,
+                total_copies: numberOfCopies,
             });
         } catch (error) {
-            next(error);
+            if (error instanceof AppError) return next(error);
+            next(new AppError("Error while importing the book.", 500, error));
         }
     },
 );
 
-app.post("/books/manual", checkTokenMiddleware, async (req, res) => {
-    try {
-        console.log("📌 [INFO] Body Request :", req.body);
+app.post(
+    "/books/manual",
+    checkTokenMiddleware,
+    async (req: Request, res: Response, next: NextFunction) => {
+        try {
+            const validatedData = insertBookSchema.parse(req.body);
 
-        const validatedData = insertBookSchema.parse(req.body);
-        console.log("✅ [INFO] Data validated successfully.");
+            const newBook = await db.transaction(async (trx) => {
+                const [insertedBook] = await trx
+                    .insert(books)
+                    .values(validatedData)
+                    .returning();
+                if (!insertedBook)
+                    throw new AppError("Failed to insert book.", 500);
 
-        console.log("📝 [INFO] Adding book in database ...");
-        const [newBook] = await db
-            .insert(books)
-            .values(validatedData)
-            .returning();
+                const numberOfCopies = validatedData.quantity || 1;
+                const copiesArray = Array.isArray(req.body.copies)
+                    ? req.body.copies
+                    : [];
 
-        if (!newBook) {
-            console.error("❌ [ERROR] Failed to insert book.");
-            res.status(500).json({ message: "Failed to insert book." });
-        }
+                const copiesToInsert = Array.from(
+                    { length: numberOfCopies },
+                    (_, i) => ({
+                        state: copiesArray[i]?.state || "new",
+                        is_reserved: false,
+                        is_claimed: false,
+                        barcode: "null",
+                        book_id: insertedBook.id,
+                    }),
+                );
 
-        console.log("✅ [INFO] Book added successfully:", newBook);
+                const insertedCopies = await trx
+                    .insert(copy)
+                    .values(copiesToInsert)
+                    .returning();
+                if (!insertedCopies.length)
+                    throw new AppError(
+                        "Error inserting copies into the database.",
+                        500,
+                    );
 
-        const bookId = newBook.id;
-        const numberOfCopies = validatedData.quantity || 1;
+                for (const copyRecord of insertedCopies) {
+                    await generateBarcodeImage(copyRecord.id);
+                }
 
-        const copiesArray = Array.isArray(req.body.copies)
-            ? req.body.copies
-            : [];
-
-        const copiesToInsert = [];
-        for (let i = 0; i < numberOfCopies; i++) {
-            copiesToInsert.push({
-                state: copiesArray[i]?.state || "new",
-                is_reserved: false,
-                is_claimed: false,
-                barcode: "null",
-                book_id: bookId,
+                return insertedBook;
             });
+
+            res.status(201).json({
+                message: "Book successfully added with copies.",
+                book: newBook,
+                total_copies: validatedData.quantity || 1,
+            });
+        } catch (error) {
+            if (error instanceof AppError) return next(error);
+            next(new AppError("Error while adding the book.", 500, error));
         }
-
-        const insertedCopies = await db
-            .insert(copy)
-            .values(copiesToInsert)
-            .returning();
-        if (!insertedCopies)
-            throw new AppError(
-                "Error inserting copies into the database.",
-                500,
-            );
-
-        for (const copyRecord of insertedCopies) {
-            generateBarcodeImage(copyRecord.id);
-        }
-        console.log(
-            `✅ [INFO] Created ${copiesToInsert.length} copies with varying states.`,
-        );
-
-        res.status(201).json({
-            message: "Book successfully added with copies.",
-            book: {
-                ...newBook,
-            },
-            total_copies: copiesToInsert.length,
-        });
-    } catch (error) {
-        console.error("❌ [ERROR] Error while adding the book:", error);
-        res.status(500).json({
-            message: "Error while adding the book.",
-            error,
-        });
-    }
-});
+    },
+);

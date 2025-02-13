@@ -5,6 +5,7 @@ import { copy, selectCopySchema } from "../../db/schema/copy";
 import { checkTokenMiddleware } from "../../app/middlewares/verify_jwt";
 import { review } from "../../db/schema/review";
 import { Request, Response } from "express";
+import { generateBarcodeImage } from "../../app/services/barcode";
 
 app.get("/copy", checkTokenMiddleware, async (res: Response) => {
     try {
@@ -96,6 +97,26 @@ app.get(
             );
             res.status(500).json({
                 message: "Error while retrieving copies and reviews for book.",
+                error,
+            });
+        }
+    },
+);
+
+app.get(
+    "/copy/barcode/:id",
+    checkTokenMiddleware,
+    async (req: Request, res: Response) => {
+        try {
+            const { id } = req.params;
+            generateBarcodeImage(parseInt(id));
+        } catch (error) {
+            console.error(
+                "Error while getting barcode for copy:",
+                error,
+            );
+            res.status(500).json({
+                message: "Error while getting barcode for copy.",
                 error,
             });
         }

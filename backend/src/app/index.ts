@@ -1,5 +1,4 @@
 import express from "express";
-import { errorHandler } from "./middlewares/errorHandler";
 import { swaggerSpec } from "./docs/swagger";
 import swaggerUi from "swagger-ui-express";
 import helmet from "helmet";
@@ -10,7 +9,7 @@ import { createAdmin } from "../routes/users/create_admin";
 
 export const app = express();
 dotenv.config();
-export let NODE_ENV = process.env.NODE_ENV;
+export const NODE_ENV = process.env.NODE_ENV;
 
 if (!NODE_ENV) {
     throw new Error("NODE_ENV is not defined in environment variables.");
@@ -45,4 +44,3 @@ app.use(cors(corsOptions));
 app.options("*", cors(corsOptions));
 
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
-app.use(errorHandler);

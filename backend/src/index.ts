@@ -1,7 +1,8 @@
 import { app } from "./app/index";
 import { startDatabase } from "./app/config/database";
-import { logMessage, errorMessage } from "./app/services/log";
+import { logMessage, errorMessage } from "./app/utils/logger";
 import { startScheduler } from "./app/services/scheduler";
+import { errorHandler } from "./app/middlewares/errorHandler";
 import { createAdmin } from "./routes/users/create_admin";
 
 const port = 3000;
@@ -15,6 +16,8 @@ async function startServer() {
         await import("./routes/historical/index");
         await import("./routes/reservation/index");
         await import("./routes/review/index");
+
+        app.use(errorHandler);
 
         app.listen(port, "0.0.0.0", () => {
             logMessage(`Server is running on http://localhost:${port}`);

@@ -5,7 +5,6 @@ import helmet from "helmet";
 import "./middlewares/key";
 import cors from "cors";
 import dotenv from "dotenv";
-import { createAdmin } from "../routes/users/create_admin";
 
 export const app = express();
 dotenv.config();

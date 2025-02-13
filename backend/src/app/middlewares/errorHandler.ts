@@ -29,12 +29,12 @@ export const errorHandler = (
         details_error:
             NODE_ENV === "development"
                 ? {
-                    stack: err.stack ? err.stack.split("\n") : undefined,
-                    originalError:
-                        err instanceof AppError && err.error
-                            ? err.error.stack?.split("\n")
-                            : undefined,
-                }
+                      stack: err.stack ? err.stack.split("\n") : undefined,
+                      originalError:
+                          err instanceof AppError && err.error
+                              ? err.error.stack?.split("\n")
+                              : undefined,
+                  }
                 : undefined,
     });
 };

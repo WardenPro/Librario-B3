@@ -13,7 +13,6 @@ export async function createAdmin() {
             .execute();
 
         if (existingAdmin.length === 0) {
-
             const salt = new Uint8Array(16);
             crypto.getRandomValues(salt);
             const hashedPassword = await argon2id({
@@ -26,20 +25,23 @@ export async function createAdmin() {
                 outputType: "encoded",
             });
 
-            await db.insert(users).values({
-                last_name: "Admin",
-                first_name: "Admin",
-                password: hashedPassword,
-                email: "admin@example.com",
-                roles: "admin",
-                created_at: new Date(),
-            }).execute();
+            await db
+                .insert(users)
+                .values({
+                    last_name: "Admin",
+                    first_name: "Admin",
+                    password: hashedPassword,
+                    email: "admin@example.com",
+                    roles: "admin",
+                    created_at: new Date(),
+                })
+                .execute();
 
             console.log("Admin user created successfully");
         } else {
             console.log("Admin user already exists");
-        } 
-    }catch(error) {
+        }
+    } catch (error) {
         console.error(error);
     }
 }

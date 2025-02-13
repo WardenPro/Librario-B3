@@ -8,7 +8,7 @@ export const copy = pgTable("copy", {
     is_reserved: boolean("is_reserved").notNull(),
     is_claimed: boolean("is_claimed").notNull(),
     book_id: integer("book_id")
-        .notNull()  
+        .notNull()
         .references(() => books.id, { onDelete: "cascade" }),
 });
 

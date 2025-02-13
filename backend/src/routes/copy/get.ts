@@ -111,10 +111,7 @@ app.get(
             const { id } = req.params;
             generateBarcodeImage(parseInt(id));
         } catch (error) {
-            console.error(
-                "Error while getting barcode for copy:",
-                error,
-            );
+            console.error("Error while getting barcode for copy:", error);
             res.status(500).json({
                 message: "Error while getting barcode for copy.",
                 error,

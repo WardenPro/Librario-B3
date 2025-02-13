@@ -9,7 +9,7 @@ import { grantedAccessMiddleware } from "../../app/middlewares/verify_access_rig
 import ISBN from "node-isbn";
 import { Request, Response, NextFunction } from "express";
 import { AppError } from "../../app/utils/AppError";
-import { generateBarcodeImage } from "../../app/services/barcode"; 
+import { generateBarcodeImage } from "../../app/services/barcode";
 
 interface IndustryIdentifier {
     type: string;
@@ -122,12 +122,17 @@ app.post(
                 });
             }
 
-            const insertedCopies = await db.insert(copy).values(copiesToInsert).returning();
+            const insertedCopies = await db
+                .insert(copy)
+                .values(copiesToInsert)
+                .returning();
 
             for (const copyRecord of insertedCopies) {
                 generateBarcodeImage(copyRecord.id);
             }
-            console.log(`✅ [INFO] Created ${copiesToInsert.length} copies with varying states.`);
+            console.log(
+                `✅ [INFO] Created ${copiesToInsert.length} copies with varying states.`,
+            );
 
             res.status(201).json({
                 message: "Book added successfully.",
@@ -143,7 +148,6 @@ app.post(
     },
 );
 
-
 app.post("/books/manual", checkTokenMiddleware, async (req, res) => {
     try {
         console.log("📌 [INFO] Body Request :", req.body);
@@ -152,7 +156,10 @@ app.post("/books/manual", checkTokenMiddleware, async (req, res) => {
         console.log("✅ [INFO] Data validated successfully.");
 
         console.log("📝 [INFO] Adding book in database ...");
-        const [newBook] = await db.insert(books).values(validatedData).returning();
+        const [newBook] = await db
+            .insert(books)
+            .values(validatedData)
+            .returning();
 
         if (!newBook) {
             console.error("❌ [ERROR] Failed to insert book.");
@@ -164,7 +171,9 @@ app.post("/books/manual", checkTokenMiddleware, async (req, res) => {
         const bookId = newBook.id;
         const numberOfCopies = validatedData.quantity || 1;
 
-        const copiesArray = Array.isArray(req.body.copies) ? req.body.copies : [];
+        const copiesArray = Array.isArray(req.body.copies)
+            ? req.body.copies
+            : [];
 
         const copiesToInsert = [];
         for (let i = 0; i < numberOfCopies; i++) {
@@ -176,15 +185,23 @@ app.post("/books/manual", checkTokenMiddleware, async (req, res) => {
                 book_id: bookId,
             });
         }
-        
-        const insertedCopies = await db.insert(copy).values(copiesToInsert).returning();
+
+        const insertedCopies = await db
+            .insert(copy)
+            .values(copiesToInsert)
+            .returning();
         if (!insertedCopies)
-            throw new AppError("Error inserting copies into the database.", 500);
+            throw new AppError(
+                "Error inserting copies into the database.",
+                500,
+            );
 
         for (const copyRecord of insertedCopies) {
             generateBarcodeImage(copyRecord.id);
         }
-        console.log(`✅ [INFO] Created ${copiesToInsert.length} copies with varying states.`);
+        console.log(
+            `✅ [INFO] Created ${copiesToInsert.length} copies with varying states.`,
+        );
 
         res.status(201).json({
             message: "Book successfully added with copies.",
@@ -193,7 +210,6 @@ app.post("/books/manual", checkTokenMiddleware, async (req, res) => {
             },
             total_copies: copiesToInsert.length,
         });
-
     } catch (error) {
         console.error("❌ [ERROR] Error while adding the book:", error);
         res.status(500).json({

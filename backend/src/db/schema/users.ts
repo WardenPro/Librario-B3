@@ -76,4 +76,4 @@ const updateUserSchema = createInsertSchema(users, {
             .optional(),
 });
 
-export const newUpdateUserSchema = updateUserSchema.omit({roles: true});
+export const newUpdateUserSchema = updateUserSchema.omit({ roles: true });

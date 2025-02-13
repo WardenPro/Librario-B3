@@ -14,7 +14,7 @@ app.post("/registration", async (req: Request, res: Response) => {
             password: req.body.password,
             email: req.body.email,
             comment: xss(req.body.comment),
-            roles: req.body.roles,
+            roles: "user",
         };
 
         const salt = new Uint8Array(16);

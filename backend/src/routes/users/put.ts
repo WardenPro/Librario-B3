@@ -1,6 +1,6 @@
 import { app } from "../../app/index";
 import { db } from "../../app/config/database";
-import { users, updateUserSchema } from "../../db/schema/users";
+import { users, newUpdateUserSchema } from "../../db/schema/users";
 import { eq } from "drizzle-orm";
 import { ZodError } from "zod";
 import { checkTokenMiddleware } from "../../app/middlewares/verify_jwt";
@@ -8,7 +8,7 @@ import { grantedAccessMiddleware } from "../../app/middlewares/verify_access_rig
 import { Request, Response } from "express";
 
 export async function updateUser(id: number, data: Request) {
-    const validatedData = updateUserSchema.parse(data);
+    const validatedData = newUpdateUserSchema.parse(data);
 
     try {
         const userExists = await db

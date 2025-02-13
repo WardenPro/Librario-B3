@@ -45,7 +45,7 @@ const fullSelectUserSchema = createSelectSchema(users, {
 
 export const selectUserSchema = fullSelectUserSchema.omit({ password: true });
 
-export const updateUserSchema = createInsertSchema(users, {
+const updateUserSchema = createInsertSchema(users, {
     last_name: (schema) =>
         schema.last_name
             .min(2, { message: "Must be 2 or more characters." })
@@ -65,3 +65,5 @@ export const updateUserSchema = createInsertSchema(users, {
             .optional(),
     roles: (schema) => schema.roles.optional(),
 });
+
+export const newUpdateUserSchema = updateUserSchema.omit({roles: true});

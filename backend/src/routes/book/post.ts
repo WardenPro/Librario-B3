@@ -114,7 +114,7 @@ app.post(
             const copiesToInsert = [];
             for (let i = 0; i < numberOfCopies; i++) {
                 copiesToInsert.push({
-                    state: copiesArray[i]?.state || "new",
+                    state: copyState || "new",
                     is_reserved: false,
                     is_claimed: false,
                     barcode: "null",

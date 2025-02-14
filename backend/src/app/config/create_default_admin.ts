@@ -12,8 +12,7 @@ export async function createAdmin() {
             .select()
             .from(users)
             .where(eq(users.roles, "admin"));
-        if (existingAdmin)
-            return;
+        if (existingAdmin) return;
 
         const adminPassword = "adminpassword";
 

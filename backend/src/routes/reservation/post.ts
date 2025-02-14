@@ -17,17 +17,17 @@ app.post(
         try {
             const validatedData = insertReservationSchema.parse(req.body);
 
-            const existingCopy = await db
+            const [existingCopy] = await db
                 .select()
                 .from(copy)
                 .where(eq(copy.id, validatedData.copy_id));
-            if (existingCopy.length === 0) {
+            if (!existingCopy) {
                 throw new AppError("Copy not found.", 404, {
                     copy_id: validatedData.copy_id,
                 });
             }
 
-            if (existingCopy[0].is_reserved) {
+            if (existingCopy.is_reserved) {
                 throw new AppError("This copy is already reserved.", 409, {
                     copy_id: validatedData.copy_id,
                 });

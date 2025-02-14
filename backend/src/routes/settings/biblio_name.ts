@@ -15,10 +15,15 @@ app.patch(
             const { newName } = req.body;
 
             if (!newName || typeof newName !== "string") {
-                throw new AppError("The library name is required and must be a string.", 400);
+                throw new AppError(
+                    "The library name is required and must be a string.",
+                    400,
+                );
             }
 
-            await db.update(library).set({ name: newName });
+            const libraryNewName = await db.update(library).set({ name: newName }).returning();
+            if (!libraryNewName)
+                throw new AppError("Library name update failed.", 500);
 
             res.status(200).json({
                 message: "Library name successfully updated.",
@@ -27,7 +32,9 @@ app.patch(
                 },
             });
         } catch (error) {
-            next(error);
+            if (error instanceof AppError)
+                return next(error);
+            return next(new AppError("An error occurred while updating the library name.", 500));
         }
-    }
+    },
 );

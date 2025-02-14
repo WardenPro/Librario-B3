@@ -35,15 +35,13 @@ export default function LoginForm() {
 
     try {
 
-      const response = await fetch("http://localhost:4000/api/login", {
+      const response = await fetch("/api/login", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({ email, password }),
       })
-
-      console.log("📡 Réponse API reçue :", response.status)
 
       let data;
       try {
@@ -57,9 +55,8 @@ export default function LoginForm() {
       }
 
       localStorage.setItem("auth_token", data.token)
-      console.log("🔑 Token JWT stocké :", data.token)
       const id = CheckUserId(data.token)
-      const ResUserRole = await fetch(`http://localhost:4000/api/roles/${id}`, {
+      const ResUserRole = await fetch(`/api/roles/${id}`, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",

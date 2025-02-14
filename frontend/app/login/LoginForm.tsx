@@ -12,22 +12,21 @@ export default function LoginForm() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [loading, setLoading] = useState(false)
-  const [errorMessage, setErrorMessage] = useState("") // State pour afficher l'erreur
+  const [errorMessage, setErrorMessage] = useState("")
   const router = useRouter()
   const { toast } = useToast()
 
-  // Fonction pour vérifier le rôle de l'utilisateur
-  const CheckUserRole = (token: string) => {
+  const CheckUserId = (token: string) => {
     const payload = token.split(".")[1]
     const decodedPayload = atob(payload)
-    const userRole = JSON.parse(decodedPayload).role
-    return userRole === "admin"
+    const userId = JSON.parse(decodedPayload).user_id
+    return userId
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
-    setErrorMessage("") // Réinitialise les erreurs
+    setErrorMessage("")
 
     try {
       console.log("🔄 Tentative de connexion...")
@@ -57,17 +56,37 @@ export default function LoginForm() {
 
       localStorage.setItem("auth_token", data.token)
       console.log("🔑 Token JWT stocké :", data.token)
+      const id = CheckUserId(data.token)
+      const ResUserRole = await fetch(`http://localhost:4000/api/roles/${id}`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          "auth_token": data.token,
+        },
+      })
+      let dataUserRole;
+      try {
+        dataUserRole = await ResUserRole.json()
+        console.log("✅ Données JSON :", dataUserRole)
+      } catch (err) {
+        throw new Error("Réponse invalide du serveur.")
+      }
+      console.log("✅ Données JSON :", dataUserRole)  
+
       toast({
         title: "Connexion réussie",
         description: "Vous êtes maintenant connecté.",
       })
 
-      if (CheckUserRole(data.token)) {
+      if (dataUserRole.roles === "admin") {
         localStorage.setItem("userRole", "admin")
         router.push("/reservations")
-      } else {
+      } else if (dataUserRole.message === "Access denied: admin only") {
         localStorage.setItem("userRole", "user")
         router.push("/")
+      } else {
+        console.error("⚠️ Erreur de connexion")
+        setErrorMessage("Erreur de connexion")
       }
     } catch (error: any) {
       console.error("⚠️ Erreur de connexion :", error.message)

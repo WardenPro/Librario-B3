@@ -3,7 +3,7 @@ import { startDatabase } from "./app/config/database";
 import { logMessage, errorMessage } from "./app/utils/logger";
 import { startScheduler } from "./app/services/scheduler";
 import { errorHandler } from "./app/middlewares/errorHandler";
-import { createAdmin } from "./routes/users/create_admin";
+import { createAdmin } from "./app/config/create_default_admin";
 
 const port = 3000;
 async function startServer() {

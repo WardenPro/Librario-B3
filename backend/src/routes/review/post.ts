@@ -27,9 +27,7 @@ app.post(
             const newReview = await db
                 .insert(review)
                 .values(validatedData)
-                .returning()
-                ;
-
+                .returning();
             res.status(201).json({
                 message: "Review successfully added.",
                 newReview,
@@ -44,7 +42,9 @@ app.post(
             } else if (error instanceof AppError) {
                 return next(error);
             }
-            return next(new AppError("Error while adding the review.", 500, error));
+            return next(
+                new AppError("Error while adding the review.", 500, error),
+            );
         }
     },
 );

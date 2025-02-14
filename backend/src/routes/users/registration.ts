@@ -44,17 +44,17 @@ app.post(
             const validatedInsert = insertUserSchema.parse(sanitizedBody);
             validatedInsert.password = hashedPassword;
 
-            const [result] = await db
+            const [newUser] = await db
                 .insert(users)
                 .values(validatedInsert)
                 .returning({ id: users.id });
-            if (!result) {
+            if (!newUser) {
                 throw new AppError("Error during registarion.", 500);
             }
 
             try {
                 const token = await generateToken(
-                    result.id,
+                    newUser.id,
                     validatedInsert.roles,
                 );
                 res.status(201).json({

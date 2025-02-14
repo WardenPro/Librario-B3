@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { useToast } from "@/components/ui/use-toast"
 import { Check } from "lucide-react"
+import { useLibrary } from "../components/LibraryContext";
 
 export default function LoginForm() {
   const [email, setEmail] = useState("")
@@ -27,11 +28,6 @@ export default function LoginForm() {
       return error
     }
   }
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      console.log("window.domQueryService:", window.domQueryService);
-    }
-  }, []);
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
@@ -89,7 +85,7 @@ export default function LoginForm() {
         console.error("⚠️ Erreur de connexion")
         setErrorMessage("Erreur de connexion")
       }
-    } catch (error: any) {
+    } catch (error: any) { 
       console.error("⚠️ Erreur de connexion :", error.message)
 
       setErrorMessage(error.message) // Affichage de l'erreur dans l'UI

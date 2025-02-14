@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation"
 import { Book, Users, Calendar, Star, BarChart2, Settings, LogOut, Clock, Home } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useRouter } from "next/navigation"
+import { useLibrary } from "../components/LibraryContext";
 
 const adminNavItems = [
   { href: "/reservations", icon: Calendar, label: "Réservations" },
@@ -25,6 +26,7 @@ export default function Sidebar() {
   const pathname = usePathname()
   const [userRole, setUserRole] = useState<string | null>(null)
   const router = useRouter()
+  const { libraryName } = useLibrary();
 
   useEffect(() => {
     setUserRole(localStorage.getItem("userRole"))
@@ -39,7 +41,7 @@ export default function Sidebar() {
 
   return (
     <aside className="w-64 bg-gray-100 dark:bg-gray-800 p-4">
-      <h1 className="text-2xl font-bold mb-8 text-center">WardenPro Librario</h1>
+      <h1 className="text-2xl font-bold mb-8 text-center">{libraryName}</h1>
       <nav>
         <ul>
           {navItems.map((item) => (

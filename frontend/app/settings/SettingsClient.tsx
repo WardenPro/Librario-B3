@@ -13,12 +13,40 @@ export default function SettingsClient() {
   const [darkMode, setDarkMode] = useState(false)
   const { toast } = useToast()
 
-  const handleSave = () => {
-    // Ici, vous feriez normalement un appel API pour sauvegarder les paramètres
+  const handleSave = async () => {
+    try {
+      const newName = libraryName.trim();
+
+      const ResUserRole = await fetch("/api/library/name", {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          "auth_token": localStorage.getItem("auth_token") || "",
+        },
+        body: JSON.stringify({ newName }),
+      });
+
+      if (!ResUserRole.ok) {
+        const errorData = await ResUserRole.json();
+        throw new Error(errorData.message || "Échec de la mise à jour.");
+      }
+
+      setLibraryName(newName);
+
     toast({
       title: "Paramètres sauvegardés",
       description: "Vos modifications ont été enregistrées avec succès.",
-    })
+    });
+
+    } catch (error) {
+      console.error("⚠️ Erreur lors de la sauvegarde des paramètres :", error);
+
+      toast({
+        title: "Erreur",
+        description: "Une erreur inconnue est survenue.",
+        variant: "destructive",
+      });
+    }
   }
 
   return (

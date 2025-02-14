@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Edit, Trash2, Plus } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
@@ -18,16 +18,33 @@ type Reservation = {
   status: "pending" | "active" | "completed" | "cancelled"
 }
 
-const reservationsData: Reservation[] = [
-  { id: 1, userId: 1, bookId: 1, startDate: "2023-06-01", endDate: "2023-06-15", status: "active" },
-  { id: 2, userId: 2, bookId: 2, startDate: "2023-06-05", endDate: "2023-06-19", status: "pending" },
-  { id: 3, userId: 3, bookId: 3, startDate: "2023-05-20", endDate: "2023-06-03", status: "completed" },
-]
-
 export default function ReservationsClient() {
-  const [reservations, setReservations] = useState<Reservation[]>(reservationsData)
+  const [reservations, setReservations] = useState<Reservation[]>([])
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [currentReservation, setCurrentReservation] = useState<Reservation | null>(null)
+
+  useEffect(() => {
+    const fetchReservations = async () => {
+      try {
+        const response = await fetch("/api/reservations", {
+          method: "GET",
+          headers: {
+            "Authorization": `Bearer ${localStorage.getItem("token")}`,
+          },
+        })
+        if (response.ok) {
+          const data: Reservation[] = await response.json()
+          setReservations(data)
+        } else {
+          console.error("Failed to fetch reservations:", response.statusText)
+        }
+      } catch (error) {
+        console.error("Error fetching reservations:", error)
+      }
+    }
+
+    fetchReservations()
+  }, [])
 
   const handleAddReservation = (newReservation: Omit<Reservation, "id">) => {
     setReservations([...reservations, { ...newReservation, id: reservations.length + 1 }])
@@ -200,4 +217,3 @@ export default function ReservationsClient() {
     </>
   )
 }
-

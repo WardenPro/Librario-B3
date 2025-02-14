@@ -1,27 +1,30 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
-import { Edit, Trash2, Plus } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { useState, useEffect } from "react";
+import { Edit, Trash2, Plus } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 type Reservation = {
-  id: number
-  userId: number
-  bookId: number
-  startDate: string
-  endDate: string
-  status: "pending" | "active" | "completed" | "cancelled"
-}
+  id: number;
+  user_id: number;
+  copy_id: number;
+  book_title: string;
+  is_claimed: boolean;
+  user_first_name: string;
+  user_last_name: string;
+  reservation_date: string;
+  final_date: string;
+};
 
 export default function ReservationsClient() {
-  const [reservations, setReservations] = useState<Reservation[]>([])
-  const [isDialogOpen, setIsDialogOpen] = useState(false)
-  const [currentReservation, setCurrentReservation] = useState<Reservation | null>(null)
+  const [reservations, setReservations] = useState<Reservation[]>([]);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [currentReservation, setCurrentReservation] = useState<Reservation | null>(null);
 
   useEffect(() => {
     const fetchReservations = async () => {
@@ -29,46 +32,94 @@ export default function ReservationsClient() {
         const response = await fetch("/api/reservations", {
           method: "GET",
           headers: {
-            "Authorization": `Bearer ${localStorage.getItem("token")}`,
+            "auth_token": `${localStorage.getItem("auth_token")}`,
           },
-        })
+        });
         if (response.ok) {
-          const data: Reservation[] = await response.json()
-          setReservations(data)
+          const data: Reservation[] = await response.json();
+          console.log("Fetched reservations:", data);
+          setReservations(data);
         } else {
-          console.error("Failed to fetch reservations:", response.statusText)
+          console.error("Failed to fetch reservations:", response.statusText);
         }
       } catch (error) {
-        console.error("Error fetching reservations:", error)
+        console.error("Error fetching reservations:", error);
       }
-    }
+    };
 
-    fetchReservations()
-  }, [])
+    fetchReservations();
+  }, []);
+
+  const handleClaimStatusChange = async (copyId: number, isClaimed: boolean) => {
+    const route = isClaimed ? `/api/copy/claimed/${copyId}` : `/api/copy/unclaimed/${copyId}`;
+
+    try {
+      const response = await fetch(route, {
+        method: "PUT",
+        headers: {
+          "auth_token": `${localStorage.getItem("auth_token")}`,
+          "Content-Type": "application/json",
+        },
+      });
+      console.log("reponse :", response);
+      if (response.ok) {
+        console.log(`Copy ${isClaimed ? "claimed" : "unclaimed"} successfully`);
+
+        setReservations(reservations.map((reservation) => {
+          if (reservation.copy_id === copyId) {
+            return { ...reservation, is_claimed: isClaimed };
+          }
+          return reservation;
+        }));
+      } else {
+        console.error("Failed to update claim status:", response.statusText);
+      }
+    } catch (error) {
+      console.error("Error updating claim status:", error);
+    }
+  };
 
   const handleAddReservation = (newReservation: Omit<Reservation, "id">) => {
-    setReservations([...reservations, { ...newReservation, id: reservations.length + 1 }])
-    setIsDialogOpen(false)
-  }
+    console.log("Adding new reservation:", newReservation);
+    setReservations([...reservations, { ...newReservation, id: reservations.length + 1 }]);
+    setIsDialogOpen(false);
+  };
 
   const handleEditReservation = (updatedReservation: Reservation) => {
+    console.log("Editing reservation:", updatedReservation);
     setReservations(
       reservations.map((reservation) => (reservation.id === updatedReservation.id ? updatedReservation : reservation)),
-    )
-    setIsDialogOpen(false)
-  }
+    );
+    setIsDialogOpen(false);
+  };
 
-  const handleDeleteReservation = (id: number) => {
-    setReservations(reservations.filter((reservation) => reservation.id !== id))
-  }
+  const handleDeleteReservation = async (id: number) => {
+    try {
+      const response = await fetch(`/api/reservations/${id}`, {
+        method: "DELETE",
+        headers: {
+          "auth_token": `${localStorage.getItem("auth_token")}`,
+        },
+      });
+
+      if (response.ok) {
+        setReservations(reservations.filter((reservation) => reservation.id !== id));
+        console.log("Reservation deleted successfully.");
+      } else {
+        console.error("Failed to delete reservation:", response.statusText);
+      }
+    } catch (error) {
+      console.error("Error deleting reservation:", error);
+    }
+  };
 
   return (
     <>
       <div className="flex justify-end">
         <Button
           onClick={() => {
-            setCurrentReservation(null)
-            setIsDialogOpen(true)
+            setCurrentReservation(null);
+            setIsDialogOpen(true);
           }}
         >
           <Plus className="mr-2 h-4 w-4" /> Ajouter une réservation
@@ -79,7 +130,8 @@ export default function ReservationsClient() {
         <TableHeader>
           <TableRow>
             <TableHead>ID Utilisateur</TableHead>
-            <TableHead>ID Livre</TableHead>
+            <TableHead>Nom Utilisateur</TableHead>
+            <TableHead>Titre du Livre</TableHead>
             <TableHead>Date de début</TableHead>
             <TableHead>Date de fin</TableHead>
             <TableHead>Statut</TableHead>
@@ -89,18 +141,35 @@ export default function ReservationsClient() {
         <TableBody>
           {reservations.map((reservation) => (
             <TableRow key={reservation.id}>
-              <TableCell>{reservation.userId}</TableCell>
-              <TableCell>{reservation.bookId}</TableCell>
-              <TableCell>{reservation.startDate}</TableCell>
-              <TableCell>{reservation.endDate}</TableCell>
-              <TableCell>{reservation.status}</TableCell>
+              <TableCell>{reservation.user_id}</TableCell>
+              <TableCell>{reservation.user_first_name} {reservation.user_last_name}</TableCell>
+              <TableCell>{reservation.book_title}</TableCell>
+              <TableCell>{reservation.reservation_date}</TableCell>
+              <TableCell>{reservation.final_date}</TableCell>
+              <TableCell>
+                <Select
+                  value={reservation.is_claimed ? "claimed" : "unclaimed"}
+                  onValueChange={(value) => {
+                    const isClaimed = value === "claimed";
+                    handleClaimStatusChange(reservation.copy_id, isClaimed);
+                  }}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Statut" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="claimed">Réclamée</SelectItem>
+                    <SelectItem value="unclaimed">Non Réclamée</SelectItem>
+                  </SelectContent>
+                </Select>
+              </TableCell>
               <TableCell>
                 <Button
                   variant="ghost"
                   size="icon"
                   onClick={() => {
-                    setCurrentReservation(reservation)
-                    setIsDialogOpen(true)
+                    setCurrentReservation(reservation);
+                    setIsDialogOpen(true);
                   }}
                 >
                   <Edit className="h-4 w-4" />
@@ -119,91 +188,80 @@ export default function ReservationsClient() {
           <DialogHeader>
             <DialogTitle>{currentReservation ? "Modifier la réservation" : "Ajouter une réservation"}</DialogTitle>
             <DialogDescription>
-              {currentReservation
-                ? "Modifiez les détails de la réservation ici."
-                : "Entrez les détails de la nouvelle réservation ici."}
+              {currentReservation ? "Modifiez les détails de la réservation ici." : "Entrez les détails de la nouvelle réservation ici."}
             </DialogDescription>
           </DialogHeader>
           <form
             onSubmit={(e) => {
-              e.preventDefault()
-              const formData = new FormData(e.currentTarget)
+              e.preventDefault();
+              const formData = new FormData(e.currentTarget);
               const reservationData = {
-                userId: Number.parseInt(formData.get("userId") as string, 10),
-                bookId: Number.parseInt(formData.get("bookId") as string, 10),
-                startDate: formData.get("startDate") as string,
-                endDate: formData.get("endDate") as string,
-                status: formData.get("status") as "pending" | "active" | "completed" | "cancelled",
-              }
+                user_id: Number.parseInt(formData.get("user_id") as string, 10),
+                copy_id: Number.parseInt(formData.get("copy_id") as string, 10),
+                book_title: formData.get("book_title") as string,
+                user_first_name: formData.get("user_first_name") as string,
+                user_last_name: formData.get("user_last_name") as string,
+                reservation_date: formData.get("reservation_date") as string,
+                final_date: formData.get("final_date") as string,
+                is_claimed: formData.get("is_claimed") === "true", // Convertir la valeur "true"/"false" correctement
+              };
               if (currentReservation) {
-                handleEditReservation({ ...reservationData, id: currentReservation.id })
+                handleEditReservation({ ...reservationData, id: currentReservation.id });
               } else {
-                handleAddReservation(reservationData)
+                handleAddReservation(reservationData);
               }
             }}
           >
             <div className="grid gap-4 py-4">
               <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="userId" className="text-right">
-                  ID Utilisateur
-                </Label>
+                <Label htmlFor="userName" className="text-right">Username</Label>
                 <Input
-                  id="userId"
-                  name="userId"
-                  type="number"
-                  defaultValue={currentReservation?.userId}
+                  id="userName"
+                  name="userName"
+                  type="text"
+                  defaultValue={`${currentReservation?.user_first_name} ${currentReservation?.user_last_name}`}
                   className="col-span-3"
                 />
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="bookId" className="text-right">
-                  ID Livre
-                </Label>
+                <Label htmlFor="book_title" className="text-right">Nom du Livre</Label>
                 <Input
-                  id="bookId"
-                  name="bookId"
-                  type="number"
-                  defaultValue={currentReservation?.bookId}
+                  id="book_title"
+                  name="book_title"
+                  type="text"
+                  defaultValue={currentReservation?.book_title}
                   className="col-span-3"
                 />
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="startDate" className="text-right">
-                  Date de début
-                </Label>
+                <Label htmlFor="reservation_date" className="text-right">Date de début</Label>
                 <Input
-                  id="startDate"
-                  name="startDate"
+                  id="reservation_date"
+                  name="reservation_date"
                   type="date"
-                  defaultValue={currentReservation?.startDate}
+                  defaultValue={currentReservation?.reservation_date}
                   className="col-span-3"
                 />
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="endDate" className="text-right">
-                  Date de fin
-                </Label>
+                <Label htmlFor="final_date" className="text-right">Date de fin</Label>
                 <Input
-                  id="endDate"
-                  name="endDate"
+                  id="final_date"
+                  name="final_date"
                   type="date"
-                  defaultValue={currentReservation?.endDate}
+                  defaultValue={currentReservation?.final_date}
                   className="col-span-3"
                 />
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="status" className="text-right">
-                  Statut
-                </Label>
-                <Select name="status" defaultValue={currentReservation?.status || "pending"}>
+                <Label htmlFor="is_claimed" className="text-right">Statut</Label>
+                <Select name="is_claimed" defaultValue={currentReservation?.is_claimed ? "true" : "false"}>
                   <SelectTrigger className="col-span-3">
-                    <SelectValue placeholder="Sélectionnez un statut" />
+                    <SelectValue placeholder="Statut" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="pending">En attente</SelectItem>
-                    <SelectItem value="active">Active</SelectItem>
-                    <SelectItem value="completed">Terminée</SelectItem>
-                    <SelectItem value="cancelled">Annulée</SelectItem>
+                    <SelectItem value="true">Réclamée</SelectItem>
+                    <SelectItem value="false">Non Réclamée</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -215,5 +273,5 @@ export default function ReservationsClient() {
         </DialogContent>
       </Dialog>
     </>
-  )
+  );
 }

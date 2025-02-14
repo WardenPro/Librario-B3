@@ -1,52 +1,58 @@
 import { app } from "../../app/index";
 import { db } from "../../app/config/database";
-import { sql } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { copy } from "../../db/schema/copy";
 import { reservation } from "../../db/schema/reservation";
 import { checkTokenMiddleware } from "../../app/middlewares/verify_jwt";
 import { grantedAccessMiddleware } from "../../app/middlewares/verify_access_right";
-import { Request, Response } from "express";
+import { NextFunction, Request, Response } from "express";
+import { AppError } from "../../app/utils/AppError";
 
 app.delete(
     "/reservations/:id",
     checkTokenMiddleware,
     grantedAccessMiddleware(),
-    async (req: Request, res: Response) => {
+    async (req: Request, res: Response, next: NextFunction) => {
         try {
-            const { id } = req.params;
+            const id = parseInt(req.params.id, 10);
+            if (isNaN(id) || id <= 0)
+                throw new AppError("Invalid reservation ID provided.", 400);
 
             const reservedCopy = await db
                 .select({ copy_id: copy.id })
-                .from(copy)
-                .where(sql`${copy.id} = ${id}`);
+                .from(reservation)
+                .where(eq(reservation.id, id))
+                .execute();
 
             if (reservedCopy.length === 0) {
-                res.status(404).json({
-                    message: "Reservation not found.",
-                    reservation: `id: ${id}`,
-                });
+                throw new AppError("Copy not found.", 404, { id: id });
             }
 
             const deletedReservation = await db
                 .delete(reservation)
-                .where(sql`${reservation.id} = ${id}`)
-                .returning();
+                .where(eq(reservation.id, id))
+                .returning()
+                .execute();
 
             await db
                 .update(copy)
                 .set({ is_reserved: false })
-                .where(sql`${copy.id} = ${reservedCopy}`);
+                .where(eq(copy.id, reservedCopy[0].copy_id))
+                .execute();
 
             res.status(200).json({
                 message: "Reservation successfully deleted.",
                 deletedReservation,
             });
         } catch (error) {
-            console.error("Error while deleting the reservation:", error);
-            res.status(500).json({
-                message: "Error while deleting the reservation.",
-                error,
-            });
+            if (error instanceof AppError) return next(error);
+            next(
+                new AppError(
+                    "Error while deleting the reservation.",
+                    500,
+                    error,
+                ),
+            );
         }
     },
 );

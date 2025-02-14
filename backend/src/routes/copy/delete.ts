@@ -1,38 +1,50 @@
 import { app } from "../../app/index";
 import { db } from "../../app/config/database";
-import { sql } from "drizzle-orm";
+import { sql, eq } from "drizzle-orm";
 import { copy } from "../../db/schema/copy";
 import { checkTokenMiddleware } from "../../app/middlewares/verify_jwt";
 import { books } from "../../db/schema/book";
 import { grantedAccessMiddleware } from "../../app/middlewares/verify_access_right";
-import { Request, Response } from "express";
+import { NextFunction, Request, Response } from "express";
+import { AppError } from "../../app/utils/AppError";
 
 app.delete(
     "/copy/:id",
     checkTokenMiddleware,
     grantedAccessMiddleware("admin"),
-    async (req: Request, res: Response) => {
+    async (req: Request, res: Response, next: NextFunction) => {
         try {
-            const { id } = req.params;
+            const copyId = parseInt(req.params.id, 10);
+            if (isNaN(copyId) || copyId >= 0)
+                throw new AppError("Invalid copy id.", 400, { id: copyId });
+
+            const copyToDelete = await db
+                .select()
+                .from(copy)
+                .where(eq(copy.id, copyId))
+                .execute();
+
+            if (copyToDelete.length === 0)
+                throw new AppError("Copy not found.", 404, { id: copyId });
+
+            if (copyToDelete[0].is_reserved || copyToDelete[0].is_claimed)
+                throw new AppError("Cannot delete a reserved or claimed copy.", 403, { id: copyId });
 
             const deletedCopy = await db
                 .delete(copy)
-                .where(sql`${copy.id} = ${id}`)
-                .returning();
+                .where(eq(copy.id, copyId))
+                .returning()
+                .execute();
 
-            if (deletedCopy.length === 0) {
-                res.status(404).json({
-                    message: "Copy not found.",
-                    copy: `id: ${id}`,
-                });
-            }
+            if (deletedCopy.length === 0)
+                throw new AppError("Failed to delete copy.", 500, { id: copyId });
 
             const bookId = deletedCopy[0].book_id;
 
             await db
                 .update(books)
-                .set({ quantity: sql`${books.quantity} - 1` })
-                .where(sql`${books.id} = ${bookId}`);
+                .set({ quantity: sql`GREATEST(${books.quantity} - 1, 0)` })
+                .where(eq(books.id, bookId));
 
             res.status(200).json({
                 message:
@@ -40,11 +52,8 @@ app.delete(
                 deletedCopy,
             });
         } catch (error) {
-            console.error("Error while deleting the copy:", error);
-            res.status(500).json({
-                message: "Error while deleting the copy.",
-                error,
-            });
+            if (error instanceof AppError) return next(error);
+            next(new AppError("Error while deleting the copy.", 500, error));
         }
     },
 );

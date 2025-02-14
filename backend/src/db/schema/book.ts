@@ -43,7 +43,7 @@ export const insertBookSchema = createInsertSchema(books, {
     category: (schema) => schema.category,
     publisher: (schema) => schema.publisher,
     author: (schema) => schema.author,
-    quantity: (schema) => schema.quantity,
+    quantity: (schema) => schema.quantity.min(1),
     publish_date: z.coerce.date(),
     image_link: (schema) => schema.image_link,
 });

@@ -10,7 +10,7 @@ import { AppError } from "../../app/utils/AppError";
 app.put(
     "/reviews/:id",
     checkTokenMiddleware,
-    grantedAccessMiddleware(),
+    grantedAccessMiddleware("owner", review),
     async (req: Request, res: Response, next: NextFunction) => {
         try {
             if (Object.keys(req.body).length === 0)

@@ -2,14 +2,12 @@ import { app } from "../../app/index";
 import { db } from "../../app/config/database";
 import { review, insertReviewSchema } from "../../db/schema/review";
 import { checkTokenMiddleware } from "../../app/middlewares/verify_jwt";
-import { grantedAccessMiddleware } from "../../app/middlewares/verify_access_right";
 import { NextFunction, Request, Response } from "express";
 import { AppError } from "../../app/utils/AppError";
 
 app.post(
     "/reviews",
     checkTokenMiddleware,
-    grantedAccessMiddleware(),
     async (req: Request, res: Response, next: NextFunction) => {
         try {
             if (Object.keys(req.body).length === 0)

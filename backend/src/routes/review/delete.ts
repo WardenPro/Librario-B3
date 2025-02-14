@@ -10,7 +10,7 @@ import { AppError } from "../../app/utils/AppError";
 app.delete(
     "/reviews/:id",
     checkTokenMiddleware,
-    grantedAccessMiddleware(),
+    grantedAccessMiddleware("admin_or_owner", review),
     async (req: Request, res: Response, next: NextFunction) => {
         try {
             const reviewId = parseInt(req.params.id, 10);

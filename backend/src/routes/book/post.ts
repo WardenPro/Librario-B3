@@ -27,8 +27,7 @@ app.post(
             if (!isbn) throw new AppError("ISBN is required.", 400);
 
             const isbnRegex = /^(?:\d{9}[xX]|\d{10}|\d{13})$/;
-            if (!isbnRegex.test(isbn))
-                throw new AppError("Invalid ISBN format.", 400);
+            if (!isbn || !isbnRegex.test(isbn)) throw new AppError("Invalid ISBN format.", 400);
 
             const parsedQuantity = parseInt(quantity, 10);
             const numberOfCopies =
@@ -99,11 +98,10 @@ app.post(
                 const copiesToInsert = Array.from({
                     length: numberOfCopies,
                 }).map(() => ({
-                    state: state || "new",
+                    state: state?.trim() || "new",
                     is_reserved: false,
                     is_claimed: false,
-                    barcode: "null",
-                    book_id: insertedBook.id,
+                    book_id: newInsertedBook.id,
                 }));
 
                 const insertedCopies = await trx
@@ -114,8 +112,13 @@ app.post(
                     throw new AppError("Error inserting copies.", 500);
 
                 for (const copyRecord of insertedCopies) {
-                    await generateBarcodeImage(copyRecord.id);
+                    try {
+                        await generateBarcodeImage(copyRecord.id);
+                    } catch (error) {
+                        console.error("Error generating barcode for copy:", copyRecord.id, error);
+                    }
                 }
+                
 
                 return newInsertedBook;
             });
@@ -155,10 +158,9 @@ app.post(
                 const copiesToInsert = Array.from(
                     { length: numberOfCopies },
                     (_, i) => ({
-                        state: copiesArray[i]?.state || "new",
+                        state: copiesArray[i]?.trim() || "new",
                         is_reserved: false,
                         is_claimed: false,
-                        barcode: "null",
                         book_id: insertedBook.id,
                     }),
                 );
@@ -174,7 +176,15 @@ app.post(
                     );
 
                 for (const copyRecord of insertedCopies) {
-                    await generateBarcodeImage(copyRecord.id);
+                    try {
+                        await generateBarcodeImage(copyRecord.id);
+                    } catch (error) {
+                        console.error(
+                            "Error generating barcode for copy:",
+                            copyRecord.id,
+                            error
+                        );
+                    }
                 }
 
                 return insertedBook;

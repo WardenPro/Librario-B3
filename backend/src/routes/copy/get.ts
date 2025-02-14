@@ -1,54 +1,45 @@
 import { app } from "../../app/index";
 import { db } from "../../app/config/database";
-import { sql } from "drizzle-orm";
+import { sql, eq } from "drizzle-orm";
 import { copy, selectCopySchema } from "../../db/schema/copy";
 import { checkTokenMiddleware } from "../../app/middlewares/verify_jwt";
 import { review } from "../../db/schema/review";
-import { Request, Response } from "express";
+import { NextFunction, Request, Response } from "express";
 import { generateBarcodeImage } from "../../app/services/barcode";
+import { AppError } from "../../app/utils/AppError";
 
-app.get("/copy", checkTokenMiddleware, async (res: Response) => {
+app.get("/copy", checkTokenMiddleware, async (req: Request, res: Response, next: NextFunction) => {
     try {
         const allCopies = await db.select().from(copy);
         const validatedCopies = allCopies.map((c) => selectCopySchema.parse(c));
         res.status(200).json(validatedCopies);
     } catch (error) {
-        console.error("Error while retrieving copies:", error);
-        res.status(500).json({
-            message: "Error while retrieving copies.",
-            error,
-        });
+        next(new AppError("Error while retrieving copies.", 500, error));
     }
 });
 
 app.get(
     "/copy/:id",
     checkTokenMiddleware,
-    async (req: Request, res: Response) => {
+    async (req: Request, res: Response, next: NextFunction) => {
         try {
-            const { id } = req.params;
-            const foundCopy = await db
+            const copyId = parseInt(req.params.id, 10);
+            if (isNaN(copyId) || copyId >= 0)
+                throw new AppError("Invalid copy id provided.", 400, { id: copyId });
+
+            const selectedCopy = await db
                 .select()
                 .from(copy)
-                .where(sql`${copy.id} = ${id}`);
+                .where(eq(copy.id, copyId))
+                .limit(1);
 
-            if (foundCopy.length === 0) {
-                res.status(404).json({
-                    message: "Copy not found.",
-                    copy: `id: ${id}`,
-                });
-            } else {
-                const validatedCopies = foundCopy.map((c) =>
-                    selectCopySchema.parse(c),
-                );
-                res.status(200).json(validatedCopies);
-            }
+            if (selectedCopy.length === 0)
+                throw new AppError("Copy not found.", 404, { copy: `id: ${copyId}` });
+
+            res.status(200).json(selectedCopy);
         } catch (error) {
-            console.error("Error while retrieving the copy:", error);
-            res.status(500).json({
-                message: "Error while retrieving the copy.",
-                error,
-            });
+            if (error instanceof AppError) return next(error);
+            next(new AppError("Error while retrieving the copy.", 500, error));
         }
     },
 );
@@ -56,9 +47,11 @@ app.get(
 app.get(
     "/copy/book/:id",
     checkTokenMiddleware,
-    async (req: Request, res: Response) => {
+    async (req: Request, res: Response, next: NextFunction) => {
         try {
-            const { id } = req.params;
+            const bookId = parseInt(req.params.id, 10);
+            if (isNaN(bookId) || bookId >= 0)
+                throw new AppError("Invalid copy id provided.", 400, { id: bookId });
 
             const copies = await db
                 .select({
@@ -72,8 +65,8 @@ app.get(
                     ),
                 })
                 .from(copy)
-                .leftJoin(review, sql`${copy.id} = ${review.copy_id}`)
-                .where(sql`${copy.book_id} = ${id}`)
+                .leftJoin(review, eq(copy.id, review.copy_id))
+                .where(eq(copy.book_id, bookId))
                 .groupBy(
                     copy.id,
                     copy.state,
@@ -82,23 +75,13 @@ app.get(
                     copy.book_id,
                 );
 
-            if (copies.length === 0) {
-                res.status(404).json({
-                    message: "No copies found for this book.",
-                    book_id: id,
-                });
-            }
+            if (copies.length === 0)
+                throw new AppError("No copies found for this book.", 404, { id: bookId });
 
             res.status(200).json(copies);
         } catch (error) {
-            console.error(
-                "Error while retrieving copies and reviews for book:",
-                error,
-            );
-            res.status(500).json({
-                message: "Error while retrieving copies and reviews for book.",
-                error,
-            });
+            if (error instanceof AppError) return next(error);
+            next(new AppError("Error while retrieving copies for book.", 500, error));
         }
     },
 );
@@ -106,16 +89,20 @@ app.get(
 app.get(
     "/copy/barcode/:id",
     checkTokenMiddleware,
-    async (req: Request, res: Response) => {
+    async (req: Request, res: Response, next: NextFunction) => {
         try {
-            const { id } = req.params;
-            generateBarcodeImage(parseInt(id));
-        } catch (error) {
-            console.error("Error while getting barcode for copy:", error);
-            res.status(500).json({
-                message: "Error while getting barcode for copy.",
-                error,
+            const copyId = parseInt(req.params.id, 10);
+            if (isNaN(copyId) || copyId >= 0)
+                throw new AppError("Invalid copy id provided.", 400, { id: copyId });
+
+            await generateBarcodeImage(copyId);
+
+            res.status(200).json({
+                message: `Barcode successfully generated for copy ${copyId}.`,
             });
+        } catch (error) {
+            if (error instanceof AppError) return next(error);
+            next(new AppError("Error while generating barcode for copy.", 500, error));
         }
     },
 );

@@ -17,6 +17,11 @@ async function startServer() {
         await import("./routes/reservation/index");
         await import("./routes/review/index");
 
+        app.use((req, res) => {
+            res.status(404).json({
+                error: "This resource does not exist."
+            });
+        });
         app.use(errorHandler);
 
         app.listen(port, "0.0.0.0", () => {

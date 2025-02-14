@@ -21,9 +21,7 @@ app.post(
                 .select()
                 .from(users)
                 .where(eq(users.id, userId))
-                .limit(1)
-                .execute();
-
+                .limit(1);
             if (!user || user.length === 0)
                 throw new AppError(`User with ID ${userId} not found`, 404);
 
@@ -32,13 +30,14 @@ app.post(
                 .set({
                     revocation_time_at: new Date(),
                 })
-                .where(eq(users.id, userId))
-                .execute();
+                .where(eq(users.id, userId));
 
             res.status(200).json({ message: "User forcibly logged out" });
         } catch (error) {
             if (error instanceof AppError) return next(error);
-            next(new AppError("Internal error during user logout", 500, error));
+            return next(
+                new AppError("Internal error during user logout", 500, error),
+            );
         }
     },
 );

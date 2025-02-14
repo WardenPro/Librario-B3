@@ -21,9 +21,7 @@ app.delete(
             const reservedCopy = await db
                 .select({ copy_id: copy.id })
                 .from(reservation)
-                .where(eq(reservation.id, id))
-                .execute();
-
+                .where(eq(reservation.id, id));
             if (reservedCopy.length === 0) {
                 throw new AppError("Copy not found.", 404, { id: id });
             }
@@ -31,14 +29,11 @@ app.delete(
             const deletedReservation = await db
                 .delete(reservation)
                 .where(eq(reservation.id, id))
-                .returning()
-                .execute();
-
+                .returning();
             await db
                 .update(copy)
                 .set({ is_reserved: false })
-                .where(eq(copy.id, reservedCopy[0].copy_id))
-                .execute();
+                .where(eq(copy.id, reservedCopy[0].copy_id));
 
             res.status(200).json({
                 message: "Reservation successfully deleted.",

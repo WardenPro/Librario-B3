@@ -20,9 +20,7 @@ app.get(
             const userRoles = await db
                 .select({ roles: users.roles })
                 .from(users)
-                .where(eq(users.id, userId))
-                .execute();
-
+                .where(eq(users.id, userId));
             if (userRoles.length === 0) {
                 throw new AppError(`User with ID ${userId} not found`, 404);
             } else {

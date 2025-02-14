@@ -8,15 +8,23 @@ import { NextFunction, Request, Response } from "express";
 import { generateBarcodeImage } from "../../app/services/barcode";
 import { AppError } from "../../app/utils/AppError";
 
-app.get("/copy", checkTokenMiddleware, async (req: Request, res: Response, next: NextFunction) => {
-    try {
-        const allCopies = await db.select().from(copy);
-        const validatedCopies = allCopies.map((c) => selectCopySchema.parse(c));
-        res.status(200).json(validatedCopies);
-    } catch (error) {
-        next(new AppError("Error while retrieving copies.", 500, error));
-    }
-});
+app.get(
+    "/copy",
+    checkTokenMiddleware,
+    async (req: Request, res: Response, next: NextFunction) => {
+        try {
+            const allCopies = await db.select().from(copy);
+            const validatedCopies = allCopies.map((c) =>
+                selectCopySchema.parse(c),
+            );
+            res.status(200).json(validatedCopies);
+        } catch (error) {
+            return next(
+                new AppError("Error while retrieving copies.", 500, error),
+            );
+        }
+    },
+);
 
 app.get(
     "/copy/:id",
@@ -25,21 +33,27 @@ app.get(
         try {
             const copyId = parseInt(req.params.id, 10);
             if (isNaN(copyId) || copyId >= 0)
-                throw new AppError("Invalid copy id provided.", 400, { id: copyId });
+                throw new AppError("Invalid copy id provided.", 400, {
+                    id: copyId,
+                });
 
-            const selectedCopy = await db
+            const [selectedCopy] = await db
                 .select()
                 .from(copy)
                 .where(eq(copy.id, copyId))
                 .limit(1);
 
-            if (selectedCopy.length === 0)
-                throw new AppError("Copy not found.", 404, { copy: `id: ${copyId}` });
+            if (!selectedCopy)
+                throw new AppError("Copy not found.", 404, {
+                    copy: `id: ${copyId}`,
+                });
 
             res.status(200).json(selectedCopy);
         } catch (error) {
             if (error instanceof AppError) return next(error);
-            next(new AppError("Error while retrieving the copy.", 500, error));
+            return next(
+                new AppError("Error while retrieving the copy.", 500, error),
+            );
         }
     },
 );
@@ -51,9 +65,11 @@ app.get(
         try {
             const bookId = parseInt(req.params.id, 10);
             if (isNaN(bookId) || bookId >= 0)
-                throw new AppError("Invalid copy id provided.", 400, { id: bookId });
+                throw new AppError("Invalid copy id provided.", 400, {
+                    id: bookId,
+                });
 
-            const copies = await db
+            const [copies] = await db
                 .select({
                     copy_id: copy.id,
                     state: copy.state,
@@ -75,13 +91,21 @@ app.get(
                     copy.book_id,
                 );
 
-            if (copies.length === 0)
-                throw new AppError("No copies found for this book.", 404, { id: bookId });
+            if (!copies)
+                throw new AppError("No copies found for this book.", 404, {
+                    id: bookId,
+                });
 
             res.status(200).json(copies);
         } catch (error) {
             if (error instanceof AppError) return next(error);
-            next(new AppError("Error while retrieving copies for book.", 500, error));
+            return next(
+                new AppError(
+                    "Error while retrieving copies for book.",
+                    500,
+                    error,
+                ),
+            );
         }
     },
 );
@@ -93,7 +117,9 @@ app.get(
         try {
             const copyId = parseInt(req.params.id, 10);
             if (isNaN(copyId) || copyId >= 0)
-                throw new AppError("Invalid copy id provided.", 400, { id: copyId });
+                throw new AppError("Invalid copy id provided.", 400, {
+                    id: copyId,
+                });
 
             await generateBarcodeImage(copyId);
 
@@ -102,7 +128,13 @@ app.get(
             });
         } catch (error) {
             if (error instanceof AppError) return next(error);
-            next(new AppError("Error while generating barcode for copy.", 500, error));
+            return next(
+                new AppError(
+                    "Error while generating barcode for copy.",
+                    500,
+                    error,
+                ),
+            );
         }
     },
 );

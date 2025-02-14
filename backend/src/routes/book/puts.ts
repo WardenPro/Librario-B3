@@ -7,7 +7,6 @@ import { grantedAccessMiddleware } from "../../app/middlewares/verify_access_rig
 import { NextFunction, Request, Response } from "express";
 import { AppError } from "../../app/utils/AppError";
 
-
 app.put(
     "/books/archiving/:id",
     checkTokenMiddleware,
@@ -18,25 +17,27 @@ app.put(
             if (isNaN(bookId) || bookId <= 0)
                 throw new AppError("Invalid book id.", 400, { id: bookId });
 
-            const selectedBook = await db
+            const [selectedBook] = await db
                 .select()
                 .from(books)
                 .where(eq(books.id, bookId));
 
-            if (selectedBook.length === 0)
+            if (!selectedBook)
                 throw new AppError("Book not found.", 404, { id: bookId });
-            if (selectedBook[0].is_removed)
-                throw new AppError("Book is already archived.", 400, { id: bookId });
+            if (selectedBook.is_removed)
+                throw new AppError("Book is already archived.", 400, {
+                    id: bookId,
+                });
 
-            const updatedBook = await db
+            const [updatedBook] = await db
                 .update(books)
                 .set({ is_removed: true })
                 .where(eq(books.id, bookId))
-                .returning()
-                .execute();
-
-            if (updatedBook.length === 0)
-                throw new AppError("Failed to archive the book.", 500, { id: bookId });
+                .returning();
+            if (!updatedBook)
+                throw new AppError("Failed to archive the book.", 500, {
+                    id: bookId,
+                });
 
             res.status(200).json("Book deleted successfully.");
         } catch (error) {
@@ -55,29 +56,35 @@ app.put(
             if (isNaN(bookId) || bookId <= 0)
                 throw new AppError("Invalid book id.", 400, { id: bookId });
 
-            const selectedBook = await db
+            const [selectedBook] = await db
                 .select()
                 .from(books)
                 .where(eq(books.id, bookId));
 
-            if (selectedBook.length === 0)
+            if (!selectedBook)
                 throw new AppError("Book not found.", 404, { id: bookId });
-            if (!selectedBook[0].is_removed)
-                throw new AppError("Book is already active.", 400, { id: bookId });
+            if (!selectedBook.is_removed)
+                throw new AppError("Book is already active.", 400, {
+                    id: bookId,
+                });
 
-            const updatedBook = await db
+            const [updatedBook] = await db
                 .update(books)
                 .set({ is_removed: false })
                 .where(eq(books.id, bookId))
                 .returning();
 
-            if (updatedBook.length === 0)
-                throw new AppError("Failed to unarchive the book.", 500, { id: bookId });
+            if (!updatedBook)
+                throw new AppError("Failed to unarchive the book.", 500, {
+                    id: bookId,
+                });
 
             res.status(200).json("Book recovered successfully.");
         } catch (error) {
             if (error instanceof AppError) return next(error);
-            next(new AppError("Error while recovering the book.", 500, error));
+            return next(
+                new AppError("Error while recovering the book.", 500, error),
+            );
         }
     },
 );

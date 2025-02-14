@@ -11,7 +11,7 @@ app.get(
     checkTokenMiddleware,
     async (req: Request, res: Response, next: NextFunction) => {
         try {
-            const allReviews = await db.select().from(review).execute();
+            const allReviews = await db.select().from(review);
             const validatedReviews = allReviews.map((r) =>
                 selectReviewSchema.parse(r),
             );
@@ -20,7 +20,9 @@ app.get(
             res.status(200).json(validatedReviews);
         } catch (error) {
             if (error instanceof AppError) return next(error);
-            next(new AppError("Internal error during reviews retrieval", 500));
+            return next(
+                new AppError("Internal error during reviews retrieval", 500),
+            );
         }
     },
 );
@@ -37,9 +39,7 @@ app.get(
             const foundReview = await db
                 .select()
                 .from(review)
-                .where(eq(review.book_id, bookId))
-                .execute();
-
+                .where(eq(review.book_id, bookId));
             const validatedReview = foundReview.map((r) =>
                 selectReviewSchema.parse(r),
             );
@@ -49,7 +49,9 @@ app.get(
             res.status(200).json(validatedReview);
         } catch (error) {
             if (error instanceof AppError) return next(error);
-            next(new AppError("Internal error during review retrieval", 500));
+            return next(
+                new AppError("Internal error during review retrieval", 500),
+            );
         }
     },
 );

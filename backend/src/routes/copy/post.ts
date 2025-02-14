@@ -21,25 +21,25 @@ app.post(
             const [bookExists] = await db
                 .select({ id: books.id })
                 .from(books)
-                .where(eq(books.id, validatedData.book_id))
-                .execute();
-
-            if (!bookExists) 
-                throw new AppError("The provided book_id does not exist.", 400, { book_id: validatedData.book_id });
+                .where(eq(books.id, validatedData.book_id));
+            if (!bookExists)
+                throw new AppError(
+                    "The provided book_id does not exist.",
+                    400,
+                    { book_id: validatedData.book_id },
+                );
 
             const newCopy = await db
                 .insert(copy)
                 .values(validatedData)
-                .returning()
-                .execute();
-
+                .returning();
             res.status(201).json({
                 message: "Copy added successfully.",
                 newCopy,
             });
         } catch (error) {
             if (error instanceof AppError) return next(error);
-            next(new AppError("Error while adding copy.", 500, error));
+            return next(new AppError("Error while adding copy.", 500, error));
         }
     },
 );

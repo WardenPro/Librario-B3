@@ -47,9 +47,7 @@ app.post(
             const [result] = await db
                 .insert(users)
                 .values(validatedInsert)
-                .returning({ id: users.id })
-                .execute();
-
+                .returning({ id: users.id });
             if (!result) {
                 throw new AppError("Error during registarion.", 500);
             }
@@ -74,11 +72,13 @@ app.post(
                 "constraint" in error &&
                 error["constraint"] === "users_email_unique"
             ) {
-                next(new AppError("This email is already in use.", 400));
+                return next(new AppError("This email is already in use.", 400));
             } else if (error instanceof AppError) {
                 next(error);
             } else {
-                next(new AppError("Error during registarion.", 500, error));
+                return next(
+                    new AppError("Error during registarion.", 500, error),
+                );
             }
         }
     },

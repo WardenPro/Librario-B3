@@ -9,9 +9,7 @@ export async function createAdmin() {
         const existingAdmin = await db
             .select()
             .from(users)
-            .where(eq(users.email, "admin@example.com"))
-            .execute();
-
+            .where(eq(users.email, "admin@example.com"));
         if (existingAdmin.length === 0) {
             const salt = new Uint8Array(16);
             crypto.getRandomValues(salt);
@@ -25,17 +23,14 @@ export async function createAdmin() {
                 outputType: "encoded",
             });
 
-            await db
-                .insert(users)
-                .values({
-                    last_name: "Admin",
-                    first_name: "Admin",
-                    password: hashedPassword,
-                    email: "admin@example.com",
-                    roles: "admin",
-                    created_at: new Date(),
-                })
-                .execute();
+            await db.insert(users).values({
+                last_name: "Admin",
+                first_name: "Admin",
+                password: hashedPassword,
+                email: "admin@example.com",
+                roles: "admin",
+                created_at: new Date(),
+            });
 
             console.log("Admin user created successfully");
         } else {

@@ -18,28 +18,30 @@ app.delete(
             if (isNaN(copyId) || copyId >= 0)
                 throw new AppError("Invalid copy id.", 400, { id: copyId });
 
-            const copyToDelete = await db
+            const [copyToDelete] = await db
                 .select()
                 .from(copy)
-                .where(eq(copy.id, copyId))
-                .execute();
-
-            if (copyToDelete.length === 0)
+                .where(eq(copy.id, copyId));
+            if (!copyToDelete)
                 throw new AppError("Copy not found.", 404, { id: copyId });
 
-            if (copyToDelete[0].is_reserved || copyToDelete[0].is_claimed)
-                throw new AppError("Cannot delete a reserved or claimed copy.", 403, { id: copyId });
+            if (copyToDelete.is_reserved || copyToDelete.is_claimed)
+                throw new AppError(
+                    "Cannot delete a reserved or claimed copy.",
+                    403,
+                    { id: copyId },
+                );
 
-            const deletedCopy = await db
+            const [deletedCopy] = await db
                 .delete(copy)
                 .where(eq(copy.id, copyId))
-                .returning()
-                .execute();
+                .returning();
+            if (!deletedCopy)
+                throw new AppError("Failed to delete copy.", 500, {
+                    id: copyId,
+                });
 
-            if (deletedCopy.length === 0)
-                throw new AppError("Failed to delete copy.", 500, { id: copyId });
-
-            const bookId = deletedCopy[0].book_id;
+            const bookId = deletedCopy.book_id;
 
             await db
                 .update(books)
@@ -53,7 +55,9 @@ app.delete(
             });
         } catch (error) {
             if (error instanceof AppError) return next(error);
-            next(new AppError("Error while deleting the copy.", 500, error));
+            return next(
+                new AppError("Error while deleting the copy.", 500, error),
+            );
         }
     },
 );

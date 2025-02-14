@@ -27,12 +27,12 @@ app.post(
             if (!isbn) throw new AppError("ISBN is required.", 400);
 
             const isbnRegex = /^(?:\d{9}[xX]|\d{10}|\d{13})$/;
-            if (!isbn || !isbnRegex.test(isbn)) throw new AppError("Invalid ISBN format.", 400);
+            if (!isbn || !isbnRegex.test(isbn))
+                throw new AppError("Invalid ISBN format.", 400);
 
-            const parsedQuantity = parseInt(quantity, 10);
             const numberOfCopies =
-                !isNaN(parsedQuantity) && parsedQuantity > 0
-                    ? parsedQuantity
+                typeof quantity === "number" && quantity > 0
+                    ? Math.floor(quantity)
                     : 1;
 
             const bookInfo = await ISBN.resolve(isbn);
@@ -115,10 +115,13 @@ app.post(
                     try {
                         await generateBarcodeImage(copyRecord.id);
                     } catch (error) {
-                        console.error("Error generating barcode for copy:", copyRecord.id, error);
+                        console.error(
+                            "Error generating barcode for copy:",
+                            copyRecord.id,
+                            error,
+                        );
                     }
                 }
-                
 
                 return newInsertedBook;
             });
@@ -130,7 +133,9 @@ app.post(
             });
         } catch (error) {
             if (error instanceof AppError) return next(error);
-            next(new AppError("Error while importing the book.", 500, error));
+            return next(
+                new AppError("Error while importing the book.", 500, error),
+            );
         }
     },
 );
@@ -169,7 +174,7 @@ app.post(
                     .insert(copy)
                     .values(copiesToInsert)
                     .returning();
-                if (!insertedCopies.length)
+                if (insertedCopies.length === 0)
                     throw new AppError(
                         "Error inserting copies into the database.",
                         500,
@@ -182,7 +187,7 @@ app.post(
                         console.error(
                             "Error generating barcode for copy:",
                             copyRecord.id,
-                            error
+                            error,
                         );
                     }
                 }
@@ -197,7 +202,9 @@ app.post(
             });
         } catch (error) {
             if (error instanceof AppError) return next(error);
-            next(new AppError("Error while adding the book.", 500, error));
+            return next(
+                new AppError("Error while adding the book.", 500, error),
+            );
         }
     },
 );

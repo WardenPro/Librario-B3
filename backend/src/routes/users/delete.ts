@@ -20,13 +20,11 @@ app.delete(
             const User = await db
                 .select()
                 .from(users)
-                .where(eq(users.id, userId))
-                .execute();
-
+                .where(eq(users.id, userId));
             if (User.length === 0)
                 throw new AppError(`User with ID ${userId} not found`, 404);
             try {
-                await db.delete(users).where(eq(users.id, userId)).execute();
+                await db.delete(users).where(eq(users.id, userId));
                 res.status(200).json("User deleted successfully.");
             } catch (error) {
                 throw new AppError(

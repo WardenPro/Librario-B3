@@ -22,9 +22,7 @@ app.put(
             const existingReview = await db
                 .select()
                 .from(review)
-                .where(eq(review.id, reviewId))
-                .execute();
-
+                .where(eq(review.id, reviewId));
             if (existingReview.length === 0)
                 throw new AppError("Review not found.", 404, { id: reviewId });
 
@@ -33,9 +31,7 @@ app.put(
                 .update(review)
                 .set(validatedData)
                 .where(eq(review.id, reviewId))
-                .returning()
-                .execute();
-
+                .returning();
             if (updatedReview.length === 0) {
                 throw new AppError("No changes applied.", 404, {
                     id: reviewId,

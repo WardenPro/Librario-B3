@@ -14,9 +14,7 @@ export async function updateUser(id: number, data: Request) {
         const userExists = await db
             .select()
             .from(users)
-            .where(eq(users.id, id))
-            .execute();
-
+            .where(eq(users.id, id));
         if (userExists.length === 0)
             throw new AppError("User not found", 404, { id: `${id}` });
 
@@ -24,9 +22,7 @@ export async function updateUser(id: number, data: Request) {
             .update(users)
             .set(validatedData)
             .where(eq(users.id, id))
-            .returning()
-            .execute();
-
+            .returning();
         if (!updatedUser)
             throw new AppError("No changes were made to the user data.", 400);
 

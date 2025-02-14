@@ -13,7 +13,7 @@ app.get(
     grantedAccessMiddleware("admin"),
     async (req: Request, res: Response, next: NextFunction) => {
         try {
-            const allHistorical = await db.select().from(historical).execute();
+            const allHistorical = await db.select().from(historical);
             const validatedHistorical = allHistorical.map((h) =>
                 selectHistoricalSchema.parse(h),
             );
@@ -39,20 +39,15 @@ app.get(
             if (isNaN(id) || id <= 0)
                 throw new AppError("Invalid bookId ID provided.", 400);
 
-            const foundHistorical = await db
+            const [foundHistorical] = await db
                 .select()
                 .from(historical)
-                .where(eq(historical.id, id))
-                .execute();
-
-            if (foundHistorical.length === 0)
+                .where(eq(historical.id, id));
+            if (!foundHistorical)
                 throw new AppError("Historical record not found.", 404, {
                     id: id,
                 });
-            const validatedHistorical = foundHistorical.map((h) =>
-                selectHistoricalSchema.parse(h),
-            );
-            res.status(200).json(validatedHistorical);
+            res.status(200).json(foundHistorical);
         } catch (error) {
             if (error instanceof AppError) return next(error);
             next(

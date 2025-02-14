@@ -15,10 +15,7 @@ app.get(
     grantedAccessMiddleware("admin"),
     async (req: Request, res: Response, next: NextFunction) => {
         try {
-            const allReservations = await db
-                .select()
-                .from(reservation)
-                .execute();
+            const allReservations = await db.select().from(reservation);
             const validatedReservations = allReservations.map((r) =>
                 selectReservationSchema.parse(r),
             );

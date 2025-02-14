@@ -17,9 +17,7 @@ app.post("/login", async (req: Request, res: Response, next: NextFunction) => {
         const [user] = await db
             .select()
             .from(users)
-            .where(eq(users.email, email))
-            .execute();
-
+            .where(eq(users.email, email));
         const isValid = user
             ? await argon2Verify({
                   password: password,
@@ -36,7 +34,9 @@ app.post("/login", async (req: Request, res: Response, next: NextFunction) => {
         res.status(200).json({ message: "Login successful.", token: token });
     } catch (error) {
         if (error instanceof AppError) return next(error);
-        next(new AppError("Internal error during user login", 500, error));
+        return next(
+            new AppError("Internal error during user login", 500, error),
+        );
     }
 });
 

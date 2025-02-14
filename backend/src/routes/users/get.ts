@@ -48,9 +48,7 @@ app.get(
             const User = await db
                 .select()
                 .from(users)
-                .where(eq(users.id, userId))
-                .execute();
-
+                .where(eq(users.id, userId));
             if (User.length === 0)
                 throw new AppError(`User with ID ${userId} not found`, 404);
 

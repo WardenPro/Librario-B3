@@ -20,9 +20,7 @@ app.post(
             const existingCopy = await db
                 .select()
                 .from(copy)
-                .where(eq(copy.id, validatedData.copy_id))
-                .execute();
-
+                .where(eq(copy.id, validatedData.copy_id));
             if (existingCopy.length === 0) {
                 throw new AppError("Copy not found.", 404, {
                     copy_id: validatedData.copy_id,
@@ -39,14 +37,11 @@ app.post(
                 const newReservation = await trx
                     .insert(reservation)
                     .values(validatedData)
-                    .returning()
-                    .execute();
-
+                    .returning();
                 await trx
                     .update(copy)
                     .set({ is_reserved: true })
-                    .where(eq(copy.id, validatedData.copy_id))
-                    .execute();
+                    .where(eq(copy.id, validatedData.copy_id));
 
                 res.status(201).json({
                     message:

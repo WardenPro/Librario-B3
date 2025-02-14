@@ -17,10 +17,15 @@ export default function LoginForm() {
   const { toast } = useToast()
 
   const CheckUserId = (token: string) => {
-    const payload = token.split(".")[1]
-    const decodedPayload = atob(payload)
-    const userId = JSON.parse(decodedPayload).user_id
-    return userId
+    try {
+      const payload = token.split(".")[1]
+      const decodedPayload = window.atob(payload)
+      const userId = JSON.parse(decodedPayload).user_id
+      return userId
+    } catch (error) {
+      console.error("⚠️ Erreur lors de la vérification de l'ID utilisateur :", error)
+      return error
+    }
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -29,7 +34,6 @@ export default function LoginForm() {
     setErrorMessage("")
 
     try {
-      console.log("🔄 Tentative de connexion...")
 
       const response = await fetch("http://localhost:4000/api/login", {
         method: "POST",
@@ -48,8 +52,6 @@ export default function LoginForm() {
         throw new Error("Réponse invalide du serveur.")
       }
 
-      console.log("✅ Données JSON :", data)
-
       if (!response.ok) {
         throw new Error(data.message || `Erreur ${response.status}: ${response.statusText}`)
       }
@@ -67,11 +69,9 @@ export default function LoginForm() {
       let dataUserRole;
       try {
         dataUserRole = await ResUserRole.json()
-        console.log("✅ Données JSON :", dataUserRole)
       } catch (err) {
         throw new Error("Réponse invalide du serveur.")
       }
-      console.log("✅ Données JSON :", dataUserRole)  
 
       toast({
         title: "Connexion réussie",

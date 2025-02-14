@@ -1,44 +1,67 @@
+import { db } from "../config/database";
 import { NODE_ENV } from "..";
 import { Request, Response, NextFunction } from "express";
+import { eq } from "drizzle-orm";
 import { AppError } from "../utils/AppError";
 
-export function grantedAccessMiddleware(requiredRole?: "admin" | "id") {
-    return (req: Request, res: Response, next: NextFunction) => {
-        (async () => {
-            try {
-                //inversed the condition to test it
-                if (NODE_ENV !== "development") {
-                    return next();
-                }
+export function grantedAccessMiddleware(
+    accessType: "owner" | "admin" | "admin_or_owner",
+    schema?: any,
+) {
+    return async (req: Request, res: Response, next: NextFunction) => {
+        try {
+            //inversed the condition to test it
+            if (NODE_ENV !== "development") return next();
+            if (!req.payload?.user_id || !req.payload?.role)
+                return next(
+                    new AppError("Unauthorized: No user ID in token.", 401),
+                );
 
-                const payload = req.payload;
+            const userIdFromToken = req.payload.user_id;
+            const isAdmin = req.payload.role === "admin";
 
-                if (!payload || !payload.role || !payload.user_id) {
-                    return next(
-                        new AppError("Missing role or ID in token", 403),
-                    );
-                }
+            if (accessType === "admin" && !isAdmin)
+                return next(new AppError("Access denied: Admin only.", 403));
 
-                const userRole: string = payload.role as string;
-                const userId: number = payload.user_id as number;
+            const resourceId = parseInt(req.params.id, 10);
+            if (isNaN(resourceId) || resourceId <= 0)
+                return next(
+                    new AppError("Invalid ID provided.", 400, {
+                        id: resourceId,
+                    }),
+                );
 
-                const requestedId = parseInt(req.params.id, 10);
+            const [resource] = await db
+                .select({ user_id: schema.user_id })
+                .from(schema)
+                .where(eq(schema.id, resourceId));
 
-                if (requiredRole === "id" && requestedId !== userId)
-                    return next(
-                        new AppError("Access denied: not your account", 403),
-                    );
+            if (!resource)
+                return next(
+                    new AppError("Resource not found.", 404, {
+                        id: resourceId,
+                    }),
+                );
 
-                if (requiredRole === "admin" && userRole !== "admin")
-                    return next(new AppError("Access denied: admin only", 403));
+            const isOwner = resource.user_id === userIdFromToken;
 
-                if (requestedId !== userId && userRole !== "admin")
-                    return next(new AppError("Access denied", 403));
+            if (accessType === "owner" && !isOwner)
+                return next(
+                    new AppError("Access denied: Not the owner.", 403, {
+                        id: resourceId,
+                    }),
+                );
 
-                next();
-            } catch (error) {
-                next(error);
-            }
-        })();
+            if (accessType === "admin_or_owner" && !isOwner && !isAdmin)
+                return next(
+                    new AppError("Access denied: Admin or owner only.", 403, {
+                        id: resourceId,
+                    }),
+                );
+
+            next();
+        } catch (error) {
+            next(new AppError("Error while verifying access.", 500, error));
+        }
     };
 }

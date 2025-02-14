@@ -48,7 +48,7 @@ export const insertBookSchema = createInsertSchema(books, {
     image_link: (schema) => schema.image_link,
 });
 
-export const SelectBookSchema = createSelectSchema(books, {
+export const selectBookSchema = createSelectSchema(books, {
     title: (schema) => schema.title,
     ISBN_10: (schema) => schema.ISBN_10.nullable(),
     ISBN_13: (schema) => schema.ISBN_13.nullable(),

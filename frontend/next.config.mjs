@@ -25,7 +25,7 @@ const nextConfig = {
     return [
       {
         source: "/api/:path*",
-        destination: "http://localhost:3000/:path*", // Redirige API vers Node.js
+        destination: "http://localhost:3000/:path*",
       },
     ];
   },

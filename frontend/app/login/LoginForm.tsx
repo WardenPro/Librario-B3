@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -27,7 +27,11 @@ export default function LoginForm() {
       return error
     }
   }
-
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      console.log("window.domQueryService:", window.domQueryService);
+    }
+  }, []);
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)

@@ -1,6 +1,9 @@
 import { app } from "../../app/index";
 import { db } from "../../app/config/database";
-import { reservation, selectReservationSchema } from "../../db/schema/reservation";
+import {
+    reservation,
+    selectReservationSchema,
+} from "../../db/schema/reservation";
 import { checkTokenMiddleware } from "../../app/middlewares/verify_jwt";
 import { grantedAccessMiddleware } from "../../app/middlewares/verify_access_right";
 import { Request, Response, NextFunction } from "express";
@@ -60,6 +63,34 @@ app.get(
                     500,
                     error,
                 ),
+            );
+        }
+    },
+);
+
+app.get(
+    "/reservations/:id",
+    checkTokenMiddleware,
+    grantedAccessMiddleware("admin_or_owner", reservation),
+    async (req: Request, res: Response, next: NextFunction) => {
+        try {
+            const userId = parseInt(req.params.id, 10);
+            if (isNaN(userId) || userId <= 0)
+                throw new AppError("Invalid user ID", 400);
+            const foundReservation = await db
+                .select()
+                .from(reservation)
+                .where(eq(reservation.user_id, userId));
+            const validatedReservations = foundReservation.map((r) =>
+                selectReservationSchema.parse(r),
+            );
+            if (validatedReservations.length === 0)
+                throw new AppError("Reservation not found", 404);
+            res.status(200).json(validatedReservations);
+        } catch (error) {
+            if (error instanceof AppError) return next(error);
+            next(
+                new AppError("Error while retrieving reservation.", 500, error),
             );
         }
     },

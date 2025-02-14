@@ -1,9 +1,9 @@
-import { db } from "../../app/config/database";
+import { db } from "./database";
 import { users } from "../../db/schema/users";
 import { eq } from "drizzle-orm";
 import { argon2id } from "hash-wasm";
 import crypto from "crypto";
-import { logMessage } from "../../app/utils/logger";
+import { logMessage } from "../utils/logger";
 import { insertUserSchema } from "../../db/schema/users";
 
 export async function createAdmin() {

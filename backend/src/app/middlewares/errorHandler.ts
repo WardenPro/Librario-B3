@@ -10,7 +10,6 @@ export const errorHandler = (
     next: NextFunction,
 ): void => {
     errorMessage("Error occurred:", {
-        message: err.message,
         stack: err.stack,
         route: req.originalUrl,
         method: req.method,
@@ -29,12 +28,12 @@ export const errorHandler = (
         details_error:
             NODE_ENV === "development"
                 ? {
-                      stack: err.stack ? err.stack.split("\n") : undefined,
-                      originalError:
-                          err instanceof AppError && err.error
-                              ? err.error.stack?.split("\n")
-                              : undefined,
-                  }
+                    stack: err.stack ? err.stack.split("\n") : undefined,
+                    originalError:
+                        err instanceof AppError && err.error
+                            ? err.error.stack?.split("\n")
+                            : undefined,
+                }
                 : undefined,
     });
 };

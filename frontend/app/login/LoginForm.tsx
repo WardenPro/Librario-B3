@@ -63,6 +63,7 @@ export default function LoginForm() {
           "auth_token": data.token,
         },
       })
+      console.log(ResUserRole)
       let dataUserRole;
       try {
         dataUserRole = await ResUserRole.json()
@@ -74,11 +75,10 @@ export default function LoginForm() {
         title: "Connexion réussie",
         description: "Vous êtes maintenant connecté.",
       })
-
       if (dataUserRole.roles === "admin") {
         localStorage.setItem("userRole", "admin")
         router.push("/reservations")
-      } else if (dataUserRole.message === "Access denied: admin only") {
+      } else if (dataUserRole.message === "Access denied: Admin only.") {
         localStorage.setItem("userRole", "user")
         router.push("/")
       } else {
@@ -88,7 +88,7 @@ export default function LoginForm() {
     } catch (error: any) { 
       console.error("⚠️ Erreur de connexion :", error.message)
 
-      setErrorMessage(error.message) // Affichage de l'erreur dans l'UI
+      setErrorMessage(error.message)
 
       toast({
         title: "Erreur de connexion",

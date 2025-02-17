@@ -2,7 +2,6 @@ import { app } from "../../app/index";
 import { library } from "../../db/schema/library";
 import { db } from "../../app/config/database";
 import { Request, Response, NextFunction } from "express";
-import { checkTokenMiddleware } from "../../app/middlewares/verify_jwt";
 import { AppError } from "../../app/utils/AppError";
 
 app.get(

@@ -51,7 +51,7 @@ app.put(
 );
 
 app.put(
-    "/copy/claimed/:id",
+    "/copy/:id/claimed",
     checkTokenMiddleware,
     grantedAccessMiddleware("admin"),
     async (req: Request, res: Response, next: NextFunction) => {
@@ -84,7 +84,7 @@ app.put(
 );
 
 app.put(
-    "/copy/unclaimed/:id",
+    "/copy/:id/unclaimed",
     checkTokenMiddleware,
     grantedAccessMiddleware("admin"),
     async (req: Request, res: Response, next: NextFunction) => {

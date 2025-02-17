@@ -60,7 +60,7 @@ app.get(
 );
 
 app.get(
-    "/copy/book/:id",
+    "/books/:id/copy",
     checkTokenMiddleware,
     async (req: Request, res: Response, next: NextFunction) => {
         try {

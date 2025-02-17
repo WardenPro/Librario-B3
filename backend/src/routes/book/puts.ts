@@ -8,7 +8,7 @@ import { NextFunction, Request, Response } from "express";
 import { AppError } from "../../app/utils/AppError";
 
 app.put(
-    "/books/archiving/:id",
+    "/books/:id/archiving",
     checkTokenMiddleware,
     grantedAccessMiddleware("admin"),
     async (req: Request, res: Response, next: NextFunction) => {
@@ -47,7 +47,7 @@ app.put(
 );
 
 app.put(
-    "/books/unarchiving/:id",
+    "/books/:id/unarchiving",
     checkTokenMiddleware,
     grantedAccessMiddleware("admin"),
     async (req: Request, res: Response, next: NextFunction) => {

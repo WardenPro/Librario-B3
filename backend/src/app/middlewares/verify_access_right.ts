@@ -3,6 +3,7 @@ import { NODE_ENV } from "..";
 import { Request, Response, NextFunction } from "express";
 import { eq } from "drizzle-orm";
 import { AppError } from "../utils/AppError";
+import { users } from "../../db/schema/users";
 
 export function grantedAccessMiddleware(
     accessType: "owner" | "admin" | "admin_or_owner",
@@ -22,6 +23,11 @@ export function grantedAccessMiddleware(
 
             if (accessType === "admin" && !isAdmin)
                 return next(new AppError("Access denied: Admin only.", 403));
+            else if (accessType === "admin" && isAdmin) return next();
+            if (!schema)
+                return next(
+                    new AppError("Schema not provided for access verification.", 500),
+                );
 
             const resourceId = parseInt(req.params.id, 10);
             if (isNaN(resourceId) || resourceId <= 0)
@@ -30,11 +36,19 @@ export function grantedAccessMiddleware(
                         id: resourceId,
                     }),
                 );
-
-            const [resource] = await db
-                .select({ user_id: schema.user_id })
-                .from(schema)
-                .where(eq(schema.id, resourceId));
+            
+            let resource = null;
+            if (schema === users) {
+                [resource] = await db.
+                    select({ user_id: schema.id })
+                    .from(schema)
+                    .where(eq(schema.id, resourceId));
+            } else {
+                [resource] = await db
+                    .select({ user_id: schema.user_id })
+                    .from(schema)
+                    .where(eq(schema.id, resourceId));
+            }
 
             if (!resource)
                 return next(
@@ -61,6 +75,7 @@ export function grantedAccessMiddleware(
 
             next();
         } catch (error) {
+            console.error(error);
             next(new AppError("Error while verifying access.", 500, error));
         }
     };

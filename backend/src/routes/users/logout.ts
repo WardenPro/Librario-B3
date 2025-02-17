@@ -10,7 +10,7 @@ import { AppError } from "../../app/utils/AppError";
 app.post(
     "/logout/:id",
     checkTokenMiddleware,
-    grantedAccessMiddleware(),
+    grantedAccessMiddleware("admin_or_owner", users),
     async (req: Request, res: Response, next: NextFunction) => {
         try {
             const userId = parseInt(req.params.id, 10);

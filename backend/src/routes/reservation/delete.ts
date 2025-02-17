@@ -11,7 +11,7 @@ import { AppError } from "../../app/utils/AppError";
 app.delete(
     "/reservations/:id",
     checkTokenMiddleware,
-    grantedAccessMiddleware(),
+    grantedAccessMiddleware("admin_or_owner", reservation),
     async (req: Request, res: Response, next: NextFunction) => {
         try {
             const id = parseInt(req.params.id, 10);

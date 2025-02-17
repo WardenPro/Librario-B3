@@ -32,7 +32,7 @@ app.get(
 app.get(
     "/historical/:id",
     checkTokenMiddleware,
-    grantedAccessMiddleware(),
+    grantedAccessMiddleware("admin_or_owner", historical),
     async (req: Request, res: Response, next: NextFunction) => {
         try {
             const id = parseInt(req.params.id, 10);

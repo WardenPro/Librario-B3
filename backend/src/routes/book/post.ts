@@ -143,6 +143,7 @@ app.post(
 app.post(
     "/books/manual",
     checkTokenMiddleware,
+    grantedAccessMiddleware("admin"),
     async (req: Request, res: Response, next: NextFunction) => {
         try {
             const validatedData = insertBookSchema.parse(req.body);

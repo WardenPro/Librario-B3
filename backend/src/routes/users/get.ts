@@ -38,7 +38,7 @@ app.get(
 app.get(
     "/users/:id",
     checkTokenMiddleware,
-    grantedAccessMiddleware("admin"),
+    grantedAccessMiddleware("admin_or_owner", users),
     async (req: Request, res: Response, next: NextFunction) => {
         try {
             const userId = parseInt(req.params.id, 10);

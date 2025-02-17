@@ -7,6 +7,7 @@ import { review } from "../../db/schema/review";
 import { NextFunction, Request, Response } from "express";
 import { generateBarcodeImage } from "../../app/services/barcode";
 import { AppError } from "../../app/utils/AppError";
+import { grantedAccessMiddleware } from "../../app/middlewares/verify_access_right";
 
 app.get(
     "/copy",
@@ -113,6 +114,7 @@ app.get(
 app.get(
     "/copy/barcode/:id",
     checkTokenMiddleware,
+    grantedAccessMiddleware("admin"),
     async (req: Request, res: Response, next: NextFunction) => {
         try {
             const copyId = parseInt(req.params.id, 10);

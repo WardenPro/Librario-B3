@@ -6,8 +6,7 @@ import { checkTokenMiddleware } from "../../app/middlewares/verify_jwt";
 import { AppError } from "../../app/utils/AppError";
 
 app.get(
-    "/library/name", 
-    checkTokenMiddleware,
+    "/library/name",
     async (req: Request, res: Response, next: NextFunction) => {
         try {
             const [result] = await db.select().from(library).limit(1);

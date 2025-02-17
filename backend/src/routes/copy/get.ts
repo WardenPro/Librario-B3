@@ -33,7 +33,7 @@ app.get(
     async (req: Request, res: Response, next: NextFunction) => {
         try {
             const copyId = parseInt(req.params.id, 10);
-            if (isNaN(copyId) || copyId >= 0)
+            if (isNaN(copyId) || copyId <= 0)
                 throw new AppError("Invalid copy id provided.", 400, {
                     id: copyId,
                 });
@@ -65,7 +65,7 @@ app.get(
     async (req: Request, res: Response, next: NextFunction) => {
         try {
             const bookId = parseInt(req.params.id, 10);
-            if (isNaN(bookId) || bookId >= 0)
+            if (isNaN(bookId) || bookId <= 0)
                 throw new AppError("Invalid copy id provided.", 400, {
                     id: bookId,
                 });
@@ -112,22 +112,21 @@ app.get(
 );
 
 app.get(
-    "/copy/barcode/:id",
+    "/copy/:id/barcode",
     checkTokenMiddleware,
     grantedAccessMiddleware("admin"),
     async (req: Request, res: Response, next: NextFunction) => {
         try {
             const copyId = parseInt(req.params.id, 10);
-            if (isNaN(copyId) || copyId >= 0)
+            if (isNaN(copyId) || copyId <= 0)
                 throw new AppError("Invalid copy id provided.", 400, {
                     id: copyId,
                 });
 
-            await generateBarcodeImage(copyId);
+            const barcodeBase64 = await generateBarcodeImage(copyId);
 
-            res.status(200).json({
-                message: `Barcode successfully generated for copy ${copyId}.`,
-            });
+            res.setHeader("Content-Type", "image/png");
+            res.status(200).send(Buffer.from(barcodeBase64.split(",")[1], "base64"));
         } catch (error) {
             if (error instanceof AppError) return next(error);
             return next(

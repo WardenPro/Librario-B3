@@ -1,10 +1,7 @@
 import bwipjs from "bwip-js";
-import fs from "fs";
-import path from "path";
+import { AppError } from "../utils/AppError";
 
-export async function generateBarcodeImage(
-    barcodeCopyId: number,
-): Promise<string | null> {
+export async function generateBarcodeImage(barcodeCopyId: number): Promise<string> {
     try {
         const barcodeText = String(barcodeCopyId);
 
@@ -17,17 +14,8 @@ export async function generateBarcodeImage(
             textxalign: "center",
         });
 
-        const fileName = `barcode_${barcodeText}.png`;
-        const filePath = path.join(__dirname, fileName);
-
-        fs.writeFileSync(filePath, pngBuffer);
-
-        return filePath;
+        return `data:image/png;base64,${pngBuffer.toString("base64")}`;
     } catch (error) {
-        console.error(
-            "Erreur lors de la génération de l'image du code-barres :",
-            error,
-        );
-        return null;
+        throw new AppError("Error generating the barcode image.", 500, error);
     }
 }

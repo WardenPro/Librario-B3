@@ -15,7 +15,7 @@ app.delete(
     async (req: Request, res: Response, next: NextFunction) => {
         try {
             const copyId = parseInt(req.params.id, 10);
-            if (isNaN(copyId) || copyId >= 0)
+            if (isNaN(copyId) || copyId <= 0)
                 throw new AppError("Invalid copy id.", 400, { id: copyId });
 
             const [copyToDelete] = await db

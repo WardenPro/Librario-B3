@@ -20,9 +20,9 @@ app.post("/login", async (req: Request, res: Response, next: NextFunction) => {
             .where(eq(users.email, email));
         const isValid = user
             ? await argon2Verify({
-                  password: password,
-                  hash: user.password,
-              })
+                password: password,
+                hash: user.password,
+            })
             : false;
 
         if (!isValid) {

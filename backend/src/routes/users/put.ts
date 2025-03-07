@@ -42,7 +42,7 @@ export async function updateUser(id: number, data: Request) {
 app.put(
     "/users/:id",
     checkTokenMiddleware,
-    grantedAccessMiddleware("owner""owner", users),
+    grantedAccessMiddleware("owner", users),
     async (req: Request, res: Response, next: NextFunction) => {
         try {
             const userId = parseInt(req.params.id, 10);

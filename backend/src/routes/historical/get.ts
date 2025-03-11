@@ -30,22 +30,22 @@ app.get(
 );
 
 app.get(
-    "/historical/:id",
+    "/users/:id/historical",
     checkTokenMiddleware,
     grantedAccessMiddleware("admin_or_owner", historical),
     async (req: Request, res: Response, next: NextFunction) => {
         try {
-            const id = parseInt(req.params.id, 10);
-            if (isNaN(id) || id <= 0)
-                throw new AppError("Invalid bookId ID provided.", 400);
+            const userId = parseInt(req.params.id, 10);
+            if (isNaN(userId) || userId <= 0)
+                throw new AppError("Invalid user ID provided.", 400);
 
             const [foundHistorical] = await db
                 .select()
                 .from(historical)
-                .where(eq(historical.id, id));
+                .where(eq(historical.user_id, userId));
             if (!foundHistorical)
                 throw new AppError("Historical record not found.", 404, {
-                    id: id,
+                    id: userId,
                 });
             res.status(200).json(foundHistorical);
         } catch (error) {

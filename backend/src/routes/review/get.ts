@@ -28,7 +28,7 @@ app.get(
 );
 
 app.get(
-    "/reviews/:id",
+    "books/:id/reviews",
     checkTokenMiddleware,
     async (req: Request, res: Response, next: NextFunction) => {
         try {

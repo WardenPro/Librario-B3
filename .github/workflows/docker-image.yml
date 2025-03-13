@@ -1,0 +1,53 @@
+name: Docker Image CI
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+    - name: Build the Docker image
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
+    - name: Log in to DockerHub
+      run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
+
+    - name: Generate version from commit count
+      id: version
+      run: |
+        VERSION=$(git rev-list --count HEAD)
+        echo "VERSION=1.${VERSION}" >> $GITHUB_ENV
+    - name: Get the current timestamp
+      id: timestamp
+      run: echo "TIMESTAMP=$(date +'%Y%m%d%H')" >> $GITHUB_ENV
+
+    - name: Build Node.js API image
+      run: |
+        docker buildx build \
+          --platform linux/amd64,linux/arm64 \
+          --file backend/Dockerfile \
+          --tag ${{ secrets.DOCKER_USERNAME }}/node_api_b3:${{ env.TIMESTAMP }}-v${{ env.VERSION }} \
+          --tag ${{ secrets.DOCKER_USERNAME }}/node_api_b3:latest \
+          --push \
+          backend/
+
+    - name: Build Next.js front image
+      run: |
+        docker buildx build \
+          --platform linux/amd64,linux/arm64 \
+          --file frontend/Dockerfile \
+          --tag ${{ secrets.DOCKER_USERNAME }}/react_app_b3:${{ env.TIMESTAMP }}-v${{ env.VERSION }} \
+          --tag ${{ secrets.DOCKER_USERNAME }}/react_app_b3:latest \
+          --push \
+          frontend/
+

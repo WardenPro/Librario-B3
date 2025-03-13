@@ -1,100 +1,112 @@
-"use client"
+"use client";
 
-import { useEffect, useState } from "react"
-import { Edit, Trash2, Plus } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import Image from "next/image"
+import { useState, useEffect } from "react";
+import { Plus } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import Image from "next/image";
 
-// Type pour un livre
 type Book = {
-  id: number
-  title: string
-  author: string
-  isbn: string
-  copies: number
-  imageUrl: string
-}
+  id: number;
+  title: string;
+  author: string;
+  ISBN_10: string | null;
+  ISBN_13: string | null;
+  description: string;
+  printType: string;
+  category: string;
+  publisher: string;
+  quantity: number;
+  publish_date: string;
+  image_link: string | null;
+};
 
-// Fonction pour récupérer les livres depuis l'API
-const fetchBooks = async () => {
-  try {
-    const response = await fetch("http://localhost:4000/api/books", {
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem("token")}`, // Ajoute le token JWT si nécessaire
-      },
-    })
-    if (!response.ok) throw new Error("Erreur lors de la récupération des livres")
-    return await response.json()
-  } catch (error) {
-    console.error("Erreur lors du fetch des livres :", error)
-    return []
-  }
-}
+type Copy = {
+  copy_id: number;
+  state: string;
+  is_reserved: boolean;
+  is_claimed: boolean;
+  book_id: number;
+  review_condition: string[] | null;
+};
 
 export default function BooksClient() {
-  const [books, setBooks] = useState<Book[]>([])
-  const [isDialogOpen, setIsDialogOpen] = useState(false)
-  const [currentBook, setCurrentBook] = useState<Book | null>(null)
+  const [books, setBooks] = useState<Book[]>([]);
+  const [selectedBook, setSelectedBook] = useState<Book | null>(null);
+  const [copies, setCopies] = useState<Copy[]>([]);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isCopyDialogOpen, setIsCopyDialogOpen] = useState(false);
 
   useEffect(() => {
-    fetchBooks().then(setBooks)
-  }, [])
+    const fetchBooks = async () => {
+      try {
+        const response = await fetch("/api/books", {
+          headers: {
+            "auth_token": `${localStorage.getItem("auth_token")}`,
+          },
+        });
+        if (response.ok) {
+          const data: Book[] = await response.json();
+          setBooks(data);
+        } else {
+          console.error("Erreur lors du fetch des livres :", response.statusText);
+        }
+      } catch (error) {
+        console.error("Erreur lors de la récupération des livres :", error);
+      }
+    };
+    fetchBooks();
+  }, []);
 
-  const handleAddBook = async (newBook: Omit<Book, "id">) => {
+  // Fonction pour récupérer les copies d'un livre
+  const fetchCopies = async (bookId: number) => {
     try {
-      const response = await fetch("api/books", {
-        method: "POST",
+      const response = await fetch(`/api/copy/book/${bookId}`, {
         headers: {
-          "Content-Type": "application/json",
-          auth_token: `${localStorage.getItem("token")}`,
+          "auth_token": `${localStorage.getItem("auth_token")}`,
         },
-        body: JSON.stringify(newBook),
-      })
-      if (!response.ok) throw new Error("Erreur lors de l'ajout du livre")
-      const addedBook = await response.json()
-      setBooks([...books, addedBook])
-      setIsDialogOpen(false)
+      });
+      if (response.ok) {
+        const data: Copy[] = await response.json();
+        setCopies(data);
+        setIsCopyDialogOpen(true);
+      } else {
+        console.error("Erreur lors du fetch des copies :", response.statusText);
+      }
     } catch (error) {
-      console.error("Erreur lors de l'ajout du livre :", error)
+      console.error("Erreur lors de la récupération des copies :", error);
     }
-  }
-
-  const handleDeleteBook = async (id: number) => {
-    try {
-      await fetch(`/api/books/${id}`, {
-        method: "DELETE",
-        headers: {
-          auth_token: `${localStorage.getItem("token")}`,
-        },
-      })
-      setBooks(books.filter((book) => book.id !== id))
-    } catch (error) {
-      console.error("Erreur lors de la suppression du livre :", error)
-    }
-  }
+  };
 
   return (
     <>
-      <div className="flex justify-end">
-        <Button
-          onClick={() => {
-            setCurrentBook(null)
-            setIsDialogOpen(true)
-          }}
-        >
+      <div className="flex justify-end mb-4">
+        <Button onClick={() => setIsDialogOpen(true)}>
           <Plus className="mr-2 h-4 w-4" /> Ajouter un livre
         </Button>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {books.map((book) => (
-          <div key={book.id} className="bg-card text-card-foreground rounded-lg shadow-md overflow-hidden">
+          <div
+            key={book.id}
+            className="bg-card text-card-foreground rounded-lg shadow-md overflow-hidden cursor-pointer"
+            onClick={() => {
+              setSelectedBook(book);
+              fetchCopies(book.id);
+            }}
+          >
             <div className="aspect-w-2 aspect-h-3 relative">
               <Image
-                src={book.imageUrl || "/placeholder.svg"}
+                src={book.image_link || "/placeholder.svg"}
                 alt={`Couverture de ${book.title}`}
                 layout="fill"
                 objectFit="cover"
@@ -103,27 +115,50 @@ export default function BooksClient() {
             <div className="p-4">
               <h3 className="font-bold text-lg mb-2">{book.title}</h3>
               <p className="text-sm text-muted-foreground mb-1">par {book.author}</p>
-              <p className="text-sm text-muted-foreground mb-1">ISBN: {book.isbn}</p>
-              <p className="text-sm text-muted-foreground mb-4">Exemplaires: {book.copies}</p>
-              <div className="flex justify-end space-x-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => {
-                    setCurrentBook(book)
-                    setIsDialogOpen(true)
-                  }}
-                >
-                  <Edit className="h-4 w-4 mr-2" /> Modifier
-                </Button>
-                <Button variant="destructive" size="sm" onClick={() => handleDeleteBook(book.id)}>
-                  <Trash2 className="h-4 w-4 mr-2" /> Supprimer
-                </Button>
-              </div>
+              <p className="text-sm text-muted-foreground mb-1">ISBN-10: {book.ISBN_10 || "N/A"}</p>
+              <p className="text-sm text-muted-foreground mb-1">ISBN-13: {book.ISBN_13 || "N/A"}</p>
+              <p className="text-sm text-muted-foreground mb-4">Exemplaires: {book.quantity}</p>
             </div>
           </div>
         ))}
       </div>
+
+      {/* Modal pour afficher les copies du livre sélectionné */}
+      <Dialog open={isCopyDialogOpen} onOpenChange={setIsCopyDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Copies de {selectedBook?.title}</DialogTitle>
+            <DialogDescription>Voici les copies disponibles pour ce livre.</DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            {copies.length > 0 ? (
+              copies.map((copy) => (
+                <div key={copy.copy_id} className="border p-3 rounded-lg shadow-sm">
+                  <p>
+                    <strong>État :</strong> {copy.state}
+                  </p>
+                  <p>
+                    <strong>Réservé :</strong> {copy.is_reserved ? "Oui" : "Non"}
+                  </p>
+                  <p>
+                    <strong>Réclamé :</strong> {copy.is_claimed ? "Oui" : "Non"}
+                  </p>
+                  {copy.review_condition && (
+                    <p>
+                      <strong>Condition des avis :</strong> {copy.review_condition.join(", ")}
+                    </p>
+                  )}
+                </div>
+              ))
+            ) : (
+              <p>Aucune copie disponible pour ce livre.</p>
+            )}
+          </div>
+          <div className="flex justify-end">
+            <Button onClick={() => setIsCopyDialogOpen(false)}>Fermer</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </>
-  )
+  );
 }

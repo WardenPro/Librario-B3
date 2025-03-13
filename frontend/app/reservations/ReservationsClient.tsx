@@ -79,12 +79,6 @@ export default function ReservationsClient() {
     }
   };
 
-  const handleAddReservation = (newReservation: Omit<Reservation, "id">) => {
-    console.log("Adding new reservation:", newReservation);
-    setReservations([...reservations, { ...newReservation, id: reservations.length + 1 }]);
-    setIsDialogOpen(false);
-  };
-
   const handleEditReservation = (updatedReservation: Reservation) => {
     console.log("Editing reservation:", updatedReservation);
     setReservations(
@@ -115,17 +109,6 @@ export default function ReservationsClient() {
 
   return (
     <>
-      <div className="flex justify-end">
-        <Button
-          onClick={() => {
-            setCurrentReservation(null);
-            setIsDialogOpen(true);
-          }}
-        >
-          <Plus className="mr-2 h-4 w-4" /> Ajouter une réservation
-        </Button>
-      </div>
-
       <Table>
         <TableHeader>
           <TableRow>
@@ -207,8 +190,6 @@ export default function ReservationsClient() {
               };
               if (currentReservation) {
                 handleEditReservation({ ...reservationData, id: currentReservation.id });
-              } else {
-                handleAddReservation(reservationData);
               }
             }}
           >

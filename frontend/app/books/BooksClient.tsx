@@ -66,7 +66,6 @@ export default function BooksClient() {
     fetchBooks();
   }, []);
 
-  // Fonction pour récupérer les copies d'un livre
   const fetchCopies = async (bookId: number) => {
     try {
       const response = await fetch(`/api/copy/book/${bookId}`, {

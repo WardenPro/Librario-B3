@@ -42,11 +42,7 @@ export async function updateUser(id: number, data: Request) {
 app.put(
     "/users/:id",
     checkTokenMiddleware,
-<<<<<<< Updated upstream
     grantedAccessMiddleware("owner", users),
-=======
-    grantedAccessMiddleware("owner"),
->>>>>>> Stashed changes
     async (req: Request, res: Response, next: NextFunction) => {
         try {
             const userId = parseInt(req.params.id, 10);

@@ -24,6 +24,7 @@ app.post(
     async (req: Request, res: Response, next: NextFunction) => {
         try {
             const { isbn, quantity, state } = req.body;
+            console.log("Payload reçu :", { isbn, quantity, state });
             if (!isbn) throw new AppError("ISBN is required.", 400);
 
             const isbnRegex = /^(?:\d{9}[xX]|\d{10}|\d{13})$/;
@@ -34,13 +35,15 @@ app.post(
                 typeof quantity === "number" && quantity > 0
                     ? Math.floor(quantity)
                     : 1;
-
+            console.log("NUMBER OF COPY", numberOfCopies);
             const bookInfo = await ISBN.resolve(isbn);
+            console.log("bookInfo :", bookInfo);
             if (!bookInfo)
                 throw new AppError("Book not found with Google Books.", 404);
 
             const industryIdentifiers =
                 bookInfo.industryIdentifiers as unknown as IndustryIdentifier[];
+            console.log("industryIdentifiers :", industryIdentifiers);
             const newBook = {
                 title: bookInfo.title || "Unknown",
                 description: bookInfo.description || "No description available",
@@ -65,6 +68,7 @@ app.post(
                 image_link: bookInfo.imageLinks?.thumbnail || null,
                 is_removed: false,
             };
+            console.log("newBook :", newBook);
 
             const conditions = [];
             if (newBook.ISBN_10)
@@ -89,6 +93,7 @@ app.post(
                     .insert(books)
                     .values(newBook)
                     .returning();
+                console.log("Livre inséré :", newInsertedBook);
                 if (!newInsertedBook)
                     throw new AppError(
                         "Error inserting book into the database.",
@@ -103,11 +108,12 @@ app.post(
                     is_claimed: false,
                     book_id: newInsertedBook.id,
                 }));
-
+                console.log("Copies à insérer :", copiesToInsert);
                 const insertedCopies = await trx
                     .insert(copy)
                     .values(copiesToInsert)
                     .returning();
+                console.log("Copies insérées :", insertedCopies);
                 if (insertedCopies.length === 0)
                     throw new AppError("Error inserting copies.", 500);
 

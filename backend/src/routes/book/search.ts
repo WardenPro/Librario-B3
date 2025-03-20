@@ -15,8 +15,8 @@ interface BookFilterParams {
     endDate?: Date;
     sortBy?: string;
     sortOrder?: "asc" | "desc";
-    limit?: number;
-    offset?: number;
+    page?: number;
+    itemsPerPage?: number;
 }
 
 app.get(
@@ -24,6 +24,11 @@ app.get(
     checkTokenMiddleware,
     async (req: Request, res: Response, next: NextFunction) => {
         try {
+            const page = req.query.page ? parseInt(req.query.page as string) : 1;
+            const itemsPerPage = req.query.itemsPerPage ? parseInt(req.query.itemsPerPage as string) : 30;
+            
+            const offset = (page - 1) * itemsPerPage;
+            
             const filters: BookFilterParams = {
                 title: req.query.title as string,
                 author: req.query.author as string,
@@ -33,8 +38,8 @@ app.get(
                 endDate: req.query.endDate ? new Date(req.query.endDate as string) : undefined,
                 sortBy: req.query.sortBy as string || "title",
                 sortOrder: (req.query.sortOrder as "asc" | "desc") || "asc",
-                limit: req.query.limit ? parseInt(req.query.limit as string) : 20,
-                offset: req.query.offset ? parseInt(req.query.offset as string) : 0
+                page: page,
+                itemsPerPage: itemsPerPage
             };
 
             const filterConditions: SQL[] = [];
@@ -88,8 +93,8 @@ app.get(
                 .from(books)
                 .where(whereCondition)
                 .orderBy(orderByClause)
-                .limit(filters.limit || 20)
-                .offset(filters.offset || 0);
+                .limit(itemsPerPage)
+                .offset(offset);
 
             const countQuery = db
                 .select({ count: sql`COUNT(*)`.mapWith(Number) })
@@ -98,14 +103,17 @@ app.get(
 
             const [countResult] = await countQuery;
             const totalCount = countResult?.count || 0;
+            const totalPages = Math.ceil(totalCount / itemsPerPage);
 
             res.status(200).json({
                 data: searchResults,
                 pagination: {
                     total: totalCount,
-                    limit: filters.limit || 20,
-                    offset: filters.offset || 0,
-                    pages: Math.ceil(totalCount / (filters.limit || 20))
+                    page: page,
+                    itemsPerPage: itemsPerPage,
+                    totalPages: totalPages,
+                    hasNextPage: page < totalPages,
+                    hasPreviousPage: page > 1
                 }
             });
         } catch (error) {

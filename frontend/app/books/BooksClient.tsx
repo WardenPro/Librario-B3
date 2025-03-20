@@ -38,6 +38,7 @@ export default function BooksClient() {
   const [selectedBook, setSelectedBook] = useState<Book | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [useAI, setUseAI] = useState(false);
 
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -162,6 +163,7 @@ export default function BooksClient() {
                   alt={`Couverture de ${selectedBook.title}`}
                   layout="fill"
                   objectFit="cover"
+                  className="transition-transform duration-300 hover:scale-105"
                 />
               </div>
             </div>
@@ -248,21 +250,20 @@ export default function BooksClient() {
           <Plus className="mr-2 h-4 w-4" /> Ajouter un livre
         </Button>
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
         {books.map((book) => (
           <div
             key={book.id}
-            className="bg-card text-card-foreground rounded-lg shadow-md overflow-hidden cursor-pointer"
-            onClick={() => {
-              router.push(`?bookId=${book.id}`, { scroll: false });
-            }}
+            className="w-48 bg-card text-card-foreground rounded-lg shadow-md overflow-hidden cursor-pointer"
+            onClick={() => router.push(`?bookId=${book.id}`, { scroll: false })}
           >
-            <div className="relative h-64">
+            <div className="relative w-full h-60">
               <Image
                 src={book.image_link || "/placeholder.svg"}
                 alt={`Couverture de ${book.title}`}
-                layout="fill"
-                objectFit="cover"
+                width={192}
+                height={240}
+                className="w-full h-full object-cover"
               />
             </div>
             <div className="p-4">

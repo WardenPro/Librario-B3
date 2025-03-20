@@ -26,7 +26,10 @@ export function grantedAccessMiddleware(
             else if (accessType === "admin" && isAdmin) return next();
             if (!schema)
                 return next(
-                    new AppError("Schema not provided for access verification.", 500),
+                    new AppError(
+                        "Schema not provided for access verification.",
+                        500,
+                    ),
                 );
 
             const resourceId = parseInt(req.params.id, 10);
@@ -36,11 +39,11 @@ export function grantedAccessMiddleware(
                         id: resourceId,
                     }),
                 );
-            
+
             let resource = null;
             if (schema === users) {
-                [resource] = await db.
-                    select({ user_id: schema.id })
+                [resource] = await db
+                    .select({ user_id: schema.id })
                     .from(schema)
                     .where(eq(schema.id, resourceId));
             } else {

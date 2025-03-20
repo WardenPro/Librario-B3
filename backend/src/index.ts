@@ -36,7 +36,7 @@ async function startServer() {
     try {
         await startDatabase();
         await createAdmin();
-        
+
         await import("./routes/users/index");
         await import("./routes/book/index");
         await import("./routes/copy/index");
@@ -44,7 +44,7 @@ async function startServer() {
         await import("./routes/reservation/index");
         await import("./routes/review/index");
         await import("./routes/library/index");
-        
+
         app.use((req, res) => {
             res.status(404).json({
                 error: "This resource does not exist.",
@@ -52,11 +52,11 @@ async function startServer() {
         });
 
         app.use(errorHandler);
-        
+
         app.listen(port, "0.0.0.0", () => {
             logMessage(`Server is running on http://localhost:${port}`);
         });
-        
+
         startScheduler();
     } catch (error) {
         errorMessage("Error connecting to the database:", error);

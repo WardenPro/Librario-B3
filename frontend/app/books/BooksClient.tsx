@@ -3,6 +3,8 @@
 import { useState, useEffect, FormEvent } from "react";
 import { Plus, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { format } from "date-fns";
+import { fr } from "date-fns/locale";
 import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import { Card } from "@/components/ui/card";
@@ -198,6 +200,10 @@ export default function BooksClient() {
     }
   };
 
+  const formatDate = (dateString: string) => {
+    return format(new Date(dateString), "dd-MM-yyyy", { locale: fr });
+  };
+
   if (bookId) {
     return (
       <div className="container mx-auto py-6">
@@ -237,7 +243,7 @@ export default function BooksClient() {
                   <p className="text-sm text-muted-foreground mb-1">Éditeur: {selectedBook.publisher}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground mb-1">Date de publication: {selectedBook.publish_date}</p>
+                  <p className="text-sm text-muted-foreground mb-1">Date de publication: {formatDate(selectedBook.publish_date)}</p>
                   <p className="text-sm text-muted-foreground mb-1">Catégorie: {selectedBook.category}</p>
                   <p className="text-sm text-muted-foreground mb-1">Type: {selectedBook.printType}</p>
                 </div>

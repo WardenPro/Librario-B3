@@ -51,7 +51,7 @@ export default function ReservationsClient() {
   }, []);
 
   const handleClaimStatusChange = async (copyId: number, isClaimed: boolean) => {
-    const route = isClaimed ? `/api/copy/claimed/${copyId}` : `/api/copy/unclaimed/${copyId}`;
+    const route = isClaimed ? `/api/copy/${copyId}/claimed` : `/api/copy/${copyId}/unclaimed`;
 
     try {
       const response = await fetch(route, {
@@ -77,14 +77,6 @@ export default function ReservationsClient() {
     } catch (error) {
       console.error("Error updating claim status:", error);
     }
-  };
-
-  const handleEditReservation = (updatedReservation: Reservation) => {
-    console.log("Editing reservation:", updatedReservation);
-    setReservations(
-      reservations.map((reservation) => (reservation.id === updatedReservation.id ? updatedReservation : reservation)),
-    );
-    setIsDialogOpen(false);
   };
 
   const handleDeleteReservation = async (id: number) => {
@@ -186,11 +178,8 @@ export default function ReservationsClient() {
                 user_last_name: formData.get("user_last_name") as string,
                 reservation_date: formData.get("reservation_date") as string,
                 final_date: formData.get("final_date") as string,
-                is_claimed: formData.get("is_claimed") === "true", // Convertir la valeur "true"/"false" correctement
+                is_claimed: formData.get("is_claimed") === "true",
               };
-              if (currentReservation) {
-                handleEditReservation({ ...reservationData, id: currentReservation.id });
-              }
             }}
           >
             <div className="grid gap-4 py-4">

@@ -1,6 +1,6 @@
 import { app } from "../..";
 import { db } from "../../app/config/database";
-import { eq } from "drizzle-orm";
+import { eq, sql, desc } from "drizzle-orm";
 import { books, selectBookSchema } from "../../db/schema/book";
 import { checkTokenMiddleware } from "../../app/middlewares/verify_jwt";
 import { NextFunction, Request, Response } from "express";
@@ -11,11 +11,40 @@ app.get(
     checkTokenMiddleware,
     async (req: Request, res: Response, next: NextFunction) => {
         try {
-            const allBooks = await db.select().from(books);
-            const validatedBooks = allBooks.map((books) => {
-                return selectBookSchema.parse(books);
+            const itemsPerPage = req.query.itemsPerPage ? parseInt(req.query.itemsPerPage as string, 10) : 30;
+            const page = req.query.page ? parseInt(req.query.page as string, 10) : 1;
+            const offset = (page - 1) * itemsPerPage;
+
+            const paginatedBooks = await db
+                .select()
+                .from(books)
+                .where(eq(books.is_removed, false))
+                .orderBy(desc(books.publish_date))
+                .limit(itemsPerPage)
+                .offset(offset);
+
+            const validatedBooks = paginatedBooks.map((book) => {
+                return selectBookSchema.parse(book);
             });
-            res.status(200).json(validatedBooks);
+
+            const [totalCount] = await db
+                .select({ count: sql`COUNT(*)`.mapWith(Number) })
+                .from(books)
+                .where(eq(books.is_removed, false));
+
+            const totalPages = Math.ceil(totalCount.count / itemsPerPage);
+
+            res.status(200).json({
+                data: validatedBooks,
+                pagination: {
+                    total: totalCount.count,
+                    page: page,
+                    itemsPerPage: itemsPerPage,
+                    totalPages: totalPages,
+                    hasNextPage: page < totalPages,
+                    hasPreviousPage: page > 1
+                }
+            });
         } catch (error) {
             return next(
                 new AppError("Error while retrieving the books.", 500, error),

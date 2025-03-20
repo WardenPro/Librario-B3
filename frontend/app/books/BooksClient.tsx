@@ -66,7 +66,6 @@ export default function BooksClient() {
     fetchBooks();
   }, []);
 
-  // Chargement des détails du livre et de ses copies quand bookId change
   useEffect(() => {
     const fetchBookDetails = async (id: string) => {
       try {
@@ -94,6 +93,7 @@ export default function BooksClient() {
             auth_token: `${localStorage.getItem("auth_token")}`,
           },
         });
+        console.log("REPONSE COPY", response, copies);
         if (response.ok) {
           const data: Copy[] = await response.json();
           setCopies(data);
@@ -111,13 +111,11 @@ export default function BooksClient() {
       fetchBookDetails(bookId);
       fetchCopies(bookId);
     } else {
-      // Réinitialiser lorsque l'on revient à la liste des livres
       setSelectedBook(null);
       setCopies([]);
     }
   }, [bookId]);
 
-  // Fonction helper pour définir la couleur en fonction de l'état
   const getStateColor = (state: string) => {
     switch (state.toLowerCase()) {
       case "excellent":
@@ -136,14 +134,13 @@ export default function BooksClient() {
     }
   };
 
-  // Si on a un bookId, on affiche les détails du livre et ses copies
   if (bookId) {
     return (
       <div className="container mx-auto py-6">
         <Button
           variant="ghost"
           className="mb-4 flex items-center"
-          onClick={() => router.push("/")}
+          onClick={() => router.push("/books")}
         >
           <ArrowLeft className="mr-2 h-4 w-4" /> Retour aux livres
         </Button>
@@ -242,7 +239,6 @@ export default function BooksClient() {
     );
   }
 
-  // Affichage de la liste des livres si aucun bookId n'est sélectionné
   return (
     <>
       <div className="flex justify-end mb-4">

@@ -27,7 +27,6 @@ interface GoogleBookInfo {
     };
 }
 
-// Fonction pour récupérer les informations d'un livre depuis Google Books
 async function fetchBookFromGoogleBooks(isbn: string): Promise<GoogleBookInfo> {
     try {
         const response = await axios.get(
@@ -35,7 +34,7 @@ async function fetchBookFromGoogleBooks(isbn: string): Promise<GoogleBookInfo> {
         );
 
         if (!response.data.items || response.data.items.length === 0) {
-            throw new AppError("Livre non trouvé sur Google Books.", 404);
+            throw new AppError("Book not found on Google Books.", 404);
         }
 
         const bookData = response.data.items[0].volumeInfo;
@@ -52,10 +51,9 @@ async function fetchBookFromGoogleBooks(isbn: string): Promise<GoogleBookInfo> {
         };
     } catch (error) {
         if (axios.isAxiosError(error) && error.response?.status === 404) {
-            throw new AppError("Livre non trouvé sur Google Books.", 404);
+            throw new AppError("Book not found on Google Books.", 404);
         }
-        console.error("Erreur lors de la requête à Google Books:", error);
-        throw new AppError("Erreur lors de la récupération des informations du livre.", 500);
+        throw new AppError("Error retrieving book information.", 500);
     }
 }
 
@@ -66,7 +64,6 @@ app.post(
     async (req: Request, res: Response, next: NextFunction) => {
         try {
             const { isbn, quantity, state } = req.body;
-            console.log("Payload reçu :", { isbn, quantity, state });
             if (!isbn) throw new AppError("ISBN is required.", 400);
 
             const isbnRegex = /^(?:\d{9}[xX]|\d{10}|\d{13})$/;
@@ -77,17 +74,13 @@ app.post(
                 typeof quantity === "number" && quantity > 0
                     ? Math.floor(quantity)
                     : 1;
-            console.log("NUMBER OF COPY", numberOfCopies);
 
-            // Utilisation de notre propre fonction pour Google Books
             const bookInfo = await fetchBookFromGoogleBooks(isbn);
-            console.log("bookInfo :", bookInfo);
 
             if (!bookInfo)
                 throw new AppError("Book not found with Google Books.", 404);
 
             const industryIdentifiers = bookInfo.industryIdentifiers || [];
-            console.log("industryIdentifiers :", industryIdentifiers);
 
             const newBook = {
                 title: bookInfo.title || "Unknown",
@@ -138,7 +131,6 @@ app.post(
                     .insert(books)
                     .values(newBook)
                     .returning();
-                console.log("Livre inséré :", newInsertedBook);
                 if (!newInsertedBook)
                     throw new AppError(
                         "Error inserting book into the database.",
@@ -153,12 +145,10 @@ app.post(
                     is_claimed: false,
                     book_id: newInsertedBook.id,
                 }));
-                console.log("Copies à insérer :", copiesToInsert);
                 const insertedCopies = await trx
                     .insert(copy)
                     .values(copiesToInsert)
                     .returning();
-                console.log("Copies insérées :", insertedCopies);
                 if (insertedCopies.length === 0)
                     throw new AppError("Error inserting copies.", 500);
 
@@ -191,7 +181,6 @@ app.post(
     },
 );
 
-// La route manual reste inchangée
 app.post(
     "/books/manual",
     checkTokenMiddleware,

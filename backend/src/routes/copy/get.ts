@@ -70,16 +70,14 @@ app.get(
                     id: bookId,
                 });
 
-            const [copies] = await db
+            const copies = await db
                 .select({
                     copy_id: copy.id,
                     state: copy.state,
                     is_reserved: copy.is_reserved,
                     is_claimed: copy.is_claimed,
                     book_id: copy.book_id,
-                    review_condition: sql`array_agg(${review.condition})`.as(
-                        "review_condition",
-                    ),
+                    review_condition: sql`array_agg(${review.condition})`.as("review_condition"),
                 })
                 .from(copy)
                 .leftJoin(review, eq(copy.id, review.copy_id))
@@ -89,15 +87,15 @@ app.get(
                     copy.state,
                     copy.is_reserved,
                     copy.is_claimed,
-                    copy.book_id,
+                    copy.book_id
                 );
 
-            if (!copies)
-                throw new AppError("No copies found for this book.", 404, {
-                    id: bookId,
-                });
+            if (!copies || copies.length === 0) {
+                throw new AppError("No copies found for this book.", 404, { id: bookId });
+            }
 
             res.status(200).json(copies);
+
         } catch (error) {
             if (error instanceof AppError) return next(error);
             return next(

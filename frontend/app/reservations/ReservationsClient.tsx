@@ -7,6 +7,8 @@ import { Edit, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useApiErrorHandler } from "@/app/components/DisconnectAfterRevocation";
+
 
 type Reservation = {
   id: number;
@@ -22,12 +24,14 @@ type Reservation = {
 
 export default function ReservationsClient() {
   const [reservations, setReservations] = useState<Reservation[]>([]);
-  const [error, setError] = useState<string | null>(null);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [currentReservation, setCurrentReservation] = useState<Reservation | null>(null);
+  const fetchWithAuth = useApiErrorHandler();
 
   useEffect(() => {
     const fetchReservations = async () => {
       try {
-        const response = await fetch("/api/reservations", {
+        const response = await fetchWithAuth("/api/reservations", {
           method: "GET",
           headers: {
             "auth_token": `${localStorage.getItem("auth_token")}`,
@@ -43,7 +47,7 @@ export default function ReservationsClient() {
     };
 
     fetchReservations();
-  }, []);
+  }, [fetchWithAuth]);
 
   const formatDate = (dateString: string) => {
     return format(new Date(dateString), "dd-MM-yyyy", { locale: fr });
@@ -53,7 +57,7 @@ export default function ReservationsClient() {
     const route = isClaimed ? `/api/copy/${copyId}/claimed` : `/api/copy/${copyId}/unclaimed`;
 
     try {
-      const response = await fetch(route, {
+      const response = await fetchWithAuth(route, {
         method: "PUT",
         headers: {
           "auth_token": `${localStorage.getItem("auth_token")}`,
@@ -75,7 +79,7 @@ export default function ReservationsClient() {
 
   const handleDeleteReservation = async (id: number) => {
     try {
-      const response = await fetch(`/api/reservations/${id}`, {
+      const response = await fetchWithAuth(`/api/reservations/${id}`, {
         method: "DELETE",
         headers: {
           "auth_token": `${localStorage.getItem("auth_token")}`,

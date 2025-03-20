@@ -28,6 +28,7 @@ export default function ReservationsClient() {
   const [currentReservation, setCurrentReservation] = useState<Reservation | null>(null);
   const [error, setError] = useState<string | null>(null);
   const fetchWithAuth = useApiErrorHandler();
+  const [error, setError] = useState<string | null>(null);
 
 
   useEffect(() => {

@@ -15,6 +15,7 @@ const adminNavItems = [
   { href: "/reviews", icon: Star, label: "Évaluations" },
   { href: "/stats", icon: BarChart2, label: "Statistiques" },
   { href: "/settings", icon: Settings, label: "Paramètres" },
+  { href: "/copy", icon: Settings, label: "Copies" },
 ]
 
 const userNavItems = [
@@ -48,11 +49,10 @@ export default function Sidebar() {
             <li key={item.href} className="mb-2">
               <Link
                 href={item.href}
-                className={`flex items-center p-2 rounded-lg ${
-                  pathname === item.href
+                className={`flex items-center p-2 rounded-lg ${pathname === item.href
                     ? "bg-primary text-primary-foreground"
                     : "hover:bg-gray-200 dark:hover:bg-gray-700"
-                }`}
+                  }`}
               >
                 <item.icon className="mr-2 h-5 w-5" />
                 {item.label}

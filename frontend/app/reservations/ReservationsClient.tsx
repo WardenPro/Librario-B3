@@ -8,6 +8,8 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useApiErrorHandler } from "@/app/components/DisconnectAfterRevocation";
+
 
 type Reservation = {
   id: number;
@@ -25,11 +27,12 @@ export default function ReservationsClient() {
   const [reservations, setReservations] = useState<Reservation[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [currentReservation, setCurrentReservation] = useState<Reservation | null>(null);
+  const fetchWithAuth = useApiErrorHandler();
 
   useEffect(() => {
     const fetchReservations = async () => {
       try {
-        const response = await fetch("/api/reservations", {
+        const response = await fetchWithAuth("/api/reservations", {
           method: "GET",
           headers: {
             "auth_token": `${localStorage.getItem("auth_token")}`,
@@ -48,13 +51,13 @@ export default function ReservationsClient() {
     };
 
     fetchReservations();
-  }, []);
+  }, [fetchWithAuth]);
 
   const handleClaimStatusChange = async (copyId: number, isClaimed: boolean) => {
     const route = isClaimed ? `/api/copy/${copyId}/claimed` : `/api/copy/${copyId}/unclaimed`;
 
     try {
-      const response = await fetch(route, {
+      const response = await fetchWithAuth(route, {
         method: "PUT",
         headers: {
           "auth_token": `${localStorage.getItem("auth_token")}`,
@@ -81,7 +84,7 @@ export default function ReservationsClient() {
 
   const handleDeleteReservation = async (id: number) => {
     try {
-      const response = await fetch(`/api/reservations/${id}`, {
+      const response = await fetchWithAuth(`/api/reservations/${id}`, {
         method: "DELETE",
         headers: {
           "auth_token": `${localStorage.getItem("auth_token")}`,

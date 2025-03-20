@@ -24,7 +24,7 @@ app.put(
             if (!selectedCopy)
                 throw new AppError("Copy not found.", 404, { id: copyId });
 
-            const validatedData = updateCopySchema.parse(req.body);
+            const validatedData = updateCopySchema.parse(req.body.state);
             const [updatedCopy] = await db
                 .update(copy)
                 .set(validatedData)

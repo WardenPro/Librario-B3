@@ -1,4 +1,4 @@
-import { app } from "../../app/index";
+import { app } from "../..";
 import { db } from "../../app/config/database";
 import { eq } from "drizzle-orm";
 import { copy, insertCopySchema } from "../../db/schema/copy";

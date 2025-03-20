@@ -1,4 +1,4 @@
-import { app } from "../../app/index";
+import { app } from "../..";
 import { db } from "../../app/config/database";
 import { review, insertReviewSchema } from "../../db/schema/review";
 import { checkTokenMiddleware } from "../../app/middlewares/verify_jwt";

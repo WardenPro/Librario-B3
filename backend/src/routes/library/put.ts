@@ -1,4 +1,4 @@
-import { app } from "../../app/index";
+import { app } from "../..";
 import { db } from "../../app/config/database";
 import { checkTokenMiddleware } from "../../app/middlewares/verify_jwt";
 import { Request, Response, NextFunction } from "express";

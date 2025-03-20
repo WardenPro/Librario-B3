@@ -1,5 +1,5 @@
 import { db } from "../config/database";
-import { NODE_ENV } from "..";
+import { NODE_ENV } from "../..";
 import { Request, Response, NextFunction } from "express";
 import { eq } from "drizzle-orm";
 import { AppError } from "../utils/AppError";

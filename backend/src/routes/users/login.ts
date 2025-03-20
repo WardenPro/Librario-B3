@@ -1,4 +1,4 @@
-import { app } from "../../app/index";
+import { app } from "../..";
 import { db } from "../../app/config/database";
 import { users } from "../../db/schema/users";
 import { eq } from "drizzle-orm";
@@ -6,8 +6,9 @@ import { argon2Verify } from "hash-wasm";
 import { generateToken } from "../../app/middlewares/jwt";
 import { NextFunction, Request, Response } from "express";
 import { AppError } from "../../app/utils/AppError";
+import { loginLimiter } from "../../app/config/rate_limits";
 
-app.post("/login", async (req: Request, res: Response, next: NextFunction) => {
+app.post("/login", loginLimiter, async (req: Request, res: Response, next: NextFunction) => {
     try {
         const { email, password } = req.body;
         if (!email || !password) {

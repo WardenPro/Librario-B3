@@ -1,4 +1,4 @@
-import { app } from "../../app/index";
+import { app } from "../..";
 import { library } from "../../db/schema/library";
 import { db } from "../../app/config/database";
 import { Request, Response, NextFunction } from "express";

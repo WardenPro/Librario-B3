@@ -1,4 +1,4 @@
-import { app } from "../../app/index";
+import { app } from "../..";
 import { db } from "../../app/config/database";
 import xss from "xss";
 import { users, insertUserSchema } from "../../db/schema/users";

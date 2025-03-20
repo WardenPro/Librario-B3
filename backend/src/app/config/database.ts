@@ -3,7 +3,7 @@ import { drizzle } from "drizzle-orm/node-postgres";
 import { logMessage, errorMessage } from "../utils/logger";
 import dotenv from "dotenv";
 import "dotenv/config";
-import { NODE_ENV } from "..";
+import { NODE_ENV } from "../..";
 
 export let db: ReturnType<typeof drizzle>;
 

@@ -1,4 +1,4 @@
-import { app } from "../../app/index";
+import { app } from "../..";
 import { db } from "../../app/config/database";
 import { users, newUpdateUserSchema } from "../../db/schema/users";
 import { eq } from "drizzle-orm";

@@ -9,6 +9,18 @@ import { useToast } from "@/components/ui/use-toast"
 import { Check } from "lucide-react"
 import { useLibrary } from "../components/LibraryContext";
 
+export const CheckUserId = (token: string) => {
+  try {
+    const payload = token.split(".")[1]
+    const decodedPayload = window.atob(payload)
+    const userId = JSON.parse(decodedPayload).user_id
+    return userId
+  } catch (error) {
+    console.error("⚠️ Erreur lors de la vérification de l'ID utilisateur :", error)
+    return error
+  }
+}
+
 export default function LoginForm() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
@@ -17,17 +29,6 @@ export default function LoginForm() {
   const router = useRouter()
   const { toast } = useToast()
 
-  const CheckUserId = (token: string) => {
-    try {
-      const payload = token.split(".")[1]
-      const decodedPayload = window.atob(payload)
-      const userId = JSON.parse(decodedPayload).user_id
-      return userId
-    } catch (error) {
-      console.error("⚠️ Erreur lors de la vérification de l'ID utilisateur :", error)
-      return error
-    }
-  }
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
@@ -125,6 +126,21 @@ export default function LoginForm() {
       <Button type="submit" className="w-full" disabled={loading}>
         {loading ? "Connexion en cours..." : "Se connecter"}
       </Button>
+      <div className="text-center mt-4">
+        <p className="text-sm text-muted-foreground">
+          Vous n'avez pas de compte ?{" "}
+          <Button
+            variant="link"
+            className="p-0 h-auto font-semibold"
+            onClick={() => {
+              console.log("Redirection vers /register...");
+              router.push("/register");
+            }}
+          >
+            S'inscrire
+          </Button>
+        </p>
+      </div>
 
       {/* Affichage du message d'erreur sous le bouton */}
       {errorMessage && (

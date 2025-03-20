@@ -22,7 +22,7 @@ export default function AuthWrapper({ children }: AuthWrapperProps) {
     const storedUserRole = localStorage.getItem("userRole")
     setUserRole(storedUserRole)
 
-    if (!storedUserRole && pathname !== "/login") {
+    if (!storedUserRole && pathname !== "/login" && pathname !== "/register") {
       router.push("/login")
     } else if (storedUserRole) {
       setIsAuthenticated(true)
@@ -35,11 +35,11 @@ export default function AuthWrapper({ children }: AuthWrapperProps) {
     }
   }, [pathname, router])
 
-  if (pathname === "/login") {
+  if (pathname === "/login" || pathname === "/register") {
     return <>{children}</>
   }
 
-  if (!isAuthenticated) {
+  if (!isAuthenticated && pathname !== "/register" && pathname !== "/login") {
     return null
   }
 

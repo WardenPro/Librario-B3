@@ -6,9 +6,8 @@ import { argon2Verify } from "hash-wasm";
 import { generateToken } from "../../app/middlewares/jwt";
 import { NextFunction, Request, Response } from "express";
 import { AppError } from "../../app/utils/AppError";
-import { loginLimiter } from "../../app/config/rate_limits";
 
-app.post("/login", loginLimiter, async (req: Request, res: Response, next: NextFunction) => {
+app.post("/login", async (req: Request, res: Response, next: NextFunction) => {
     try {
         const { email, password } = req.body;
         if (!email || !password) {

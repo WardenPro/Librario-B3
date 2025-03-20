@@ -4,7 +4,6 @@ import { logMessage, errorMessage } from "./app/utils/logger";
 import { startScheduler } from "./app/services/scheduler";
 import { errorHandler } from "./app/middlewares/errorHandler";
 import { createAdmin } from "./app/config/create_default_admin";
-import { limiter } from "./app/config/rate_limits";
 import cors from "cors";
 import { corsOptions } from "./app/config/cors";
 import helmet from "helmet";
@@ -26,7 +25,6 @@ const port = 3000;
 app.use(helmet());
 app.use(cors(corsOptions));
 app.options("*", cors(corsOptions));
-app.use(limiter);
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 

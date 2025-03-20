@@ -61,18 +61,16 @@ export default function BooksClient() {
   const [reservationDialogOpen, setReservationDialogOpen] = useState(false);
   const [selectedCopy, setSelectedCopy] = useState<Copy | null>(null);
 
-  // Nouveaux états pour le formulaire de réservation
   const [userId, setUserId] = useState("");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
 
-  const itemsPerPage = 30; // ou ajustez en fonction de vos besoins
+  const itemsPerPage = 30;
 
   const router = useRouter();
   const searchParams = useSearchParams();
   const bookId = searchParams.get("bookId");
 
-  // Chargement des livres avec pagination
   useEffect(() => {
     const fetchBooks = async () => {
       try {
@@ -86,7 +84,6 @@ export default function BooksClient() {
         );
         if (response.ok) {
           const data = await response.json();
-          // Ici data.data correspond aux livres et data.pagination aux infos de pagination
           setBooks(data.data);
           setPagination(data.pagination);
         } else {
@@ -99,7 +96,6 @@ export default function BooksClient() {
     fetchBooks();
   }, [currentPage]);
 
-  // Chargement des détails du livre et de ses exemplaires si bookId est présent
   useEffect(() => {
     const fetchBookDetails = async (id: string) => {
       try {
@@ -167,7 +163,6 @@ export default function BooksClient() {
     }
   };
 
-  // Fonction pour envoyer la réservation
   const handleReservationSubmit = async (e: FormEvent) => {
     e.preventDefault();
     if (!selectedCopy) return;
@@ -190,7 +185,6 @@ export default function BooksClient() {
       if (response.ok) {
         console.log("Réservation créée avec succès");
         setReservationDialogOpen(false);
-        // Mise à jour locale de la copie pour indiquer qu'elle est réservée
         setCopies((prev) =>
           prev.map((copy) =>
             copy.copy_id === selectedCopy.copy_id ? { ...copy, is_reserved: true } : copy
@@ -204,7 +198,6 @@ export default function BooksClient() {
     }
   };
 
-  // Affichage quand un livre est sélectionné
   if (bookId) {
     return (
       <div className="container mx-auto py-6">
@@ -321,7 +314,7 @@ export default function BooksClient() {
                     </div>
                   )}
 
-                {/* Nouveau bouton pour réserver cette copie */}
+                { }
                 {!copy.is_reserved && (
                   <Button
                     className="mt-4 w-full"
@@ -342,7 +335,7 @@ export default function BooksClient() {
           </div>
         )}
 
-        {/* Dialogue de réservation */}
+        { }
         <Dialog
           open={reservationDialogOpen}
           onOpenChange={setReservationDialogOpen}
@@ -408,7 +401,6 @@ export default function BooksClient() {
     );
   }
 
-  // Affichage de la liste des livres avec pagination
   return (
     <div className="container mx-auto py-6">
       <div className="flex justify-end mb-4">
@@ -448,7 +440,7 @@ export default function BooksClient() {
         ))}
       </div>
 
-      {/* Composant de pagination */}
+      { }
       {pagination && (
         <div className="flex justify-center items-center mt-6 gap-4">
           <Button

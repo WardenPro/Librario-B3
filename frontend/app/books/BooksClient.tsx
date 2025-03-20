@@ -32,6 +32,15 @@ type Copy = {
   review_condition: string[] | null;
 };
 
+type Pagination = {
+  total: number;
+  page: number;
+  itemsPerPage: number;
+  totalPages: number;
+  hasNextPage: boolean;
+  hasPreviousPage: boolean;
+};
+
 export default function BooksClient() {
   const [books, setBooks] = useState<Book[]>([]);
   const [copies, setCopies] = useState<Copy[]>([]);
@@ -39,23 +48,28 @@ export default function BooksClient() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [useAI, setUseAI] = useState(false);
+  const [pagination, setPagination] = useState<Pagination | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 30; // ou ajustez en fonction de vos besoins
 
   const router = useRouter();
   const searchParams = useSearchParams();
   const bookId = searchParams.get("bookId");
 
-  // Chargement des livres
+  // Chargement des livres avec pagination
   useEffect(() => {
     const fetchBooks = async () => {
       try {
-        const response = await fetch("/api/books", {
+        const response = await fetch(`/api/books?page=${currentPage}&itemsPerPage=${itemsPerPage}`, {
           headers: {
             auth_token: `${localStorage.getItem("auth_token")}`,
           },
         });
         if (response.ok) {
-          const data: Book[] = await response.json();
-          setBooks(data);
+          const data = await response.json();
+          // Ici data.data correspond aux livres et data.pagination aux infos de pagination
+          setBooks(data.data);
+          setPagination(data.pagination);
         } else {
           console.error("Erreur lors du fetch des livres :", response.statusText);
         }
@@ -64,8 +78,9 @@ export default function BooksClient() {
       }
     };
     fetchBooks();
-  }, []);
+  }, [currentPage]);
 
+  // Chargement des détails du livre et de ses exemplaires si bookId est présent
   useEffect(() => {
     const fetchBookDetails = async (id: string) => {
       try {
@@ -93,7 +108,6 @@ export default function BooksClient() {
             auth_token: `${localStorage.getItem("auth_token")}`,
           },
         });
-        console.log("REPONSE COPY", response, copies);
         if (response.ok) {
           const data: Copy[] = await response.json();
           setCopies(data);
@@ -134,6 +148,7 @@ export default function BooksClient() {
     }
   };
 
+  // Si on affiche un livre en particulier
   if (bookId) {
     return (
       <div className="container mx-auto py-6">
@@ -158,9 +173,8 @@ export default function BooksClient() {
                 <Image
                   src={selectedBook.image_link || "/placeholder.svg"}
                   alt={`Couverture de ${selectedBook.title}`}
-                  layout="fill"
-                  objectFit="cover"
-                  className="transition-transform duration-300 hover:scale-105"
+                  fill
+                  style={{ objectFit: "cover" }}
                 />
               </div>
             </div>
@@ -239,8 +253,9 @@ export default function BooksClient() {
     );
   }
 
+  // Affichage de la liste des livres avec pagination
   return (
-    <>
+    <div className="container mx-auto py-6">
       <div className="flex justify-end mb-4">
         <Button onClick={() => console.log("Ouvrir le dialog pour ajouter un livre")}>
           <Plus className="mr-2 h-4 w-4" /> Ajouter un livre
@@ -257,9 +272,8 @@ export default function BooksClient() {
               <Image
                 src={book.image_link || "/placeholder.svg"}
                 alt={`Couverture de ${book.title}`}
-                width={192}
-                height={240}
-                className="w-full h-full object-cover"
+                fill
+                style={{ objectFit: "cover" }}
               />
             </div>
             <div className="p-4">
@@ -272,6 +286,29 @@ export default function BooksClient() {
           </div>
         ))}
       </div>
-    </>
+
+      {/* Composant de pagination */}
+      {pagination && (
+        <div className="flex justify-center items-center mt-6 gap-4">
+          <Button
+            variant="outline"
+            disabled={!pagination.hasPreviousPage}
+            onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+          >
+            Précédent
+          </Button>
+          <span>
+            Page {pagination.page} sur {pagination.totalPages}
+          </span>
+          <Button
+            variant="outline"
+            disabled={!pagination.hasNextPage}
+            onClick={() => setCurrentPage((prev) => prev + 1)}
+          >
+            Suivant
+          </Button>
+        </div>
+      )}
+    </div>
   );
 }

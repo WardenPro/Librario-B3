@@ -13,6 +13,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 
 type Book = {
   id: number;
@@ -44,6 +45,7 @@ export default function BooksClient() {
   const [copies, setCopies] = useState<Copy[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isCopyDialogOpen, setIsCopyDialogOpen] = useState(false);
+  const router = useRouter();
 
   useEffect(() => {
     const fetchBooks = async () => {
@@ -66,25 +68,6 @@ export default function BooksClient() {
     fetchBooks();
   }, []);
 
-  const fetchCopies = async (bookId: number) => {
-    try {
-      const response = await fetch(`/api/copy/book/${bookId}`, {
-        headers: {
-          "auth_token": `${localStorage.getItem("auth_token")}`,
-        },
-      });
-      if (response.ok) {
-        const data: Copy[] = await response.json();
-        setCopies(data);
-        setIsCopyDialogOpen(true);
-      } else {
-        console.error("Erreur lors du fetch des copies :", response.statusText);
-      }
-    } catch (error) {
-      console.error("Erreur lors de la récupération des copies :", error);
-    }
-  };
-
   return (
     <>
       <div className="flex justify-end mb-4">
@@ -99,9 +82,9 @@ export default function BooksClient() {
             key={book.id}
             className="bg-card text-card-foreground rounded-lg shadow-md overflow-hidden cursor-pointer"
             onClick={() => {
-              setSelectedBook(book);
-              fetchCopies(book.id);
+              router.push("/CopyClient");
             }}
+
           >
             <div className="aspect-w-2 aspect-h-3 relative">
               <Image

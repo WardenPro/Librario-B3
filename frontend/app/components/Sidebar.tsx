@@ -14,7 +14,7 @@ const adminNavItems = [
   { href: "/users", icon: Users, label: "Utilisateurs" },
   { href: "/reviews", icon: Star, label: "Évaluations" },
   { href: "/stats", icon: BarChart2, label: "Statistiques" },
-  { href: "/settings", icon: Settings, label: "Paramètres" },
+  { href: "/settings", icon: Settings, label: "Paramètres" }
 ]
 
 const userNavItems = [

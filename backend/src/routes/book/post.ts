@@ -1,4 +1,4 @@
-import { app } from "../../";
+import { app } from "../..";
 import { db } from "../../app/config/database";
 import { books, insertBookSchema } from "../../db/schema/book";
 import { copy } from "../../db/schema/copy";

@@ -32,8 +32,5 @@ export const selectCopySchema = createSelectSchema(copy, {
 });
 
 export const updateCopySchema = createInsertSchema(copy, {
-    state: (schema) => schema.state.optional(),
-    is_reserved: (schema) => schema.is_reserved.optional(),
-    is_claimed: (schema) => schema.is_claimed.optional(),
-    book_id: (schema) => schema.book_id.optional(),
+    state: (schema) => schema.state,
 });

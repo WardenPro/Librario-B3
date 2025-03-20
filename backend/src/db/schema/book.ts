@@ -61,3 +61,14 @@ export const selectBookSchema = createSelectSchema(books, {
     publish_date: (schema) => schema.publish_date,
     image_link: (schema) => schema.image_link,
 });
+
+export const updateBookSchema = createInsertSchema(books, {
+    title: (schema) => schema.title,
+    description: (schema) => schema.description,
+    printType: (schema) => schema.printType,
+    category: (schema) => schema.category,
+    publisher: (schema) => schema.publisher,
+    author: (schema) => schema.author,
+    publish_date: z.coerce.date(),
+    image_link: (schema) => schema.image_link,
+});

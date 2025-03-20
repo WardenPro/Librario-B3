@@ -32,7 +32,7 @@ app.delete(
                 .returning();
             await db
                 .update(copy)
-                .set({ is_reserved: false })
+                .set({ is_reserved: false, is_claimed: false })
                 .where(eq(copy.id, reservedCopy[0].copy_id));
             res.status(200).json({
                 message: "Reservation successfully deleted.",

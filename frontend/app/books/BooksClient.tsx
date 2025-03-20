@@ -1,12 +1,21 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, FormEvent } from "react";
 import { Plus, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 type Book = {
   id: number;
@@ -47,9 +56,16 @@ export default function BooksClient() {
   const [selectedBook, setSelectedBook] = useState<Book | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [useAI, setUseAI] = useState(false);
   const [pagination, setPagination] = useState<Pagination | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
+  const [reservationDialogOpen, setReservationDialogOpen] = useState(false);
+  const [selectedCopy, setSelectedCopy] = useState<Copy | null>(null);
+
+  // Nouveaux états pour le formulaire de réservation
+  const [userId, setUserId] = useState("");
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
+
   const itemsPerPage = 30; // ou ajustez en fonction de vos besoins
 
   const router = useRouter();
@@ -60,11 +76,14 @@ export default function BooksClient() {
   useEffect(() => {
     const fetchBooks = async () => {
       try {
-        const response = await fetch(`/api/books?page=${currentPage}&itemsPerPage=${itemsPerPage}`, {
-          headers: {
-            auth_token: `${localStorage.getItem("auth_token")}`,
-          },
-        });
+        const response = await fetch(
+          `/api/books?page=${currentPage}&itemsPerPage=${itemsPerPage}`,
+          {
+            headers: {
+              auth_token: `${localStorage.getItem("auth_token")}`,
+            },
+          }
+        );
         if (response.ok) {
           const data = await response.json();
           // Ici data.data correspond aux livres et data.pagination aux infos de pagination
@@ -148,7 +167,44 @@ export default function BooksClient() {
     }
   };
 
-  // Si on affiche un livre en particulier
+  // Fonction pour envoyer la réservation
+  const handleReservationSubmit = async (e: FormEvent) => {
+    e.preventDefault();
+    if (!selectedCopy) return;
+    const payload = {
+      copy_id: selectedCopy.copy_id,
+      user_id: Number(userId),
+      reservation_date: startDate,
+      final_date: endDate,
+    };
+
+    try {
+      const response = await fetch("/api/reservations", {
+        method: "POST",
+        headers: {
+          auth_token: `${localStorage.getItem("auth_token")}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+      if (response.ok) {
+        console.log("Réservation créée avec succès");
+        setReservationDialogOpen(false);
+        // Mise à jour locale de la copie pour indiquer qu'elle est réservée
+        setCopies((prev) =>
+          prev.map((copy) =>
+            copy.copy_id === selectedCopy.copy_id ? { ...copy, is_reserved: true } : copy
+          )
+        );
+      } else {
+        console.error("Erreur lors de la création de la réservation:", response.statusText);
+      }
+    } catch (error) {
+      console.error("Erreur lors de la création de la réservation:", error);
+    }
+  };
+
+  // Affichage quand un livre est sélectionné
   if (bookId) {
     return (
       <div className="container mx-auto py-6">
@@ -201,7 +257,9 @@ export default function BooksClient() {
           </div>
         )}
 
-        <h2 className="text-xl font-bold mb-4">Exemplaires disponibles ({copies.length})</h2>
+        <h2 className="text-xl font-bold mb-4">
+          Exemplaires disponibles ({copies.length})
+        </h2>
 
         {loading ? (
           <div className="text-center py-8">Chargement des exemplaires...</div>
@@ -210,36 +268,70 @@ export default function BooksClient() {
             {copies.map((copy) => (
               <Card key={copy.copy_id} className="p-4">
                 <div className="flex justify-between items-start mb-3">
-                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStateColor(copy.state)}`}>
+                  <span
+                    className={`px-2 py-1 rounded-full text-xs font-medium ${getStateColor(
+                      copy.state
+                    )}`}
+                  >
                     État: {copy.state}
                   </span>
                   <div className="flex gap-2">
                     {copy.is_reserved && (
-                      <Badge variant="outline" className="bg-yellow-100 text-yellow-800 border-yellow-300">
+                      <Badge
+                        variant="outline"
+                        className="bg-yellow-100 text-yellow-800 border-yellow-300"
+                      >
                         Réservé
                       </Badge>
                     )}
                     {copy.is_claimed && (
-                      <Badge variant="outline" className="bg-blue-100 text-blue-800 border-blue-300">
+                      <Badge
+                        variant="outline"
+                        className="bg-blue-100 text-blue-800 border-blue-300"
+                      >
                         Réclamé
                       </Badge>
                     )}
                   </div>
                 </div>
-                <p className="text-sm mb-2">ID exemplaire: #{copy.copy_id}</p>
-                {copy.review_condition && copy.review_condition.length > 0 && (
-                  <div className="mt-3">
-                    <h4 className="text-sm font-medium mb-1">Évaluations de l'état:</h4>
-                    <div className="flex flex-wrap gap-1">
-                      {copy.review_condition.map((condition, index) =>
-                        condition && condition !== "null" && (
-                          <Badge key={index} variant="secondary" className="text-xs">
-                            {condition}
-                          </Badge>
-                        )
-                      )}
+                <p className="text-sm mb-2">
+                  ID exemplaire: #{copy.copy_id}
+                </p>
+                {copy.review_condition &&
+                  copy.review_condition.length > 0 && (
+                    <div className="mt-3">
+                      <h4 className="text-sm font-medium mb-1">
+                        Évaluations de l'état:
+                      </h4>
+                      <div className="flex flex-wrap gap-1">
+                        {copy.review_condition.map(
+                          (condition, index) =>
+                            condition &&
+                            condition !== "null" && (
+                              <Badge
+                                key={index}
+                                variant="secondary"
+                                className="text-xs"
+                              >
+                                {condition}
+                              </Badge>
+                            )
+                        )}
+                      </div>
                     </div>
-                  </div>
+                  )}
+
+                {/* Nouveau bouton pour réserver cette copie */}
+                {!copy.is_reserved && (
+                  <Button
+                    className="mt-4 w-full"
+                    onClick={() => {
+                      setSelectedCopy(copy);
+                      setReservationDialogOpen(true);
+                    }}
+                  >
+                    Réserver cette copie
+                  </Button>
                 )}
               </Card>
             ))}
@@ -249,6 +341,69 @@ export default function BooksClient() {
             Aucun exemplaire disponible pour ce livre.
           </div>
         )}
+
+        {/* Dialogue de réservation */}
+        <Dialog
+          open={reservationDialogOpen}
+          onOpenChange={setReservationDialogOpen}
+        >
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>
+                Réserver l'exemplaire #{selectedCopy?.copy_id}
+              </DialogTitle>
+              <DialogDescription>
+                Entrez l'ID de l'utilisateur ainsi que les dates de début et de fin
+                de la réservation.
+              </DialogDescription>
+            </DialogHeader>
+            <form onSubmit={handleReservationSubmit}>
+              <div className="grid gap-4 py-4">
+                <div className="grid grid-cols-1 gap-2">
+                  <Label htmlFor="userId">User ID</Label>
+                  <Input
+                    id="userId"
+                    type="number"
+                    value={userId}
+                    onChange={(e) => setUserId(e.target.value)}
+                    required
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <Label htmlFor="startDate">Date de début</Label>
+                    <Input
+                      id="startDate"
+                      type="date"
+                      value={startDate}
+                      onChange={(e) => setStartDate(e.target.value)}
+                      required
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="endDate">Date de fin</Label>
+                    <Input
+                      id="endDate"
+                      type="date"
+                      value={endDate}
+                      onChange={(e) => setEndDate(e.target.value)}
+                      required
+                    />
+                  </div>
+                </div>
+              </div>
+              <div className="flex justify-end gap-2">
+                <Button
+                  variant="outline"
+                  onClick={() => setReservationDialogOpen(false)}
+                >
+                  Annuler
+                </Button>
+                <Button type="submit">Confirmer la réservation</Button>
+              </div>
+            </form>
+          </DialogContent>
+        </Dialog>
       </div>
     );
   }
@@ -279,9 +434,15 @@ export default function BooksClient() {
             <div className="p-4">
               <h3 className="font-bold text-lg mb-2">{book.title}</h3>
               <p className="text-sm text-muted-foreground mb-1">par {book.author}</p>
-              <p className="text-sm text-muted-foreground mb-1">ISBN-10: {book.ISBN_10 || "N/A"}</p>
-              <p className="text-sm text-muted-foreground mb-1">ISBN-13: {book.ISBN_13 || "N/A"}</p>
-              <p className="text-sm text-muted-foreground mb-4">Exemplaires: {book.quantity}</p>
+              <p className="text-sm text-muted-foreground mb-1">
+                ISBN-10: {book.ISBN_10 || "N/A"}
+              </p>
+              <p className="text-sm text-muted-foreground mb-1">
+                ISBN-13: {book.ISBN_13 || "N/A"}
+              </p>
+              <p className="text-sm text-muted-foreground mb-4">
+                Exemplaires: {book.quantity}
+              </p>
             </div>
           </div>
         ))}

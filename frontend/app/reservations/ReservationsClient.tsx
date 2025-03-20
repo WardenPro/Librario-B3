@@ -25,7 +25,6 @@ export default function ReservationsClient() {
   const [reservations, setReservations] = useState<Reservation[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [currentReservation, setCurrentReservation] = useState<Reservation | null>(null);
-
   const [error, setError] = useState<string | null>(null);
   const fetchWithAuth = useApiErrorHandler();
 

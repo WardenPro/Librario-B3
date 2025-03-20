@@ -1,7 +1,9 @@
 import bwipjs from "bwip-js";
 import { AppError } from "../utils/AppError";
 
-export async function generateBarcodeImage(barcodeCopyId: number): Promise<string> {
+export async function generateBarcodeImage(
+    barcodeCopyId: number,
+): Promise<string> {
     try {
         const barcodeText = String(barcodeCopyId);
 

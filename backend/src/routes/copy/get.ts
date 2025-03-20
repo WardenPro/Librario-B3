@@ -126,7 +126,9 @@ app.get(
             const barcodeBase64 = await generateBarcodeImage(copyId);
 
             res.setHeader("Content-Type", "image/png");
-            res.status(200).send(Buffer.from(barcodeBase64.split(",")[1], "base64"));
+            res.status(200).send(
+                Buffer.from(barcodeBase64.split(",")[1], "base64"),
+            );
         } catch (error) {
             if (error instanceof AppError) return next(error);
             return next(

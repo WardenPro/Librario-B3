@@ -3,13 +3,13 @@
 import { useEffect, useState } from "react"
 import { useRouter, usePathname } from "next/navigation"
 import Sidebar from "./Sidebar"
-import type React from "react"
+import type React from "react" // Added import for React
 
 type AuthWrapperProps = {
   children: React.ReactNode
 }
 
-const adminRoutes = ["/reservations", "/books", "/users", "/reviews", "/stats", "/settings ", "/copy"]
+const adminRoutes = ["/reservations", "/books", "/users", "/reviews", "/stats", "/settings"]
 const userRoutes = ["/", "/history"]
 
 export default function AuthWrapper({ children }: AuthWrapperProps) {

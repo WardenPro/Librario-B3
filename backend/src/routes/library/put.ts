@@ -22,13 +22,20 @@ app.put(
                 .set(ValidatedLibraryData)
                 .returning();
             if (!updatedLibrary)
-                throw new AppError("No changes were made to the library data.", 400);
+                throw new AppError(
+                    "No changes were made to the library data.",
+                    400,
+                );
 
             res.status(200).json(updatedLibrary);
         } catch (error) {
-            if (error instanceof AppError)
-                return next(error);
-            return next(new AppError("An error occurred while updating the library name.", 500));
+            if (error instanceof AppError) return next(error);
+            return next(
+                new AppError(
+                    "An error occurred while updating the library name.",
+                    500,
+                ),
+            );
         }
     },
 );

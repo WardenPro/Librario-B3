@@ -1,66 +1,55 @@
-"use client"
+"use client";
 
-import { useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 
-export function handleApiError(error: any, router: any) {
-    if (error?.message?.includes("Relogin is required") || error?.message?.includes("Invalid Compact JWS")) {
+const AUTH_ERRORS = ["Relogin is required", "Invalid Compact JWS"];
+
+function handleApiError(error: any, router: any) {
+    if (AUTH_ERRORS.some((msg) => error?.message?.includes(msg))) {
         localStorage.clear();
         router.replace("/login");
         router.refresh();
-
     }
+}
+
+async function fetchWithAuthCheck(input: RequestInfo, init?: RequestInit, router?: any) {
+    const token = localStorage.getItem("auth_token");
+
+    if (!token) {
+        router?.replace("/login");
+        return Promise.reject(new Error("No auth token found"));
+    }
+
+    const response = await fetch(input, init);
+
+    if (!response.ok) {
+        try {
+            const error = await response.json();
+            handleApiError(error, router);
+            return Promise.reject(error);
+        } catch (parseError) {
+            console.error("Unhandled API error:", parseError);
+            return Promise.reject(parseError);
+        }
+    }
+
+    return response;
 }
 
 export function useApiErrorHandler() {
     const router = useRouter();
 
     useEffect(() => {
-        // ✅ Bloquer immédiatement si aucun token
         if (!localStorage.getItem("auth_token")) {
             router.replace("/login");
-            return;
         }
-
-        const handleFetchError = async (response: Response) => {
-            if (!response.ok) {
-                try {
-                    const error = await response.json();
-                    if (error?.message?.includes("Relogin is required")) {
-                        localStorage.clear(); // ✅ Efface tout
-                        router.replace("/login"); // ✅ Redirection forcée
-                    }
-                    throw error;
-                } catch (err) {
-                    console.error("Erreur API non gérée :", err);
-                }
-            }
-            return response;
-        };
-
-        // Sauvegarder l'original fetch
-        const originalFetch = window.fetch;
-
-        // Remplacer fetch par une version qui gère les erreurs
-        window.fetch = async (...args) => {
-            if (!localStorage.getItem("auth_token")) {
-                console.warn("Tentative de requête API sans token. Redirection forcée...");
-                router.replace("/login");
-                return Promise.reject("No auth token found");
-            }
-
-            const response = await originalFetch(...args);
-            return handleFetchError(response);
-        };
-
-        // Nettoyage : Restaurer l'ancien fetch quand le composant est démonté
-        return () => {
-            window.fetch = originalFetch;
-        };
     }, [router]);
+
+    return (input: RequestInfo, init?: RequestInit) => fetchWithAuthCheck(input, init, router);
 }
 
 export function DisconnectAfterRevocationWrapper({ children }: { children: React.ReactNode }) {
-    useApiErrorHandler()
-    return <>{children}</>
+    useApiErrorHandler();
+    return <>{children}</>;
 }

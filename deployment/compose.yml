@@ -1,10 +1,18 @@
 services:
 
-  app:
+  back:
     image: warden696/node_api_b3:latest
-    container_name: node-app
+    container_name: back
     ports:
       - "3000:3000"
+    environment:
+      - NODE_ENV=production
+
+  front:
+    image: warden696/react_app_b3:latest
+    container_name: front
+    ports:
+      - "4000:4000"
     environment:
       - NODE_ENV=production
 

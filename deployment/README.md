@@ -27,7 +27,6 @@
 | Backend                      | Frontend                                   |
 |-----------------------------|--------------------------------------------|
 | node v22.13.1, target ES2022 | node v22.13.1, target ES2022 |
-|| API Backend
 
 ---
 
@@ -35,7 +34,7 @@
 
 | Backend                   | Frontend |
 |---------------------------|----------|
-| JWT secret in .env        |          |
+| JWT secret in .env        |  API Backend        |
 | Database credential in .env |        |
 | API openlibrary           |          |
 | API Gemini                |          |

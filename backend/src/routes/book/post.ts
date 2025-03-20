@@ -1,21 +1,63 @@
-import { app } from "../..";
+import { app } from "../../";
 import { db } from "../../app/config/database";
 import { books, insertBookSchema } from "../../db/schema/book";
 import { copy } from "../../db/schema/copy";
 import { eq, or } from "drizzle-orm";
 import { checkTokenMiddleware } from "../../app/middlewares/verify_jwt";
 import { grantedAccessMiddleware } from "../../app/middlewares/verify_access_right";
-import ISBN from "node-isbn";
+import axios from "axios";
 import { Request, Response, NextFunction } from "express";
 import { AppError } from "../../app/utils/AppError";
 import { generateBarcodeImage } from "../../app/services/barcode";
 
-interface IndustryIdentifier {
-    type: string;
-    identifier: string;
+interface GoogleBookInfo {
+    title?: string;
+    description?: string;
+    printType?: string;
+    categories?: string[];
+    publisher?: string;
+    authors?: string[];
+    publishedDate?: string;
+    industryIdentifiers?: Array<{
+        type: string;
+        identifier: string;
+    }>;
+    imageLinks?: {
+        thumbnail?: string;
+    };
 }
 
-ISBN.provider(["google"]);
+// Fonction pour récupérer les informations d'un livre depuis Google Books
+async function fetchBookFromGoogleBooks(isbn: string): Promise<GoogleBookInfo> {
+    try {
+        const response = await axios.get(
+            `https://www.googleapis.com/books/v1/volumes?q=isbn:${isbn}`
+        );
+
+        if (!response.data.items || response.data.items.length === 0) {
+            throw new AppError("Livre non trouvé sur Google Books.", 404);
+        }
+
+        const bookData = response.data.items[0].volumeInfo;
+        return {
+            title: bookData.title,
+            description: bookData.description,
+            printType: bookData.printType,
+            categories: bookData.categories,
+            publisher: bookData.publisher,
+            authors: bookData.authors,
+            publishedDate: bookData.publishedDate,
+            industryIdentifiers: bookData.industryIdentifiers,
+            imageLinks: bookData.imageLinks
+        };
+    } catch (error) {
+        if (axios.isAxiosError(error) && error.response?.status === 404) {
+            throw new AppError("Livre non trouvé sur Google Books.", 404);
+        }
+        console.error("Erreur lors de la requête à Google Books:", error);
+        throw new AppError("Erreur lors de la récupération des informations du livre.", 500);
+    }
+}
 
 app.post(
     "/books/import",
@@ -36,14 +78,17 @@ app.post(
                     ? Math.floor(quantity)
                     : 1;
             console.log("NUMBER OF COPY", numberOfCopies);
-            const bookInfo = await ISBN.resolve(isbn);
+
+            // Utilisation de notre propre fonction pour Google Books
+            const bookInfo = await fetchBookFromGoogleBooks(isbn);
             console.log("bookInfo :", bookInfo);
+
             if (!bookInfo)
                 throw new AppError("Book not found with Google Books.", 404);
 
-            const industryIdentifiers =
-                bookInfo.industryIdentifiers as unknown as IndustryIdentifier[];
+            const industryIdentifiers = bookInfo.industryIdentifiers || [];
             console.log("industryIdentifiers :", industryIdentifiers);
+
             const newBook = {
                 title: bookInfo.title || "Unknown",
                 description: bookInfo.description || "No description available",
@@ -146,6 +191,7 @@ app.post(
     },
 );
 
+// La route manual reste inchangée
 app.post(
     "/books/manual",
     checkTokenMiddleware,

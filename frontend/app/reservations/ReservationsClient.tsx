@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { Edit, Trash2 } from "lucide-react";
@@ -25,29 +25,31 @@ export default function ReservationsClient() {
   const [reservations, setReservations] = useState<Reservation[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [currentReservation, setCurrentReservation] = useState<Reservation | null>(null);
-  const fetchWithAuth = useApiErrorHandler();
   const [error, setError] = useState<string | null>(null);
+  const fetchWithAuth = useApiErrorHandler();
+
+  const fetchReservations = useCallback(async () => {
+    try {
+      const response = await fetchWithAuth("/api/reservations", {
+        method: "GET",
+        headers: {
+          "auth_token": `${localStorage.getItem("auth_token")}`,
+        },
+      });
+      if (!response.ok) throw new Error("Erreur lors de la récupération des réservations");
+
+      const data: Reservation[] = await response.json();
+      setReservations(data);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Erreur inconnue");
+    }
+  }, [fetchWithAuth]);
 
   useEffect(() => {
-    const fetchReservations = async () => {
-      try {
-        const response = await fetchWithAuth("/api/reservations", {
-          method: "GET",
-          headers: {
-            "auth_token": `${localStorage.getItem("auth_token")}`,
-          },
-        });
-        if (!response.ok) throw new Error("Erreur lors de la récupération des réservations");
-
-        const data: Reservation[] = await response.json();
-        setReservations(data);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "Erreur inconnue");
-      }
-    };
-
     fetchReservations();
-  }, [fetchWithAuth]);
+  }, []);
+
+
 
   const formatDate = (dateString: string) => {
     return format(new Date(dateString), "dd-MM-yyyy", { locale: fr });

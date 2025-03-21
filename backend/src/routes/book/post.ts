@@ -57,6 +57,48 @@ async function fetchBookFromGoogleBooks(isbn: string): Promise<GoogleBookInfo> {
     }
 }
 
+async function buildBook(bookInfo: GoogleBookInfo, numberOfCopies: number) {
+    const industryIdentifiers = bookInfo.industryIdentifiers || [];
+
+    let bookIMG = bookInfo.imageLinks?.thumbnail || null;
+    if (bookIMG !== null) {
+        try {
+            let image = await axios.get(bookIMG, {responseType: "arraybuffer"});
+            bookIMG = Buffer.from(image.data).toString("base64");
+        } catch (error) {
+            console.error("Error fetching image:", error);
+            bookIMG = null;
+        }
+    }
+
+    const newBook = {
+        title: bookInfo.title || "Unknown",
+        description: bookInfo.description || "No description available",
+        printType: bookInfo.printType || "Unknown",
+        category: bookInfo.categories
+            ? bookInfo.categories.join(", ")
+            : "Unknown",
+        publisher: bookInfo.publisher || "Unknown",
+        author: bookInfo.authors
+            ? bookInfo.authors.join(", ")
+            : "Unknown",
+        quantity: numberOfCopies,
+        publish_date: bookInfo.publishedDate
+            ? new Date(bookInfo.publishedDate)
+            : new Date(),
+        ISBN_10:
+            industryIdentifiers.find((i) => i.type === "ISBN_10")
+                ?.identifier || null,
+        ISBN_13:
+            industryIdentifiers.find((i) => i.type === "ISBN_13")
+                ?.identifier || null,
+        image_link: bookIMG,
+        is_removed: false,
+    };
+
+    return newBook;
+}
+
 app.post(
     "/books/import",
     checkTokenMiddleware,
@@ -80,33 +122,7 @@ app.post(
             if (!bookInfo)
                 throw new AppError("Book not found with Google Books.", 404);
 
-            const industryIdentifiers = bookInfo.industryIdentifiers || [];
-
-            const newBook = {
-                title: bookInfo.title || "Unknown",
-                description: bookInfo.description || "No description available",
-                printType: bookInfo.printType || "Unknown",
-                category: bookInfo.categories
-                    ? bookInfo.categories.join(", ")
-                    : "Unknown",
-                publisher: bookInfo.publisher || "Unknown",
-                author: bookInfo.authors
-                    ? bookInfo.authors.join(", ")
-                    : "Unknown",
-                quantity: numberOfCopies,
-                publish_date: bookInfo.publishedDate
-                    ? new Date(bookInfo.publishedDate)
-                    : new Date(),
-                ISBN_10:
-                    industryIdentifiers.find((i) => i.type === "ISBN_10")
-                        ?.identifier || null,
-                ISBN_13:
-                    industryIdentifiers.find((i) => i.type === "ISBN_13")
-                        ?.identifier || null,
-                image_link: bookInfo.imageLinks?.thumbnail || null,
-                is_removed: false,
-            };
-            console.log("newBook :", newBook);
+            const newBook = await buildBook(bookInfo, numberOfCopies);
 
             const conditions = [];
             if (newBook.ISBN_10)

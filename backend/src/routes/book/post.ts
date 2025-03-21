@@ -10,7 +10,7 @@ import { Request, Response, NextFunction } from "express";
 import { AppError } from "../../app/utils/AppError";
 import { generateBarcodeImage } from "../../app/services/barcode";
 
-interface GoogleBookInfo {
+interface BookInfo {
     title?: string;
     description?: string;
     printType?: string;
@@ -18,6 +18,8 @@ interface GoogleBookInfo {
     publisher?: string;
     authors?: string[];
     publishedDate?: string;
+    pageCount?: number;
+    language?: string;
     industryIdentifiers?: Array<{
         type: string;
         identifier: string;
@@ -27,10 +29,10 @@ interface GoogleBookInfo {
     };
 }
 
-async function fetchBookFromGoogleBooks(isbn: string): Promise<GoogleBookInfo> {
+async function fetchBookFromGoogleBooks(isbn: string): Promise<BookInfo> {
     try {
         const response = await axios.get(
-            `https://www.googleapis.com/books/v1/volumes?q=isbn:${isbn}`
+            `https://www.googleapis.com/books/v1/volumes?q=isbn:${isbn}`,
         );
 
         if (!response.data.items || response.data.items.length === 0) {
@@ -45,9 +47,11 @@ async function fetchBookFromGoogleBooks(isbn: string): Promise<GoogleBookInfo> {
             categories: bookData.categories,
             publisher: bookData.publisher,
             authors: bookData.authors,
+            pageCount: bookData.pageCount,
+            language: bookData.language,
             publishedDate: bookData.publishedDate,
             industryIdentifiers: bookData.industryIdentifiers,
-            imageLinks: bookData.imageLinks
+            imageLinks: bookData.imageLinks,
         };
     } catch (error) {
         if (axios.isAxiosError(error) && error.response?.status === 404) {
@@ -57,13 +61,15 @@ async function fetchBookFromGoogleBooks(isbn: string): Promise<GoogleBookInfo> {
     }
 }
 
-async function buildBook(bookInfo: GoogleBookInfo, numberOfCopies: number) {
+async function buildBook(bookInfo: BookInfo, numberOfCopies: number) {
     const industryIdentifiers = bookInfo.industryIdentifiers || [];
 
     let bookIMG = bookInfo.imageLinks?.thumbnail || null;
     if (bookIMG !== null) {
         try {
-            let image = await axios.get(bookIMG, {responseType: "arraybuffer"});
+            let image = await axios.get(bookIMG, {
+                responseType: "arraybuffer",
+            });
             bookIMG = Buffer.from(image.data).toString("base64");
         } catch (error) {
             console.error("Error fetching image:", error);
@@ -79,19 +85,17 @@ async function buildBook(bookInfo: GoogleBookInfo, numberOfCopies: number) {
             ? bookInfo.categories.join(", ")
             : "Unknown",
         publisher: bookInfo.publisher || "Unknown",
-        author: bookInfo.authors
-            ? bookInfo.authors.join(", ")
-            : "Unknown",
+        author: bookInfo.authors ? bookInfo.authors.join(", ") : "Unknown",
         quantity: numberOfCopies,
         publish_date: bookInfo.publishedDate
             ? new Date(bookInfo.publishedDate)
             : new Date(),
         ISBN_10:
-            industryIdentifiers.find((i) => i.type === "ISBN_10")
-                ?.identifier || null,
+            industryIdentifiers.find((i) => i.type === "ISBN_10")?.identifier ||
+            null,
         ISBN_13:
-            industryIdentifiers.find((i) => i.type === "ISBN_13")
-                ?.identifier || null,
+            industryIdentifiers.find((i) => i.type === "ISBN_13")?.identifier ||
+            null,
         image_link: bookIMG,
         is_removed: false,
     };

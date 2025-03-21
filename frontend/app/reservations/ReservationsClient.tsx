@@ -9,7 +9,6 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useApiErrorHandler } from "@/app/components/DisconnectAfterRevocation";
 
-
 type Reservation = {
   id: number;
   user_id: number;
@@ -26,7 +25,10 @@ export default function ReservationsClient() {
   const [reservations, setReservations] = useState<Reservation[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [currentReservation, setCurrentReservation] = useState<Reservation | null>(null);
+
+  const [error, setError] = useState<string | null>(null);
   const fetchWithAuth = useApiErrorHandler();
+
 
   useEffect(() => {
     const fetchReservations = async () => {
@@ -48,7 +50,7 @@ export default function ReservationsClient() {
 
     fetchReservations();
   }, [fetchWithAuth]);
-
+  
   const formatDate = (dateString: string) => {
     return format(new Date(dateString), "dd-MM-yyyy", { locale: fr });
   };

@@ -3,13 +3,14 @@
 import { useEffect, useState } from "react"
 import { useRouter, usePathname } from "next/navigation"
 import Sidebar from "./Sidebar"
-import type React from "react" // Added import for React
+import type React from "react"
 
 type AuthWrapperProps = {
   children: React.ReactNode
 }
 
-const adminRoutes = ["/reservations", "/books", "/users", "/reviews", "/stats", "/settings"]
+const adminBasePaths = ["/reservations", "/books", "/users", "/reviews", "/stats", "/settings"]
+const adminDynamicPaths = ["/user-history"]
 const userRoutes = ["/", "/history"]
 
 export default function AuthWrapper({ children }: AuthWrapperProps) {
@@ -17,6 +18,15 @@ export default function AuthWrapper({ children }: AuthWrapperProps) {
   const [userRole, setUserRole] = useState<string | null>(null)
   const router = useRouter()
   const pathname = usePathname()
+
+  const isAdminRoute = (path: string) => {
+    return adminBasePaths.includes(path) ||
+      adminDynamicPaths.some(dynamicPath => path.startsWith(dynamicPath))
+  }
+
+  const isUserRoute = (path: string) => {
+    return userRoutes.includes(path)
+  }
 
   useEffect(() => {
     const storedUserRole = localStorage.getItem("userRole")
@@ -27,9 +37,9 @@ export default function AuthWrapper({ children }: AuthWrapperProps) {
     } else if (storedUserRole) {
       setIsAuthenticated(true)
 
-      if (storedUserRole === "admin" && !adminRoutes.includes(pathname)) {
+      if (storedUserRole === "admin" && !isAdminRoute(pathname)) {
         router.push("/reservations")
-      } else if (storedUserRole === "user" && !userRoutes.includes(pathname)) {
+      } else if (storedUserRole === "user" && !isUserRoute(pathname)) {
         router.push("/")
       }
     }

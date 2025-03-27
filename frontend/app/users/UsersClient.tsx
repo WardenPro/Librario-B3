@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { useRouter } from "next/navigation";
 
 type User = {
   id: number;
@@ -19,6 +20,7 @@ export default function UsersClient() {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const router = useRouter();
 
   useEffect(() => {
     const fetchUsers = async () => {
@@ -64,6 +66,10 @@ export default function UsersClient() {
     }
   };
 
+  const handleUserClick = (id: number) => {
+    router.push(`/user-history/${id}`);
+  };
+
   if (loading) return <p>Chargement des utilisateurs...</p>;
   if (error) return <p className="text-red-500">{error}</p>;
 
@@ -82,14 +88,14 @@ export default function UsersClient() {
         </TableHeader>
         <TableBody>
           {users.map((user) => (
-            <TableRow key={user.id}>
+            <TableRow key={user.id} onClick={() => handleUserClick(user.id)} className="cursor-pointer">
               <TableCell>{user.first_name} {user.last_name}</TableCell>
               <TableCell>{user.email}</TableCell>
               <TableCell>{user.roles}</TableCell>
               <TableCell>{user.bio}</TableCell>
               <TableCell>{new Date(user.created_at).toLocaleDateString()}</TableCell>
               <TableCell>
-                <Button variant="ghost" size="icon" onClick={() => handleDeleteUser(user.id)}>
+                <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); handleDeleteUser(user.id); }}>
                   <Trash2 className="h-4 w-4" />
                 </Button>
               </TableCell>

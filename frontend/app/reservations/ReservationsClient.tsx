@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { Trash2 } from "lucide-react";
@@ -63,6 +63,12 @@ export default function ReservationsClient() {
 
     fetchReservations();
   }, []);
+
+  useEffect(() => {
+    fetchReservations();
+  }, []);
+
+
 
   const formatDate = (dateString: string) => {
     return format(new Date(dateString), "dd-MM-yyyy", { locale: fr });

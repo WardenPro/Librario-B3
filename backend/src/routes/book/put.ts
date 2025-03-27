@@ -1,7 +1,7 @@
 import { app } from "../..";
 import { db } from "../../app/config/database";
 import { eq } from "drizzle-orm";
-import { books } from "../../db/schema/book";
+import { books, updateBookSchema } from "../../db/schema/book";
 import { checkTokenMiddleware } from "../../app/middlewares/verify_jwt";
 import { grantedAccessMiddleware } from "../../app/middlewares/verify_access_right";
 import { NextFunction, Request, Response } from "express";
@@ -84,6 +84,45 @@ app.put(
             if (error instanceof AppError) return next(error);
             return next(
                 new AppError("Error while recovering the book.", 500, error),
+            );
+        }
+    },
+);
+
+app.put(
+    "/books/:id",
+    checkTokenMiddleware,
+    grantedAccessMiddleware("admin"),
+    async (req: Request, res: Response, next: NextFunction) => {
+        try {
+            const bookId = parseInt(req.params.id, 10);
+            if (isNaN(bookId) || bookId <= 0)
+                throw new AppError("Invalid book id.", 400, { id: bookId });
+            if (Object.keys(req.body).length === 0)
+                throw new AppError("No data provided for update.", 400);
+
+            const selectedBook = await db
+                .select()
+                .from(books)
+                .where(eq(books.id, bookId));   
+            if (selectedBook.length === 0)
+                throw new AppError("Book not found.", 404, { id: bookId });
+
+            const validatedData = updateBookSchema.parse(req.body);
+
+            const updatedBook = await db
+                .update(books)
+                .set(validatedData)
+                .where(eq(books.id, bookId))
+                .returning();
+            if (updatedBook.length === 0)
+                throw new AppError("No changes were made to the book data.", 400);
+
+            res.status(200).json(updatedBook[0]);
+        } catch (error) {
+            if (error instanceof AppError) return next(error);
+            return next(
+                new AppError("Error while updating the book.", 500, error),
             );
         }
     },

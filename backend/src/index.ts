@@ -48,6 +48,7 @@ async function startServer() {
         app.use((req, res) => {
             res.status(404).json({
                 error: "This resource does not exist.",
+                req: req.originalUrl,
             });
         });
 

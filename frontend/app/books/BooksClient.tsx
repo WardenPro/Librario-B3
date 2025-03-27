@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useApiErrorHandler } from "@/app/components/DisconnectAfterRevocation";
 
 type Book = {
   id: number;
@@ -74,6 +75,7 @@ export default function BooksClient() {
   const [currentPage, setCurrentPage] = useState(1);
   const [reservationDialogOpen, setReservationDialogOpen] = useState(false);
   const [selectedCopy, setSelectedCopy] = useState<Copy | null>(null);
+  const fetchWithAuth = useApiErrorHandler();
 
   const [userId, setUserId] = useState("");
   const [startDate, setStartDate] = useState(format(new Date(), 'yyyy-MM-dd'));
@@ -132,7 +134,7 @@ export default function BooksClient() {
   useEffect(() => {
     const fetchBooks = async () => {
       try {
-        const response = await fetch(
+        const response = await fetchWithAuth(
           `/api/books?page=${currentPage}&itemsPerPage=${itemsPerPage}`,
           {
             headers: {
@@ -181,7 +183,7 @@ export default function BooksClient() {
   useEffect(() => {
     const fetchBookDetails = async (id: string) => {
       try {
-        const bookResponse = await fetch(`/api/books/${id}`, {
+        const bookResponse = await fetchWithAuth(`/api/books/${id}`, {
           headers: {
             auth_token: `${localStorage.getItem("auth_token")}`,
           },
@@ -200,7 +202,7 @@ export default function BooksClient() {
     const fetchCopies = async (id: string) => {
       try {
         setLoading(true);
-        const response = await fetch(`/api/books/${id}/copy`, {
+        const response = await fetchWithAuth(`/api/books/${id}/copy`, {
           headers: {
             auth_token: `${localStorage.getItem("auth_token")}`,
           },
@@ -308,7 +310,7 @@ export default function BooksClient() {
     };
 
     try {
-      const response = await fetch("/api/reservations", {
+      const response = await fetchWithAuth("/api/reservations", {
         method: "POST",
         headers: {
           auth_token: `${localStorage.getItem("auth_token")}`,

@@ -18,7 +18,7 @@ export default function SettingsClient() {
     try {
       const newName = libraryName.trim();
 
-      const ResUserRole = await fetch("/api/library/name", {
+      const ResUserRole = await fetch("/api/library", {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",

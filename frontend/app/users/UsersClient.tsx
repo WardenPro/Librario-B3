@@ -13,6 +13,7 @@ type User = {
   email: string;
   roles: "admin" | "user";
   created_at: string;
+  bio: string;
 };
 
 export default function UsersClient() {
@@ -80,6 +81,7 @@ export default function UsersClient() {
             <TableHead>Nom</TableHead>
             <TableHead>Email</TableHead>
             <TableHead>Rôle</TableHead>
+            <TableHead>Bio</TableHead>
             <TableHead>Date de création</TableHead>
             <TableHead>Actions</TableHead>
           </TableRow>
@@ -90,6 +92,7 @@ export default function UsersClient() {
               <TableCell>{user.first_name} {user.last_name}</TableCell>
               <TableCell>{user.email}</TableCell>
               <TableCell>{user.roles}</TableCell>
+              <TableCell>{user.bio}</TableCell>
               <TableCell>{new Date(user.created_at).toLocaleDateString()}</TableCell>
               <TableCell>
                 <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); handleDeleteUser(user.id); }}>

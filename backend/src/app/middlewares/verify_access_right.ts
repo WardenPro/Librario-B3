@@ -22,7 +22,7 @@ export function grantedAccessMiddleware(
             const isAdmin = req.payload.role === "admin";
 
             if (accessType === "admin" && !isAdmin)
-                return next(new AppError("Access denied: Admin only.", 403));
+                return next(new AppError("Access denied.", 403));
             else if (accessType === "admin" && isAdmin) return next();
             if (!schema)
                 return next(
@@ -50,12 +50,12 @@ export function grantedAccessMiddleware(
                 [resource] = await db
                     .select({ user_id: schema.user_id })
                     .from(schema)
-                    .where(eq(schema.id, resourceId));
+                    .where(eq(schema.user_id, resourceId));
             }
 
             if (!resource)
                 return next(
-                    new AppError("Resource not found.", 404, {
+                    new AppError(`Resource with ID ${resourceId} not found.`, 404, {
                         id: resourceId,
                     }),
                 );
@@ -64,21 +64,20 @@ export function grantedAccessMiddleware(
 
             if (accessType === "owner" && !isOwner)
                 return next(
-                    new AppError("Access denied: Not the owner.", 403, {
+                    new AppError("Access denied.", 403, {
                         id: resourceId,
                     }),
                 );
 
             if (accessType === "admin_or_owner" && !isOwner && !isAdmin)
                 return next(
-                    new AppError("Access denied: Admin or owner only.", 403, {
+                    new AppError("Access denied.", 403, {
                         id: resourceId,
                     }),
                 );
 
             next();
         } catch (error) {
-            console.error(error);
             next(new AppError("Error while verifying access.", 500, error));
         }
     };

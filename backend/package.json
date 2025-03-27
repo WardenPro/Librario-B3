@@ -10,6 +10,7 @@
         "@types/node": "^22.12.0",
         "@types/node-cron": "^3",
         "@types/node-isbn": "^1",
+        "@types/nodemailer": "^6",
         "@types/pg": "^8",
         "@types/swagger-jsdoc": "^6",
         "@types/swagger-ui-express": "^4.1.7",
@@ -45,6 +46,7 @@
         "jose": "^5.9.6",
         "node-cron": "^3.0.3",
         "node-isbn": "^1.6.1",
+        "nodemailer": "^6.10.0",
         "pg": "^8.13.1",
         "xss": "^1.0.15",
         "zod": "^3.23.8"

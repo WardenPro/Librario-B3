@@ -14,6 +14,8 @@ app.get(
     async (req: Request, res: Response, next: NextFunction) => {
         try {
             const allHistorical = await db.select().from(historical);
+            if (!allHistorical)
+                throw new AppError("No historical records found.", 404);
             const validatedHistorical = allHistorical.map((h) =>
                 selectHistoricalSchema.parse(h),
             );
@@ -39,20 +41,21 @@ app.get(
             if (isNaN(userId) || userId <= 0)
                 throw new AppError("Invalid user ID provided.", 400);
 
-            const [foundHistorical] = await db
+            const userHistorical = await db
                 .select()
                 .from(historical)
                 .where(eq(historical.user_id, userId));
-            if (!foundHistorical)
-                throw new AppError("Historical record not found.", 404, {
-                    id: userId,
-                });
-            res.status(200).json(foundHistorical);
+
+            const validatedHistorical = userHistorical.map((h) =>
+                selectHistoricalSchema.parse(h)
+            );
+            
+            res.status(200).json(validatedHistorical);
         } catch (error) {
             if (error instanceof AppError) return next(error);
             next(
                 new Error(
-                    "An error occurred while retrieving historical record.",
+                    "An error occurred while retrieving historical records.",
                 ),
             );
         }

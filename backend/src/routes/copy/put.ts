@@ -6,7 +6,8 @@ import { checkTokenMiddleware } from "../../app/middlewares/verify_jwt";
 import { grantedAccessMiddleware } from "../../app/middlewares/verify_access_right";
 import { Request, Response, NextFunction } from "express";
 import { AppError } from "../../app/utils/AppError";
-
+import { historical } from "../../db/schema/historical";
+import { reservation } from "../../db/schema/reservation";
 app.put(
     "/copy/:id",
     checkTokenMiddleware,
@@ -60,7 +61,18 @@ app.put(
             if (isNaN(copyId) || copyId <= 0)
                 throw new AppError("Invalid copy ID provided.", 400);
 
-            const [updatedCopy] = await db
+            const [userReservation] = await db
+                .select()
+                .from(reservation)
+                .where(eq(reservation.copy_id, copyId))
+                .limit(1);
+            if (!userReservation)
+                throw new AppError("Reservation not found for this copy.", 404, {
+                    id: copyId,
+                });
+
+            const [updatedCopy, newHistorical] = await db.transaction(async (trx) => {
+                const [updatedCopy] = await trx
                 .update(copy)
                 .set({ is_claimed: true })
                 .where(eq(copy.id, copyId))
@@ -69,10 +81,22 @@ app.put(
                 throw new AppError("Copy not found or already claimed.", 404, {
                     id: copyId,
                 });
+            
+            const [newHistorical] = await trx.insert(historical).values({
+                user_id: userReservation.user_id,
+                book_id: updatedCopy.book_id,
+                date_read: new Date(),
+            }).returning();
+            if (!newHistorical)
+                    throw new AppError("Error while adding to historical.", 500);
+
+                return [newHistorical, updatedCopy];
+            });
 
             res.status(200).json({
                 message: "Copy successfully claimed.",
                 updatedCopy,
+                newHistorical,
             });
         } catch (error) {
             if (error instanceof AppError) return next(error);
@@ -93,6 +117,16 @@ app.put(
             if (isNaN(copyId) || copyId <= 0)
                 throw new AppError("Invalid copy ID provided.", 400);
 
+            const [userReservation] = await db
+                .select()
+                .from(reservation)
+                .where(eq(reservation.copy_id, copyId))
+                .limit(1);
+            if (!userReservation)
+                throw new AppError("Reservation not found for this copy.", 404, {
+                    id: copyId,
+                });
+
             const [updatedCopy] = await db
                 .update(copy)
                 .set({ is_claimed: false })
@@ -105,9 +139,17 @@ app.put(
                     { id: copyId },
                 );
 
+            const [deletedReservation] = await db
+                .delete(reservation)
+                .where(eq(historical.book_id, updatedCopy.book_id))
+                .returning();
+            if (!deletedReservation)
+                throw new AppError("Error while deleting reservation.", 500);
+
             res.status(200).json({
                 message: "Copy successfully unclaimed.",
                 updatedCopy,
+                deletedReservation,
             });
         } catch (error) {
             if (error instanceof AppError) return next(error);

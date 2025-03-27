@@ -30,6 +30,7 @@ app.get(
                     book_title: books.title,
                     user_first_name: users.first_name,
                     user_last_name: users.last_name,
+                    user_email: users.email,
                 })
                 .from(reservation)
                 .innerJoin(copy, eq(copy.id, reservation.copy_id))
@@ -50,6 +51,7 @@ app.get(
                     is_claimed: r.is_claimed,
                     user_first_name: r.user_first_name,
                     user_last_name: r.user_last_name,
+                    user_email: r.user_email,
                     book_title: r.book_title,
                 };
             });

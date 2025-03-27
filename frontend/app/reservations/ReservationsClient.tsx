@@ -3,10 +3,23 @@
 import { useState, useEffect } from "react";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
-import { Edit, Trash2 } from "lucide-react";
+import { Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useApiErrorHandler } from "@/app/components/DisconnectAfterRevocation";
 
 type Reservation = {
@@ -17,16 +30,17 @@ type Reservation = {
   is_claimed: boolean;
   user_first_name: string;
   user_last_name: string;
+  user_email: string;
   reservation_date: string;
   final_date: string;
 };
 
 export default function ReservationsClient() {
   const [reservations, setReservations] = useState<Reservation[]>([]);
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [currentReservation, setCurrentReservation] = useState<Reservation | null>(null);
-  const fetchWithAuth = useApiErrorHandler();
   const [error, setError] = useState<string | null>(null);
+  const fetchWithAuth = useApiErrorHandler();
+
+  const [filter, setFilter] = useState("all");
 
   useEffect(() => {
     const fetchReservations = async () => {
@@ -34,10 +48,11 @@ export default function ReservationsClient() {
         const response = await fetchWithAuth("/api/reservations", {
           method: "GET",
           headers: {
-            "auth_token": `${localStorage.getItem("auth_token")}`,
+            auth_token: `${localStorage.getItem("auth_token")}`,
           },
         });
-        if (!response.ok) throw new Error("Erreur lors de la récupération des réservations");
+        if (!response.ok)
+          throw new Error("Erreur lors de la récupération des réservations");
 
         const data: Reservation[] = await response.json();
         setReservations(data);
@@ -47,20 +62,22 @@ export default function ReservationsClient() {
     };
 
     fetchReservations();
-  }, [fetchWithAuth]);
+  }, []);
 
   const formatDate = (dateString: string) => {
     return format(new Date(dateString), "dd-MM-yyyy", { locale: fr });
   };
 
   const handleClaimStatusChange = async (copyId: number, isClaimed: boolean) => {
-    const route = isClaimed ? `/api/copy/${copyId}/claimed` : `/api/copy/${copyId}/unclaimed`;
+    const route = isClaimed
+      ? `/api/copy/${copyId}/claimed`
+      : `/api/copy/${copyId}/unclaimed`;
 
     try {
       const response = await fetchWithAuth(route, {
         method: "PUT",
         headers: {
-          "auth_token": `${localStorage.getItem("auth_token")}`,
+          auth_token: `${localStorage.getItem("auth_token")}`,
           "Content-Type": "application/json",
         },
       });
@@ -69,7 +86,9 @@ export default function ReservationsClient() {
 
       setReservations((prevReservations) =>
         prevReservations.map((reservation) =>
-          reservation.copy_id === copyId ? { ...reservation, is_claimed: isClaimed } : reservation
+          reservation.copy_id === copyId
+            ? { ...reservation, is_claimed: isClaimed }
+            : reservation
         )
       );
     } catch (error) {
@@ -82,26 +101,61 @@ export default function ReservationsClient() {
       const response = await fetchWithAuth(`/api/reservations/${id}`, {
         method: "DELETE",
         headers: {
-          "auth_token": `${localStorage.getItem("auth_token")}`,
+          auth_token: `${localStorage.getItem("auth_token")}`,
         },
       });
 
-      if (!response.ok) throw new Error("Erreur lors de la suppression de la réservation");
+      if (!response.ok)
+        throw new Error("Erreur lors de la suppression de la réservation");
 
-      setReservations((prevReservations) => prevReservations.filter((reservation) => reservation.id !== id));
+      setReservations((prevReservations) =>
+        prevReservations.filter((reservation) => reservation.id !== id)
+      );
     } catch (error) {
       setError(error instanceof Error ? error.message : "Erreur inconnue");
     }
   };
 
+  const filteredReservations = reservations.filter((reservation) => {
+    const today = new Date();
+    const finalDate = new Date(reservation.final_date);
+
+    switch (filter) {
+      case "claimed":
+        return reservation.is_claimed;
+      case "unclaimed":
+        return !reservation.is_claimed;
+      case "claimedExpired":
+        return reservation.is_claimed && finalDate < today;
+      default:
+        return true;
+    }
+  });
+
   if (error) return <p className="text-red-500">{error}</p>;
 
   return (
     <>
+      {/* Sélecteur de filtre */}
+      <div className="mb-4">
+        <Select value={filter} onValueChange={(value) => setFilter(value)}>
+          <SelectTrigger>
+            <SelectValue placeholder="Filtrer les réservations" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Toutes les réservations</SelectItem>
+            <SelectItem value="claimed">Réclamées</SelectItem>
+            <SelectItem value="unclaimed">Non réclamées</SelectItem>
+            <SelectItem value="claimedExpired">
+              Réclamées et expirées
+            </SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>ID Utilisateur</TableHead>
             <TableHead>Nom Utilisateur</TableHead>
             <TableHead>Titre du Livre</TableHead>
             <TableHead>Date de début</TableHead>
@@ -111,37 +165,54 @@ export default function ReservationsClient() {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {reservations.map((reservation) => (
-            <TableRow key={reservation.id}>
-              <TableCell>{reservation.user_id}</TableCell>
-              <TableCell>{reservation.user_first_name} {reservation.user_last_name}</TableCell>
-              <TableCell>{reservation.book_title}</TableCell>
-              <TableCell>{formatDate(reservation.reservation_date)}</TableCell>
-              <TableCell>{formatDate(reservation.final_date)}</TableCell>
-              <TableCell>
-                <Select
-                  value={reservation.is_claimed ? "claimed" : "unclaimed"}
-                  onValueChange={(value) => {
-                    const isClaimed = value === "claimed";
-                    handleClaimStatusChange(reservation.copy_id, isClaimed);
-                  }}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Statut" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="claimed">Réclamée</SelectItem>
-                    <SelectItem value="unclaimed">Non Réclamée</SelectItem>
-                  </SelectContent>
-                </Select>
-              </TableCell>
-              <TableCell>
-                <Button variant="ghost" size="icon" onClick={() => handleDeleteReservation(reservation.id)}>
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              </TableCell>
-            </TableRow>
-          ))}
+          {filteredReservations.map((reservation) => {
+            const today = new Date();
+            const finalDate = new Date(reservation.final_date);
+            const isExpiredClaimed =
+              reservation.is_claimed && finalDate < today;
+            return (
+              <TableRow
+                key={reservation.id}
+                className={isExpiredClaimed ? "text-red-500" : ""}
+              >
+                <TableCell>
+                  <div>
+                    {reservation.user_first_name} {reservation.user_last_name}
+                  </div>
+                  <div className="text-sm text-gray-500">{reservation.user_email}</div>
+                </TableCell>
+                <TableCell>{reservation.book_title}</TableCell>
+                <TableCell>{formatDate(reservation.reservation_date)}</TableCell>
+                <TableCell>{formatDate(reservation.final_date)}</TableCell>
+                <TableCell>
+                  <Select
+                    value={reservation.is_claimed ? "claimed" : "unclaimed"}
+                    onValueChange={(value) => {
+                      const isClaimed = value === "claimed";
+                      handleClaimStatusChange(reservation.copy_id, isClaimed);
+                    }}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Statut" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="claimed">Réclamée</SelectItem>
+                      <SelectItem value="unclaimed">Non Réclamée</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </TableCell>
+                <TableCell>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => handleDeleteReservation(reservation.id)}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </TableCell>
+              </TableRow>
+            );
+          })}
         </TableBody>
       </Table>
     </>

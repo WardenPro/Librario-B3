@@ -34,7 +34,7 @@
 
 | Backend                   | Frontend |
 |---------------------------|----------|
-| JWT secret in .env        |  API Backend        |
-| Database credential in .env |        |
+| JWT secret in env         | API Backend in env |
+| Database credential in env|          |
 | API openlibrary           |          |
 | API Gemini                |          |

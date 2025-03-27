@@ -86,6 +86,8 @@ async function buildBook(bookInfo: BookInfo, numberOfCopies: number) {
             : "Unknown",
         publisher: bookInfo.publisher || "Unknown",
         author: bookInfo.authors ? bookInfo.authors.join(", ") : "Unknown",
+        pageCount: bookInfo.pageCount,
+        language: bookInfo.language || "Unknown",
         quantity: numberOfCopies,
         publish_date: bookInfo.publishedDate
             ? new Date(bookInfo.publishedDate)

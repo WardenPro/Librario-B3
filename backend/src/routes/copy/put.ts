@@ -70,6 +70,20 @@ app.put(
                 throw new AppError("Reservation not found for this copy.", 404, {
                     id: copyId,
                 });
+            
+            const [selectedCopy] = await db
+                .select({ is_claimed: copy.is_claimed })
+                .from(copy)
+                .where(eq(copy.id, copyId))
+                .limit(1);
+            if (!selectedCopy)
+                throw new AppError("Copy not found.", 404, {
+                    id: copyId,
+                });
+            if (selectedCopy.is_claimed)
+                throw new AppError("Copy already claimed.", 400, {
+                    id: copyId,
+                });
 
             const [updatedCopy, newHistorical] = await db.transaction(async (trx) => {
                 const [updatedCopy] = await trx
@@ -141,7 +155,7 @@ app.put(
 
             const [deletedReservation] = await db
                 .delete(reservation)
-                .where(eq(historical.book_id, updatedCopy.book_id))
+                .where(eq(reservation.user_id, userReservation.user_id))
                 .returning();
             if (!deletedReservation)
                 throw new AppError("Error while deleting reservation.", 500);

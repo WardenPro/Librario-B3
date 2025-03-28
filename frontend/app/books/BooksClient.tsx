@@ -30,6 +30,8 @@ type Book = {
   category: string;
   publisher: string;
   quantity: number;
+  language: string;
+  pages: number;
   publish_date: string;
   image_link: string | null;
 };
@@ -394,6 +396,8 @@ export default function BooksClient() {
       author: formData.get("author") as string,
       quantity: Number(formData.get("quantity")),
       publish_date: formData.get("publish_date") as string,
+      pages: Number(formData.get("pages")),
+      language: formData.get("language") as string,
       ISBN_10: formData.get("ISBN_10") as string,
       ISBN_13: formData.get("ISBN_13") as string,
       image_link: formData.get("image_link") as string,
@@ -439,7 +443,11 @@ export default function BooksClient() {
             <div className="w-full md:w-1/4 flex-shrink-0">
               <div className="relative h-64 md:h-80 rounded-lg overflow-hidden">
                 <Image
-                  src={selectedBook.image_link || "/placeholder.svg"}
+                  src={
+                    selectedBook.image_link
+                      ? `data:image/jpeg;base64,${selectedBook.image_link}`
+                      : "/placeholder.svg"
+                  }
                   alt={`Couverture de ${selectedBook.title}`}
                   fill
                   style={{ objectFit: "cover" }}
@@ -708,20 +716,24 @@ export default function BooksClient() {
           >
             <div className="relative w-full h-60">
               <Image
-                src={book.image_link || "/placeholder.svg"}
-                alt={`Couverture de ${book.title}`}
-                fill
-                style={{ objectFit: "cover" }}
-              />
+                  src={
+                    book.image_link
+                      ? `data:image/jpeg;base64,${book.image_link}`
+                      : "/placeholder.svg"
+                  }
+                  alt={`Couverture de ${book.title}`}
+                  fill
+                  style={{ objectFit: "cover" }}
+                />
             </div>
             <div className="p-4">
               <h3 className="font-bold text-lg mb-2">{book.title}</h3>
               <p className="text-sm text-muted-foreground mb-1">par {book.author}</p>
               <p className="text-sm text-muted-foreground mb-1">
-                ISBN-10: {book.ISBN_10 || "N/A"}
+                Nombre de pages: {book.pages}
               </p>
               <p className="text-sm text-muted-foreground mb-1">
-                ISBN-13: {book.ISBN_13 || "N/A"}
+                Langue: {book.language}
               </p>
               <p className="text-sm text-muted-foreground mb-4">
                 Exemplaires: {book.quantity}
@@ -841,6 +853,14 @@ export default function BooksClient() {
                   <Input id="publisher" name="publisher" type="text" required />
                 </div>
                 <div className="flex flex-col">
+                  <Label htmlFor="pages">Nombre de pages</Label>
+                  <Input id="pages" name="pages" type="number" required min={1} />
+                </div>
+                <div className="flex flex-col">
+                  <Label htmlFor="language">Langue</Label>
+                  <Input id="language" name="language" type="text" required placeholder="Ex: FR / EN / ES" />
+                </div>
+                <div className="flex flex-col">
                   <Label htmlFor="quantity">Quantité</Label>
                   <Input
                     id="quantity"
@@ -848,6 +868,7 @@ export default function BooksClient() {
                     type="number"
                     required
                     defaultValue={1}
+                    min={1}
                     onChange={(e) => {
                       const qty = Number(e.target.value);
                       setManualQuantity(qty);

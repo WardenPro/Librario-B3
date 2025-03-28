@@ -6,12 +6,12 @@ const LibraryContext = createContext<{
   libraryName: string;
   setLibraryName: (name: string) => void;
 }>({
-  libraryName: "WardenPro Librario",
+  libraryName: "Librario",
   setLibraryName: () => {},
 });
 
 export function LibraryProvider({ children }: { children: React.ReactNode }) {
-  const [libraryName, setLibraryName] = useState("WardenPro Librario");
+  const [libraryName, setLibraryName] = useState("Librario");
 
   useEffect(() => {
     const fetchLibraryName = async () => {
@@ -40,7 +40,6 @@ export function LibraryProvider({ children }: { children: React.ReactNode }) {
   );
 }
 
-// Hook personnalisé
 export function useLibrary() {
   return useContext(LibraryContext);
 }

@@ -1,11 +1,20 @@
-import BooksClient from "./BooksClient"
+"use client";
+
+import { useSearchParams } from "next/navigation";
+import { BooksList } from "../components/books/BooksList";
+import { BookDetails } from "../components/books/BookDetails";
 
 export default function BooksPage() {
-  return (
-    <div className="space-y-4">
-      <h1 className="text-3xl font-bold">Gestion des livres</h1>
-      <BooksClient />
-    </div>
-  )
-}
+  const searchParams = useSearchParams();
+  const bookId = searchParams.get("bookId");
 
+  return (
+    <>
+      {bookId ? (
+        <BookDetails bookId={bookId} />
+      ) : (
+        <BooksList />
+      )}
+    </>
+  );
+}

@@ -6,6 +6,8 @@ import { checkTokenMiddleware } from "../../app/middlewares/verify_jwt";
 import { grantedAccessMiddleware } from "../../app/middlewares/verify_access_right";
 import { NextFunction, Request, Response } from "express";
 import { AppError } from "../../app/utils/AppError";
+import { users } from "../../db/schema/users";
+import { books } from "../../db/schema/book";
 
 app.get(
     "/historical",
@@ -31,6 +33,7 @@ app.get(
     },
 );
 
+
 app.get(
     "/users/:id/historical",
     checkTokenMiddleware,
@@ -42,22 +45,26 @@ app.get(
                 throw new AppError("Invalid user ID provided.", 400);
 
             const userHistorical = await db
-                .select()
+                .select({
+                    id: historical.id,
+                    date_read: historical.date_read,
+                    book_title: books.title,
+                    user_first_name: users.first_name,
+                    user_last_name: users.last_name,
+                })
                 .from(historical)
-                .where(eq(historical.user_id, userId));
+                .innerJoin(books, eq(historical.book_id, books.id))
+                .innerJoin(users, eq(historical.user_id, users.id))
+                .where(eq(historical.user_id, userId))
+                .orderBy(historical.date_read);
 
-            const validatedHistorical = userHistorical.map((h) =>
-                selectHistoricalSchema.parse(h)
-            );
-            
-            res.status(200).json(validatedHistorical);
+            res.status(200).json(userHistorical);
         } catch (error) {
             if (error instanceof AppError) return next(error);
             next(
-                new Error(
-                    "An error occurred while retrieving historical records.",
-                ),
+                new Error("An error occurred while retrieving historical records.")
             );
         }
-    },
+    }
 );
+

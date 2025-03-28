@@ -1,4 +1,4 @@
-import { pgTable, serial, text, integer, unique } from "drizzle-orm/pg-core";
+import { pgTable, serial, text, integer, unique, timestamp } from "drizzle-orm/pg-core";
 import { createInsertSchema, createSelectSchema } from "drizzle-zod";
 import { books } from "./book";
 import { copy } from "./copy";
@@ -20,6 +20,7 @@ export const review = pgTable(
         user_id: integer("user_id")
             .notNull()
             .references(() => users.id, { onDelete: "cascade" }),
+        created_at: timestamp("created_at").notNull().defaultNow(),
     },
     (table) => [unique().on(table.user_id, table.book_id)],
 );

@@ -64,12 +64,6 @@ export default function ReservationsClient() {
     fetchReservations();
   }, []);
 
-  useEffect(() => {
-    fetchReservations();
-  }, []);
-
-
-
   const formatDate = (dateString: string) => {
     return format(new Date(dateString), "dd-MM-yyyy", { locale: fr });
   };

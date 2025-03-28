@@ -27,7 +27,6 @@ app.get("/library", async (req: Request, res: Response, next: NextFunction) => {
 
 app.get(
     "/library/name",
-    checkTokenMiddleware,
     async (req: Request, res: Response, next: NextFunction) => {
         try {
             const [result] = await db.select().from(library).limit(1);
